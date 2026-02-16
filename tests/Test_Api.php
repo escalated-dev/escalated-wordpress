@@ -36,14 +36,14 @@ class Test_Api extends WP_UnitTestCase {
         // Create an admin user.
         $this->admin_id = $this->factory->user->create( [ 'role' => 'administrator' ] );
 
-        // Create an API token.
+        // Create an API token (store the SHA-256 hash, keep plain text for requests).
         $this->token = wp_generate_password( 64, false );
         global $wpdb;
         $token_table = \Escalated\Escalated::table( 'api_tokens' );
         $wpdb->insert( $token_table, [
             'user_id'    => $this->admin_id,
             'name'       => 'Test Token',
-            'token'      => $this->token,
+            'token'      => hash( 'sha256', $this->token ),
             'abilities'  => wp_json_encode( [ '*' ] ),
             'created_at' => current_time( 'mysql' ),
         ] );
@@ -118,7 +118,7 @@ class Test_Api extends WP_UnitTestCase {
         $wpdb->insert( $token_table, [
             'user_id'    => $this->admin_id,
             'name'       => 'Expired Token',
-            'token'      => $expired_token,
+            'token'      => hash( 'sha256', $expired_token ),
             'abilities'  => wp_json_encode( [ '*' ] ),
             'expires_at' => '2020-01-01 00:00:00',
             'created_at' => current_time( 'mysql' ),
@@ -403,7 +403,7 @@ class Test_Api extends WP_UnitTestCase {
         $wpdb->insert( $token_table, [
             'user_id'    => $this->admin_id,
             'name'       => 'Read Only Token',
-            'token'      => $read_only_token,
+            'token'      => hash( 'sha256', $read_only_token ),
             'abilities'  => wp_json_encode( [ 'tickets:read' ] ),
             'created_at' => current_time( 'mysql' ),
         ] );

@@ -136,7 +136,7 @@ class ApiToken {
         $id = static::create([
             'user_id'    => (int) $user_id,
             'name'       => $name,
-            'token_hash' => $token_hash,
+            'token' => $token_hash,
             'abilities'  => $abilities,
         ]);
 
@@ -166,7 +166,7 @@ class ApiToken {
         $token_hash = hash('sha256', $plain_token);
 
         return $wpdb->get_row(
-            $wpdb->prepare("SELECT * FROM {$table} WHERE token_hash = %s", $token_hash)
+            $wpdb->prepare("SELECT * FROM {$table} WHERE token = %s", $token_hash)
         );
     }
 

@@ -48,7 +48,8 @@ class Test_Activator extends WP_UnitTestCase {
 
         foreach ( $tables as $table ) {
             $full_table = $wpdb->prefix . $table;
-            $exists     = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $full_table ) );
+            $like       = $wpdb->esc_like( $full_table );
+            $exists     = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $like ) );
             $this->assertEquals( $full_table, $exists, "Table {$full_table} should exist." );
         }
     }
