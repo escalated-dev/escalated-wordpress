@@ -2,6 +2,11 @@
 
 A full-featured helpdesk and ticketing system for WordPress with multi-role support, SLA tracking, escalation rules, inbound email processing, macros, and a REST API.
 
+## Download
+
+- Latest plugin package: `https://github.com/escalated-dev/escalated-wordpress/releases/latest/download/escalated.zip`
+- All releases: `https://github.com/escalated-dev/escalated-wordpress/releases`
+
 ## Features
 
 - Ticket management with threaded conversations, internal notes, and activity timeline.
@@ -98,6 +103,21 @@ vendor/bin/phpunit -c phpunit.xml.dist
 ```
 
 If needed, set `WP_TESTS_DIR` to your local WordPress tests library path before running PHPUnit.
+
+## Releases
+
+This repository includes CI/CD for WordPress plugin packaging. Pushing a version tag (for example, `v1.0.1`) will automatically:
+
+- Build `escalated.zip` (including `vendor/`)
+- Create a GitHub Release
+- Attach the ZIP as a downloadable release asset
+
+Publish a new release with:
+
+```bash
+git tag v1.0.1
+git push origin v1.0.1
+```
 
 ## License
 
