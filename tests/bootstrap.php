@@ -22,3 +22,6 @@ tests_add_filter( 'muplugins_loaded', function() {
 });
 
 require $_tests_dir . '/includes/bootstrap.php';
+
+// Activate plugin tables, roles, and defaults once before tests run.
+\Escalated\Activator::activate();
