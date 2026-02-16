@@ -1,11 +1,19 @@
-# escalated-wordpress
+# Escalated for WordPress
+
+[![Tests](https://github.com/escalated-dev/escalated-wordpress/actions/workflows/run-tests.yml/badge.svg)](https://github.com/escalated-dev/escalated-wordpress/actions/workflows/run-tests.yml)
+[![Latest Release](https://img.shields.io/github/v/release/escalated-dev/escalated-wordpress)](https://github.com/escalated-dev/escalated-wordpress/releases/latest)
+[![PHP Version](https://img.shields.io/badge/php-%3E%3D8.1-8892BF)](https://www.php.net/)
+[![WordPress](https://img.shields.io/badge/wordpress-%3E%3D6.0-21759B)](https://wordpress.org/)
+[![License](https://img.shields.io/github/license/escalated-dev/escalated-wordpress)](https://www.gnu.org/licenses/gpl-2.0.html)
 
 A full-featured helpdesk and ticketing system for WordPress with multi-role support, SLA tracking, escalation rules, inbound email processing, macros, and a REST API.
 
 ## Download
 
-- Latest plugin package: `https://github.com/escalated-dev/escalated-wordpress/releases/latest/download/escalated.zip`
-- All releases: `https://github.com/escalated-dev/escalated-wordpress/releases`
+[![Download Latest Release](https://img.shields.io/badge/Download-Latest%20Release-2ea44f?style=for-the-badge&logo=github)](https://github.com/escalated-dev/escalated-wordpress/releases/latest)
+
+- Latest plugin package: [escalated.zip](https://github.com/escalated-dev/escalated-wordpress/releases/latest/download/escalated.zip)
+- All releases: [Releases](https://github.com/escalated-dev/escalated-wordpress/releases)
 
 ## Features
 
