@@ -284,6 +284,7 @@ class Activator {
             last_used_ip VARCHAR(45) NULL,
             expires_at DATETIME NULL,
             created_at DATETIME,
+            updated_at DATETIME NULL,
             PRIMARY KEY  (id),
             UNIQUE KEY token (token)
         ) $charset_collate;";

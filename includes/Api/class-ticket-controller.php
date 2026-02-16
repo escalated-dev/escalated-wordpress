@@ -15,7 +15,6 @@ use Escalated\Models\Attachment;
 use Escalated\Models\Setting;
 use Escalated\Helpers\Enums;
 use Escalated\Helpers\Sanitizer;
-use Escalated\Services\TicketService;
 use Escalated\Services\AssignmentService;
 use Escalated\Services\MacroService;
 use WP_REST_Request;
@@ -446,7 +445,7 @@ class Ticket_Controller extends Base_Controller {
             $data['assigned_to'] = absint( $request->get_param( 'assigned_to' ) );
         }
 
-        $ticket_id = TicketService::create( $data, $user_id );
+        $ticket_id = Ticket::create( $data );
 
         if ( false === $ticket_id ) {
             return $this->error( 'escalated_create_failed', __( 'Failed to create ticket.', 'escalated' ), 500 );

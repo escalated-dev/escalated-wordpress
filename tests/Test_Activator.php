@@ -46,11 +46,11 @@ class Test_Activator extends WP_UnitTestCase {
             'escalated_api_tokens',
         ];
 
+        $existing_tables = $wpdb->get_col( 'SHOW TABLES' );
+
         foreach ( $tables as $table ) {
             $full_table = $wpdb->prefix . $table;
-            $like       = $wpdb->esc_like( $full_table );
-            $exists     = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $like ) );
-            $this->assertEquals( $full_table, $exists, "Table {$full_table} should exist." );
+            $this->assertContains( $full_table, $existing_tables, "Table {$full_table} should exist." );
         }
     }
 
