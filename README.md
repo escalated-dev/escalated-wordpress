@@ -4,7 +4,7 @@
 [![Latest Release](https://img.shields.io/github/v/release/escalated-dev/escalated-wordpress)](https://github.com/escalated-dev/escalated-wordpress/releases/latest)
 [![PHP Version](https://img.shields.io/badge/php-%3E%3D8.1-8892BF)](https://www.php.net/)
 [![WordPress](https://img.shields.io/badge/wordpress-%3E%3D6.0-21759B)](https://wordpress.org/)
-[![License](https://img.shields.io/github/license/escalated-dev/escalated-wordpress)](https://www.gnu.org/licenses/gpl-2.0.html)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 A full-featured helpdesk and ticketing system for WordPress with multi-role support, SLA tracking, escalation rules, inbound email processing, macros, and a REST API.
 
@@ -114,4 +114,4 @@ If needed, set `WP_TESTS_DIR` to your local WordPress tests library path before 
 
 ## License
 
-GPL-2.0-or-later. See `readme.txt` and plugin headers for details.
+MIT. See [LICENSE](LICENSE) for details.
