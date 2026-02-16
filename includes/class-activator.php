@@ -244,7 +244,7 @@ class Activator {
             ticket_id BIGINT UNSIGNED NOT NULL,
             user_id BIGINT UNSIGNED NOT NULL,
             created_at DATETIME,
-            UNIQUE KEY ticket_user (ticket_id, user_id)
+            PRIMARY KEY  (ticket_id, user_id)
         ) $charset_collate;";
         dbDelta( $sql );
 

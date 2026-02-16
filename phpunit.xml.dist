@@ -3,12 +3,12 @@
     bootstrap="tests/bootstrap.php"
     backupGlobals="false"
     colors="true"
-    convertDeprecationsToExceptions="true"
     beStrictAboutTestsThatDoNotTestAnything="true"
 >
     <testsuites>
         <testsuite name="Escalated Test Suite">
             <directory suffix=".php">./tests/</directory>
+            <exclude>./tests/bootstrap.php</exclude>
         </testsuite>
     </testsuites>
 </phpunit>

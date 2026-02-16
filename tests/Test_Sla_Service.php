@@ -250,18 +250,10 @@ class Test_Sla_Service extends WP_UnitTestCase {
 
         $count = $this->sla_service->check_breaches();
 
-        // Depending on scope_open matching 'open', this should detect the breach.
         $updated = Ticket::find( (int) $ticket->id );
 
-        // Note: scope_open() uses statuses 'open', 'pending', 'on_hold', 'waiting'.
-        // Our ticket status is 'open', so it should match.
-        if ( (int) $updated->sla_first_response_breached === 1 ) {
-            $this->assertEquals( 1, (int) $updated->sla_first_response_breached );
-            $this->assertGreaterThanOrEqual( 1, $count );
-        } else {
-            // If scope_open doesn't match, breach check won't find it.
-            $this->markTestSkipped( 'scope_open does not match the ticket status.' );
-        }
+        $this->assertEquals( 1, (int) $updated->sla_first_response_breached );
+        $this->assertGreaterThanOrEqual( 1, $count );
     }
 
     public function test_check_breaches_fires_action(): void {
@@ -281,9 +273,8 @@ class Test_Sla_Service extends WP_UnitTestCase {
         $this->sla_service->check_breaches();
 
         $updated = Ticket::find( (int) $ticket->id );
-        if ( (int) $updated->sla_resolution_breached === 1 ) {
-            $this->assertEquals( 'resolution', $breach_type );
-        }
+        $this->assertEquals( 1, (int) $updated->sla_resolution_breached );
+        $this->assertEquals( 'resolution', $breach_type );
     }
 
     public function test_check_breaches_ignores_already_breached(): void {
@@ -325,8 +316,7 @@ class Test_Sla_Service extends WP_UnitTestCase {
 
         $count = $this->sla_service->check_warnings( 30 );
 
-        // Warning should fire only if the ticket is found by scope_open.
-        $this->assertIsInt( $count );
+        $this->assertGreaterThanOrEqual( 1, $count );
     }
 
     public function test_check_warnings_returns_count(): void {
