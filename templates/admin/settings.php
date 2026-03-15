@@ -68,6 +68,16 @@ $s = function( $key, $default = '' ) use ( $settings ) {
                     </label>
                 </td>
             </tr>
+            <tr>
+                <th scope="row"><?php esc_html_e( 'Powered by Escalated', 'escalated' ); ?></th>
+                <td>
+                    <label>
+                        <input type="checkbox" name="show_powered_by" value="1"
+                            <?php checked( $s( 'show_powered_by', '1' ), '1' ); ?>>
+                        <?php esc_html_e( 'Show "Powered by Escalated" footer on customer portal pages', 'escalated' ); ?>
+                    </label>
+                </td>
+            </tr>
         </table>
 
         <!-- SLA Settings -->

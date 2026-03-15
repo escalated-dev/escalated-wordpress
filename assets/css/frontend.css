@@ -750,3 +750,26 @@
         width: 100%;
     }
 }
+
+/* Powered by Escalated */
+.escalated-powered-by {
+    text-align: center;
+    padding: 12px 0;
+    margin-top: 16px;
+    border-top: 1px solid var(--escalated-border, #e5e7eb);
+}
+
+.escalated-powered-by a {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--escalated-text-secondary, #9ca3af);
+    text-decoration: none;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.escalated-powered-by a:hover {
+    opacity: 1;
+}

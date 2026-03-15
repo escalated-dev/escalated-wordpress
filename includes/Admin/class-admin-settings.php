@@ -40,6 +40,7 @@ class Admin_Settings {
             'ticket_reference_prefix'  => 'sanitize_text_field',
             'default_priority'         => 'sanitize_text_field',
             'guest_tickets_enabled'    => 'absint',
+            'show_powered_by'          => 'absint',
 
             // SLA
             'auto_close_enabled'       => 'absint',
@@ -85,6 +86,7 @@ class Admin_Settings {
                 // Checkbox fields: if not present, store 0.
                 if ( in_array( $sanitizer, [ 'absint' ], true ) && in_array( $key, [
                     'guest_tickets_enabled',
+                    'show_powered_by',
                     'auto_close_enabled',
                     'inbound_email_enabled',
                     'notification_new_ticket',

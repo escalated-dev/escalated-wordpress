@@ -56,7 +56,7 @@ class Shortcodes {
         $current_page = $result['current_page'];
         $template = apply_filters( 'escalated_template_path', ESCALATED_PLUGIN_DIR . 'templates/frontend/ticket-list.php', 'ticket-list' );
         include $template;
-        return ob_get_clean();
+        return ob_get_clean() . $this->powered_by_footer();
     }
 
     public function render_create_ticket( $atts ): string {
@@ -67,7 +67,7 @@ class Shortcodes {
         ob_start();
         $template = apply_filters( 'escalated_template_path', ESCALATED_PLUGIN_DIR . 'templates/frontend/ticket-create.php', 'ticket-create' );
         include $template;
-        return ob_get_clean();
+        return ob_get_clean() . $this->powered_by_footer();
     }
 
     public function render_view_ticket( $atts ): string {
@@ -83,7 +83,7 @@ class Shortcodes {
             ob_start();
             $template = apply_filters( 'escalated_template_path', ESCALATED_PLUGIN_DIR . 'templates/frontend/guest-view.php', 'guest-view' );
             include $template;
-            return ob_get_clean();
+            return ob_get_clean() . $this->powered_by_footer();
         }
 
         // Logged-in user
@@ -109,7 +109,7 @@ class Shortcodes {
         ob_start();
         $template = apply_filters( 'escalated_template_path', ESCALATED_PLUGIN_DIR . 'templates/frontend/ticket-view.php', 'ticket-view' );
         include $template;
-        return ob_get_clean();
+        return ob_get_clean() . $this->powered_by_footer();
     }
 
     public function render_guest_create( $atts ): string {
@@ -120,6 +120,22 @@ class Shortcodes {
         ob_start();
         $template = apply_filters( 'escalated_template_path', ESCALATED_PLUGIN_DIR . 'templates/frontend/guest-create.php', 'guest-create' );
         include $template;
-        return ob_get_clean();
+        return ob_get_clean() . $this->powered_by_footer();
+    }
+
+    /**
+     * Render "Powered by Escalated" footer if enabled.
+     */
+    protected function powered_by_footer(): string {
+        if ( ! \Escalated\Models\Setting::get_bool( 'show_powered_by', true ) ) {
+            return '';
+        }
+
+        return '<div class="escalated-powered-by">'
+            . '<a href="https://escalated.dev" target="_blank" rel="noopener noreferrer">'
+            . '<img src="https://escalated.dev/brand/logo-icon-white.svg" alt="" width="14" height="14" style="vertical-align: middle; margin-right: 4px;" />'
+            . esc_html__( 'Powered by Escalated', 'escalated' )
+            . '</a>'
+            . '</div>';
     }
 }
