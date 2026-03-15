@@ -55,14 +55,50 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-progress --prefer-dist
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y subversion
-
       - name: Install WordPress test suite
         run: |
-          bash <(curl -s https://raw.githubusercontent.com/wp-cli/scaffold-command/main/templates/install-wp-tests.sh) wordpress_test root root 127.0.0.1 latest true
+          WP_TESTS_DIR=/tmp/wordpress-tests-lib
+          WP_CORE_DIR=/tmp/wordpress
+
+          # Download WordPress
+          mkdir -p "$WP_CORE_DIR"
+          curl -sL https://wordpress.org/latest.tar.gz | tar xz --strip-components=1 -C "$WP_CORE_DIR"
+
+          # Download WordPress test suite
+          mkdir -p "$WP_TESTS_DIR"
+          WP_VERSION=$(php -r "require '$WP_CORE_DIR/wp-includes/version.php'; echo \$wp_version;")
+          WP_BRANCH="${WP_VERSION%.*}"
+          curl -sL "https://github.com/WordPress/wordpress-develop/archive/refs/heads/${WP_BRANCH}.tar.gz" | tar xz --strip-components=1 -C "$WP_TESTS_DIR" "wordpress-develop-${WP_BRANCH}/tests/phpunit/includes" "wordpress-develop-${WP_BRANCH}/tests/phpunit/data"
+          # Move extracted contents to expected layout
+          mv "$WP_TESTS_DIR/tests/phpunit/includes" "$WP_TESTS_DIR/includes"
+          mv "$WP_TESTS_DIR/tests/phpunit/data" "$WP_TESTS_DIR/data"
+          rm -rf "$WP_TESTS_DIR/tests"
+
+          # Create wp-tests-config.php
+          cat > "$WP_TESTS_DIR/wp-tests-config.php" <<'WPCONFIG'
+          <?php
+          define( 'ABSPATH', '/tmp/wordpress/' );
+          define( 'DB_NAME', 'wordpress_test' );
+          define( 'DB_USER', 'root' );
+          define( 'DB_PASSWORD', 'root' );
+          define( 'DB_HOST', '127.0.0.1' );
+          define( 'DB_CHARSET', 'utf8' );
+          define( 'DB_COLLATE', '' );
+          $table_prefix = 'wptests_';
+          define( 'WP_TESTS_DOMAIN', 'example.org' );
+          define( 'WP_TESTS_EMAIL', 'admin@example.org' );
+          define( 'WP_TESTS_TITLE', 'Test Blog' );
+          define( 'WP_PHP_BINARY', 'php' );
+          define( 'WPLANG', '' );
+          WPCONFIG
+
+          # Verify installation
+          if [ ! -f "$WP_TESTS_DIR/includes/functions.php" ]; then
+            echo "ERROR: WordPress test suite installation failed"
+            ls -la "$WP_TESTS_DIR/" || true
+            exit 1
+          fi
+          echo "WordPress test suite installed successfully"
 
       - name: Run PHPUnit
         run: vendor/bin/phpunit
