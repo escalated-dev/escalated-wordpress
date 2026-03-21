@@ -21,7 +21,7 @@ class Test_Activator extends WP_UnitTestCase {
     }
 
     /**
-     * All 17 database tables should exist after activation.
+     * All 21 database tables should exist after activation.
      */
     public function test_tables_created(): void {
         global $wpdb;
@@ -44,6 +44,10 @@ class Test_Activator extends WP_UnitTestCase {
             'escalated_satisfaction_ratings',
             'escalated_settings',
             'escalated_api_tokens',
+            'escalated_permissions',
+            'escalated_roles',
+            'escalated_role_permissions',
+            'escalated_role_users',
         ];
 
         $existing_tables = $wpdb->get_col( 'SHOW TABLES' );
@@ -55,37 +59,108 @@ class Test_Activator extends WP_UnitTestCase {
     }
 
     /**
-     * Custom roles escalated_admin and escalated_agent should exist.
+     * Custom roles escalated_admin, escalated_agent, and escalated_light_agent should exist.
      */
     public function test_roles_created(): void {
         $this->assertNotNull( get_role( 'escalated_admin' ), 'Role escalated_admin should exist.' );
         $this->assertNotNull( get_role( 'escalated_agent' ), 'Role escalated_agent should exist.' );
+        $this->assertNotNull( get_role( 'escalated_light_agent' ), 'Role escalated_light_agent should exist.' );
     }
 
     /**
-     * The escalated_admin role should have all escalated capabilities.
+     * All 52 granular capability names derived from permission slugs.
+     *
+     * Each slug like "ticket.view" maps to the WordPress capability
+     * "escalated_ticket_view" (prefix "escalated_", dots become underscores).
+     *
+     * @return string[]
+     */
+    private function get_all_caps(): array {
+        return [
+            // Tickets
+            'escalated_ticket_view',
+            'escalated_ticket_create',
+            'escalated_ticket_edit',
+            'escalated_ticket_delete',
+            'escalated_ticket_assign',
+            'escalated_ticket_merge',
+            'escalated_ticket_close',
+            'escalated_ticket_export',
+            // Replies
+            'escalated_reply_create',
+            'escalated_reply_create_internal',
+            'escalated_reply_edit',
+            'escalated_reply_delete',
+            // Knowledge Base
+            'escalated_kb_view',
+            'escalated_kb_create',
+            'escalated_kb_edit',
+            'escalated_kb_delete',
+            'escalated_kb_publish',
+            // Departments
+            'escalated_department_view',
+            'escalated_department_create',
+            'escalated_department_edit',
+            'escalated_department_delete',
+            // Reports
+            'escalated_report_view',
+            'escalated_report_export',
+            // SLA
+            'escalated_sla_view',
+            'escalated_sla_manage',
+            // Automations
+            'escalated_automation_view',
+            'escalated_automation_manage',
+            // Escalation Rules
+            'escalated_escalation_view',
+            'escalated_escalation_manage',
+            // Macros
+            'escalated_macro_view',
+            'escalated_macro_create',
+            'escalated_macro_manage',
+            // Tags
+            'escalated_tag_view',
+            'escalated_tag_manage',
+            // Custom Fields
+            'escalated_custom_field_view',
+            'escalated_custom_field_manage',
+            // Roles
+            'escalated_role_view',
+            'escalated_role_manage',
+            // Users
+            'escalated_user_view',
+            'escalated_user_manage',
+            // Settings
+            'escalated_settings_view',
+            'escalated_settings_manage',
+            // Webhooks
+            'escalated_webhook_view',
+            'escalated_webhook_manage',
+            // API Tokens
+            'escalated_api_token_view',
+            'escalated_api_token_manage',
+            // Audit Log
+            'escalated_audit_view',
+            // Plugins
+            'escalated_plugin_view',
+            'escalated_plugin_manage',
+            // Custom Objects
+            'escalated_custom_object_view',
+            'escalated_custom_object_manage',
+            'escalated_custom_object_data',
+        ];
+    }
+
+    /**
+     * The escalated_admin role should have all 52 escalated capabilities.
      */
     public function test_admin_role_has_all_caps(): void {
         $role = get_role( 'escalated_admin' );
 
-        $expected_caps = [
-            'escalated_manage_settings',
-            'escalated_manage_departments',
-            'escalated_manage_sla',
-            'escalated_manage_escalation_rules',
-            'escalated_manage_tags',
-            'escalated_view_reports',
-            'escalated_manage_api_tokens',
-            'escalated_manage_all_tickets',
-            'escalated_view_tickets',
-            'escalated_reply_tickets',
-            'escalated_assign_tickets',
-            'escalated_add_internal_notes',
-            'escalated_use_macros',
-            'escalated_use_canned_responses',
-        ];
+        $all_caps = $this->get_all_caps();
+        $this->assertCount( 52, $all_caps, 'There should be exactly 52 granular capabilities.' );
 
-        foreach ( $expected_caps as $cap ) {
+        foreach ( $all_caps as $cap ) {
             $this->assertTrue( $role->has_cap( $cap ), "escalated_admin should have capability: {$cap}" );
         }
     }
@@ -97,25 +172,52 @@ class Test_Activator extends WP_UnitTestCase {
         $role = get_role( 'escalated_agent' );
 
         $agent_caps = [
-            'escalated_view_tickets',
-            'escalated_reply_tickets',
-            'escalated_assign_tickets',
-            'escalated_add_internal_notes',
-            'escalated_use_macros',
-            'escalated_use_canned_responses',
+            'escalated_ticket_view',
+            'escalated_ticket_create',
+            'escalated_ticket_edit',
+            'escalated_ticket_delete',
+            'escalated_ticket_assign',
+            'escalated_ticket_merge',
+            'escalated_ticket_close',
+            'escalated_ticket_export',
+            'escalated_reply_create',
+            'escalated_reply_create_internal',
+            'escalated_reply_edit',
+            'escalated_reply_delete',
+            'escalated_kb_view',
+            'escalated_report_view',
+            'escalated_macro_view',
+            'escalated_macro_create',
+            'escalated_tag_view',
+            'escalated_custom_field_view',
+            'escalated_audit_view',
         ];
 
         foreach ( $agent_caps as $cap ) {
             $this->assertTrue( $role->has_cap( $cap ), "escalated_agent should have capability: {$cap}" );
         }
 
-        // Agent should NOT have admin-level caps.
+        // Agent should NOT have admin-only caps.
         $admin_only_caps = [
-            'escalated_manage_settings',
-            'escalated_manage_departments',
-            'escalated_manage_sla',
-            'escalated_manage_escalation_rules',
-            'escalated_manage_api_tokens',
+            'escalated_settings_view',
+            'escalated_settings_manage',
+            'escalated_department_create',
+            'escalated_department_edit',
+            'escalated_department_delete',
+            'escalated_sla_manage',
+            'escalated_escalation_manage',
+            'escalated_api_token_view',
+            'escalated_api_token_manage',
+            'escalated_role_view',
+            'escalated_role_manage',
+            'escalated_user_manage',
+            'escalated_webhook_view',
+            'escalated_webhook_manage',
+            'escalated_plugin_manage',
+            'escalated_automation_manage',
+            'escalated_custom_field_manage',
+            'escalated_tag_manage',
+            'escalated_macro_manage',
         ];
 
         foreach ( $admin_only_caps as $cap ) {
@@ -124,13 +226,55 @@ class Test_Activator extends WP_UnitTestCase {
     }
 
     /**
-     * The WP administrator role should receive all escalated capabilities.
+     * The escalated_light_agent role should have limited capabilities.
+     */
+    public function test_light_agent_role_has_limited_caps(): void {
+        $role = get_role( 'escalated_light_agent' );
+
+        $light_caps = [
+            'escalated_ticket_view',
+            'escalated_reply_create',
+            'escalated_reply_create_internal',
+            'escalated_kb_view',
+            'escalated_macro_view',
+            'escalated_tag_view',
+        ];
+
+        foreach ( $light_caps as $cap ) {
+            $this->assertTrue( $role->has_cap( $cap ), "escalated_light_agent should have capability: {$cap}" );
+        }
+
+        // Light agent should NOT have these caps.
+        $excluded_caps = [
+            'escalated_ticket_create',
+            'escalated_ticket_edit',
+            'escalated_ticket_delete',
+            'escalated_ticket_assign',
+            'escalated_ticket_merge',
+            'escalated_ticket_close',
+            'escalated_ticket_export',
+            'escalated_reply_edit',
+            'escalated_reply_delete',
+            'escalated_settings_manage',
+            'escalated_department_create',
+            'escalated_sla_manage',
+            'escalated_api_token_manage',
+        ];
+
+        foreach ( $excluded_caps as $cap ) {
+            $this->assertFalse( $role->has_cap( $cap ), "escalated_light_agent should NOT have capability: {$cap}" );
+        }
+    }
+
+    /**
+     * The WP administrator role should receive all 52 escalated capabilities.
      */
     public function test_administrator_has_escalated_caps(): void {
         $role = get_role( 'administrator' );
 
-        $this->assertTrue( $role->has_cap( 'escalated_manage_settings' ) );
-        $this->assertTrue( $role->has_cap( 'escalated_view_tickets' ) );
+        foreach ( $this->get_all_caps() as $cap ) {
+            $this->assertTrue( $role->has_cap( $cap ), "administrator should have capability: {$cap}" );
+        }
     }
 
     /**
