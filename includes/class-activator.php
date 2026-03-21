@@ -7,11 +7,12 @@ class Activator {
     /**
      * Run on plugin activation.
      *
-     * Creates all 17 database tables, registers custom roles and capabilities,
+     * Creates all 21 database tables, registers custom roles and capabilities,
      * inserts default settings, and schedules cron events.
      */
     public static function activate(): void {
         self::create_tables();
+        self::seed_permissions();
         self::create_roles();
         self::add_admin_caps();
         self::insert_default_settings();
@@ -22,7 +23,7 @@ class Activator {
     }
 
     /**
-     * Create all 17 database tables using dbDelta.
+     * Create all 21 database tables using dbDelta.
      */
     private static function create_tables(): void {
         global $wpdb;
@@ -289,53 +290,196 @@ class Activator {
             UNIQUE KEY token (token)
         ) $charset_collate;";
         dbDelta( $sql );
+
+        // 18. escalated_permissions
+        $sql = "CREATE TABLE {$prefix}permissions (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            name VARCHAR(255) NOT NULL,
+            slug VARCHAR(255) NOT NULL,
+            `group` VARCHAR(255),
+            description TEXT,
+            created_at DATETIME,
+            updated_at DATETIME,
+            PRIMARY KEY  (id),
+            UNIQUE KEY slug (slug)
+        ) $charset_collate;";
+        dbDelta( $sql );
+
+        // 19. escalated_roles
+        $sql = "CREATE TABLE {$prefix}roles (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            name VARCHAR(255) NOT NULL,
+            slug VARCHAR(255) NOT NULL,
+            description TEXT,
+            is_system TINYINT(1) DEFAULT 0,
+            created_at DATETIME,
+            updated_at DATETIME,
+            PRIMARY KEY  (id),
+            UNIQUE KEY slug (slug)
+        ) $charset_collate;";
+        dbDelta( $sql );
+
+        // 20. escalated_role_permissions (pivot)
+        $sql = "CREATE TABLE {$prefix}role_permissions (
+            role_id BIGINT UNSIGNED NOT NULL,
+            permission_id BIGINT UNSIGNED NOT NULL,
+            PRIMARY KEY  (role_id, permission_id)
+        ) $charset_collate;";
+        dbDelta( $sql );
+
+        // 21. escalated_role_users (pivot)
+        $sql = "CREATE TABLE {$prefix}role_users (
+            role_id BIGINT UNSIGNED NOT NULL,
+            user_id BIGINT UNSIGNED NOT NULL,
+            PRIMARY KEY  (role_id, user_id)
+        ) $charset_collate;";
+        dbDelta( $sql );
     }
 
     /**
-     * Get all escalated capabilities.
+     * Get all 52 granular permission definitions.
+     *
+     * Each entry maps to a row in the escalated_permissions table AND
+     * a WordPress capability prefixed with "escalated_".
+     *
+     * @return array<array{slug: string, name: string, group: string, description: string}>
+     */
+    private static function get_permission_definitions(): array {
+        return [
+            // Tickets
+            [ 'slug' => 'ticket.view',    'name' => 'View tickets',           'group' => 'Tickets',          'description' => 'View tickets' ],
+            [ 'slug' => 'ticket.create',  'name' => 'Create tickets',         'group' => 'Tickets',          'description' => 'Create tickets' ],
+            [ 'slug' => 'ticket.edit',    'name' => 'Edit ticket properties', 'group' => 'Tickets',          'description' => 'Edit ticket properties' ],
+            [ 'slug' => 'ticket.delete',  'name' => 'Delete tickets',         'group' => 'Tickets',          'description' => 'Delete tickets' ],
+            [ 'slug' => 'ticket.assign',  'name' => 'Assign tickets',         'group' => 'Tickets',          'description' => 'Assign tickets to agents' ],
+            [ 'slug' => 'ticket.merge',   'name' => 'Merge tickets',          'group' => 'Tickets',          'description' => 'Merge tickets together' ],
+            [ 'slug' => 'ticket.close',   'name' => 'Close tickets',          'group' => 'Tickets',          'description' => 'Close and reopen tickets' ],
+            [ 'slug' => 'ticket.export',  'name' => 'Export tickets',         'group' => 'Tickets',          'description' => 'Export ticket data' ],
+            // Replies
+            [ 'slug' => 'reply.create',          'name' => 'Reply to tickets',   'group' => 'Replies', 'description' => 'Reply to tickets' ],
+            [ 'slug' => 'reply.create_internal', 'name' => 'Add internal notes', 'group' => 'Replies', 'description' => 'Add internal notes' ],
+            [ 'slug' => 'reply.edit',            'name' => 'Edit replies',       'group' => 'Replies', 'description' => 'Edit replies' ],
+            [ 'slug' => 'reply.delete',          'name' => 'Delete replies',     'group' => 'Replies', 'description' => 'Delete replies' ],
+            // Knowledge Base
+            [ 'slug' => 'kb.view',    'name' => 'View knowledge base', 'group' => 'Knowledge Base', 'description' => 'View knowledge base' ],
+            [ 'slug' => 'kb.create',  'name' => 'Create articles',     'group' => 'Knowledge Base', 'description' => 'Create articles' ],
+            [ 'slug' => 'kb.edit',    'name' => 'Edit articles',       'group' => 'Knowledge Base', 'description' => 'Edit articles' ],
+            [ 'slug' => 'kb.delete',  'name' => 'Delete articles',     'group' => 'Knowledge Base', 'description' => 'Delete articles' ],
+            [ 'slug' => 'kb.publish', 'name' => 'Publish articles',    'group' => 'Knowledge Base', 'description' => 'Publish/unpublish articles' ],
+            // Departments
+            [ 'slug' => 'department.view',   'name' => 'View departments',   'group' => 'Departments', 'description' => 'View departments' ],
+            [ 'slug' => 'department.create', 'name' => 'Create departments', 'group' => 'Departments', 'description' => 'Create departments' ],
+            [ 'slug' => 'department.edit',   'name' => 'Edit departments',   'group' => 'Departments', 'description' => 'Edit departments' ],
+            [ 'slug' => 'department.delete', 'name' => 'Delete departments', 'group' => 'Departments', 'description' => 'Delete departments' ],
+            // Reports
+            [ 'slug' => 'report.view',   'name' => 'View reports',   'group' => 'Reports', 'description' => 'View reports and analytics' ],
+            [ 'slug' => 'report.export', 'name' => 'Export reports', 'group' => 'Reports', 'description' => 'Export report data' ],
+            // SLA
+            [ 'slug' => 'sla.view',   'name' => 'View SLA policies',   'group' => 'SLA', 'description' => 'View SLA policies' ],
+            [ 'slug' => 'sla.manage', 'name' => 'Manage SLA policies', 'group' => 'SLA', 'description' => 'Create, edit, delete SLA policies' ],
+            // Automations
+            [ 'slug' => 'automation.view',   'name' => 'View automations',   'group' => 'Automations', 'description' => 'View automations' ],
+            [ 'slug' => 'automation.manage', 'name' => 'Manage automations', 'group' => 'Automations', 'description' => 'Create, edit, delete automations' ],
+            // Escalation Rules
+            [ 'slug' => 'escalation.view',   'name' => 'View escalation rules',   'group' => 'Escalation Rules', 'description' => 'View escalation rules' ],
+            [ 'slug' => 'escalation.manage', 'name' => 'Manage escalation rules', 'group' => 'Escalation Rules', 'description' => 'Create, edit, delete escalation rules' ],
+            // Macros
+            [ 'slug' => 'macro.view',   'name' => 'View macros',   'group' => 'Macros', 'description' => 'View macros' ],
+            [ 'slug' => 'macro.create', 'name' => 'Create macros', 'group' => 'Macros', 'description' => 'Create personal macros' ],
+            [ 'slug' => 'macro.manage', 'name' => 'Manage macros', 'group' => 'Macros', 'description' => 'Create, edit, delete shared macros' ],
+            // Tags
+            [ 'slug' => 'tag.view',   'name' => 'View tags',   'group' => 'Tags', 'description' => 'View tags' ],
+            [ 'slug' => 'tag.manage', 'name' => 'Manage tags', 'group' => 'Tags', 'description' => 'Create, edit, delete tags' ],
+            // Custom Fields
+            [ 'slug' => 'custom_field.view',   'name' => 'View custom fields',   'group' => 'Custom Fields', 'description' => 'View custom fields' ],
+            [ 'slug' => 'custom_field.manage', 'name' => 'Manage custom fields', 'group' => 'Custom Fields', 'description' => 'Create, edit, delete custom fields' ],
+            // Roles
+            [ 'slug' => 'role.view',   'name' => 'View roles',   'group' => 'Roles', 'description' => 'View roles' ],
+            [ 'slug' => 'role.manage', 'name' => 'Manage roles', 'group' => 'Roles', 'description' => 'Create, edit, delete roles and assign permissions' ],
+            // Users
+            [ 'slug' => 'user.view',   'name' => 'View users',   'group' => 'Users', 'description' => 'View user profiles' ],
+            [ 'slug' => 'user.manage', 'name' => 'Manage users', 'group' => 'Users', 'description' => 'Manage user accounts and agent profiles' ],
+            // Settings
+            [ 'slug' => 'settings.view',   'name' => 'View settings',   'group' => 'Settings', 'description' => 'View settings' ],
+            [ 'slug' => 'settings.manage', 'name' => 'Manage settings', 'group' => 'Settings', 'description' => 'Manage system settings' ],
+            // Webhooks
+            [ 'slug' => 'webhook.view',   'name' => 'View webhooks',   'group' => 'Webhooks', 'description' => 'View webhooks' ],
+            [ 'slug' => 'webhook.manage', 'name' => 'Manage webhooks', 'group' => 'Webhooks', 'description' => 'Create, edit, delete webhooks' ],
+            // API Tokens
+            [ 'slug' => 'api_token.view',   'name' => 'View API tokens',   'group' => 'API Tokens', 'description' => 'View API tokens' ],
+            [ 'slug' => 'api_token.manage', 'name' => 'Manage API tokens', 'group' => 'API Tokens', 'description' => 'Create, revoke API tokens' ],
+            // Audit Log
+            [ 'slug' => 'audit.view', 'name' => 'View audit log', 'group' => 'Audit Log', 'description' => 'View audit log' ],
+            // Plugins
+            [ 'slug' => 'plugin.view',   'name' => 'View plugins',   'group' => 'Plugins', 'description' => 'View plugins' ],
+            [ 'slug' => 'plugin.manage', 'name' => 'Manage plugins', 'group' => 'Plugins', 'description' => 'Install, configure, remove plugins' ],
+            // Custom Objects
+            [ 'slug' => 'custom_object.view',   'name' => 'View custom objects',       'group' => 'Custom Objects', 'description' => 'View custom objects' ],
+            [ 'slug' => 'custom_object.manage', 'name' => 'Manage custom objects',     'group' => 'Custom Objects', 'description' => 'Create, edit, delete custom object schemas' ],
+            [ 'slug' => 'custom_object.data',   'name' => 'Manage custom object data', 'group' => 'Custom Objects', 'description' => 'Manage custom object records' ],
+        ];
+    }
+
+    /**
+     * Convert a permission slug to a WordPress capability name.
+     *
+     * Example: "ticket.view" → "escalated_ticket_view"
+     *
+     * @param string $slug
+     * @return string
+     */
+    private static function slug_to_cap( string $slug ): string {
+        return 'escalated_' . str_replace( '.', '_', $slug );
+    }
+
+    /**
+     * Get all escalated capabilities (derived from permission slugs).
      */
     private static function get_escalated_caps(): array {
-        return [
-            'escalated_manage_settings',
-            'escalated_manage_departments',
-            'escalated_manage_sla',
-            'escalated_manage_escalation_rules',
-            'escalated_manage_tags',
-            'escalated_view_reports',
-            'escalated_manage_api_tokens',
-            'escalated_manage_all_tickets',
-            'escalated_view_tickets',
-            'escalated_reply_tickets',
-            'escalated_assign_tickets',
-            'escalated_add_internal_notes',
-            'escalated_use_macros',
-            'escalated_use_canned_responses',
-        ];
+        return array_map(
+            [ self::class, 'slug_to_cap' ],
+            array_column( self::get_permission_definitions(), 'slug' )
+        );
     }
 
     /**
-     * Get agent-level escalated capabilities.
+     * Get the permission slugs assigned to the Agent role.
      */
-    private static function get_agent_caps(): array {
+    private static function get_agent_permission_slugs(): array {
         return [
-            'escalated_view_tickets',
-            'escalated_reply_tickets',
-            'escalated_assign_tickets',
-            'escalated_add_internal_notes',
-            'escalated_use_macros',
-            'escalated_use_canned_responses',
+            'ticket.view', 'ticket.create', 'ticket.edit', 'ticket.delete',
+            'ticket.assign', 'ticket.merge', 'ticket.close', 'ticket.export',
+            'reply.create', 'reply.create_internal', 'reply.edit', 'reply.delete',
+            'kb.view',
+            'report.view',
+            'macro.view', 'macro.create',
+            'tag.view',
+            'custom_field.view',
+            'audit.view',
         ];
     }
 
     /**
-     * Register custom roles: escalated_admin and escalated_agent.
+     * Get the permission slugs assigned to the Light Agent role.
+     */
+    private static function get_light_agent_permission_slugs(): array {
+        return [
+            'ticket.view',
+            'reply.create', 'reply.create_internal',
+            'kb.view',
+            'macro.view',
+            'tag.view',
+        ];
+    }
+
+    /**
+     * Register custom WordPress roles: escalated_admin, escalated_agent, escalated_light_agent.
      */
     private static function create_roles(): void {
-        // Get the editor role capabilities as the base for escalated_admin.
+        // --- Escalated Admin (all escalated capabilities) ---
         $editor_role = get_role( 'editor' );
         $admin_caps  = $editor_role ? $editor_role->capabilities : [];
 
-        // Add all escalated caps to the admin role capabilities.
         foreach ( self::get_escalated_caps() as $cap ) {
             $admin_caps[ $cap ] = true;
         }
@@ -343,21 +487,30 @@ class Activator {
         remove_role( 'escalated_admin' );
         add_role( 'escalated_admin', 'Escalated Admin', $admin_caps );
 
-        // Get the subscriber role capabilities as the base for escalated_agent.
+        // --- Escalated Agent ---
         $subscriber_role = get_role( 'subscriber' );
         $agent_caps      = $subscriber_role ? $subscriber_role->capabilities : [];
 
-        // Add agent-level escalated caps.
-        foreach ( self::get_agent_caps() as $cap ) {
-            $agent_caps[ $cap ] = true;
+        foreach ( self::get_agent_permission_slugs() as $slug ) {
+            $agent_caps[ self::slug_to_cap( $slug ) ] = true;
         }
 
         remove_role( 'escalated_agent' );
         add_role( 'escalated_agent', 'Escalated Agent', $agent_caps );
+
+        // --- Escalated Light Agent ---
+        $light_caps = $subscriber_role ? $subscriber_role->capabilities : [];
+
+        foreach ( self::get_light_agent_permission_slugs() as $slug ) {
+            $light_caps[ self::slug_to_cap( $slug ) ] = true;
+        }
+
+        remove_role( 'escalated_light_agent' );
+        add_role( 'escalated_light_agent', 'Escalated Light Agent', $light_caps );
     }
 
     /**
-     * Add all escalated capabilities to the administrator role.
+     * Add all escalated capabilities to the WordPress administrator role.
      */
     private static function add_admin_caps(): void {
         $admin_role = get_role( 'administrator' );
@@ -367,6 +520,127 @@ class Activator {
 
         foreach ( self::get_escalated_caps() as $cap ) {
             $admin_role->add_cap( $cap );
+        }
+    }
+
+    /**
+     * Seed granular permissions and default system roles into the
+     * escalated_permissions, escalated_roles, and escalated_role_permissions tables.
+     *
+     * This method is idempotent — safe to run multiple times.
+     */
+    private static function seed_permissions(): void {
+        global $wpdb;
+
+        $perm_table      = $wpdb->prefix . 'escalated_permissions';
+        $role_table      = $wpdb->prefix . 'escalated_roles';
+        $pivot_table     = $wpdb->prefix . 'escalated_role_permissions';
+        $now             = current_time( 'mysql' );
+        $definitions     = self::get_permission_definitions();
+
+        // ---- Upsert permissions ----
+        // Note: `group` is a MySQL reserved word, so we use raw SQL with backtick-quoted column names.
+        foreach ( $definitions as $attrs ) {
+            $exists = $wpdb->get_var(
+                $wpdb->prepare( "SELECT id FROM {$perm_table} WHERE slug = %s", $attrs['slug'] )
+            );
+
+            if ( $exists ) {
+                $wpdb->query( $wpdb->prepare(
+                    "UPDATE {$perm_table} SET name = %s, `group` = %s, description = %s, updated_at = %s WHERE id = %d",
+                    $attrs['name'],
+                    $attrs['group'],
+                    $attrs['description'],
+                    $now,
+                    $exists
+                ) );
+            } else {
+                $wpdb->query( $wpdb->prepare(
+                    "INSERT INTO {$perm_table} (name, slug, `group`, description, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s)",
+                    $attrs['name'],
+                    $attrs['slug'],
+                    $attrs['group'],
+                    $attrs['description'],
+                    $now,
+                    $now
+                ) );
+            }
+        }
+
+        // Build slug → id index.
+        $rows       = $wpdb->get_results( "SELECT id, slug FROM {$perm_table}", OBJECT );
+        $slug_index = [];
+        foreach ( $rows as $row ) {
+            $slug_index[ $row->slug ] = (int) $row->id;
+        }
+
+        // ---- Upsert roles ----
+        $role_defs = [
+            [
+                'slug'        => 'admin',
+                'name'        => 'Admin',
+                'description' => 'Full access to all features and settings.',
+                'permissions' => array_column( $definitions, 'slug' ), // all
+            ],
+            [
+                'slug'        => 'agent',
+                'name'        => 'Agent',
+                'description' => 'Standard agent with ticket handling and limited administrative access.',
+                'permissions' => self::get_agent_permission_slugs(),
+            ],
+            [
+                'slug'        => 'light_agent',
+                'name'        => 'Light Agent',
+                'description' => 'Limited agent with read-only ticket access and internal note capability.',
+                'permissions' => self::get_light_agent_permission_slugs(),
+            ],
+        ];
+
+        foreach ( $role_defs as $def ) {
+            $role_id = $wpdb->get_var(
+                $wpdb->prepare( "SELECT id FROM {$role_table} WHERE slug = %s", $def['slug'] )
+            );
+
+            if ( $role_id ) {
+                $wpdb->update(
+                    $role_table,
+                    [
+                        'name'        => $def['name'],
+                        'description' => $def['description'],
+                        'is_system'   => 1,
+                        'updated_at'  => $now,
+                    ],
+                    [ 'id' => $role_id ]
+                );
+            } else {
+                $wpdb->insert(
+                    $role_table,
+                    [
+                        'name'        => $def['name'],
+                        'slug'        => $def['slug'],
+                        'description' => $def['description'],
+                        'is_system'   => 1,
+                        'created_at'  => $now,
+                        'updated_at'  => $now,
+                    ]
+                );
+                $role_id = $wpdb->insert_id;
+            }
+
+            // Sync pivot: delete existing, then re-insert.
+            $wpdb->delete( $pivot_table, [ 'role_id' => $role_id ] );
+
+            foreach ( $def['permissions'] as $slug ) {
+                if ( isset( $slug_index[ $slug ] ) ) {
+                    $wpdb->insert(
+                        $pivot_table,
+                        [
+                            'role_id'       => (int) $role_id,
+                            'permission_id' => $slug_index[ $slug ],
+                        ]
+                    );
+                }
+            }
         }
     }
 
