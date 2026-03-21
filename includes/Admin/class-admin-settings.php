@@ -41,6 +41,7 @@ class Admin_Settings {
             'default_priority'         => 'sanitize_text_field',
             'guest_tickets_enabled'    => 'absint',
             'show_powered_by'          => 'absint',
+            'panel_theme'              => 'sanitize_text_field',
 
             // SLA
             'auto_close_enabled'       => 'absint',

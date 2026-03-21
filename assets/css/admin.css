@@ -1082,3 +1082,71 @@
     /* Warning accent */
     --esc-wp-warning-accent: #fbbf24;
 }
+
+/* ==========================================================================
+   Light Mode — Class-based toggle (forces light even when OS prefers dark)
+   ========================================================================== */
+
+.escalated-light {
+    --esc-wp-bg: #fff;
+    --esc-wp-bg-section: #f6f7f7;
+    --esc-wp-bg-input: #fff;
+    --esc-wp-border: #c3c4c7;
+    --esc-wp-border-light: #f0f0f1;
+    --esc-wp-border-mid: #dcdcde;
+    --esc-wp-text: #1d2327;
+    --esc-wp-text-body: #2c3338;
+    --esc-wp-text-secondary: #646970;
+    --esc-wp-text-tertiary: #a7aaad;
+    --esc-wp-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+    --esc-wp-row-hover: rgba(0, 0, 0, 0.02);
+    --esc-wp-link: #2271b1;
+    --esc-wp-link-hover: #135e96;
+    --esc-wp-tag-bg: #f0f0f1;
+    --esc-wp-empty-icon: #c3c4c7;
+    /* Accent colors */
+    --esc-wp-blue: #3B82F6;
+    --esc-wp-purple: #8B5CF6;
+    --esc-wp-amber: #F59E0B;
+    --esc-wp-orange: #F97316;
+    --esc-wp-red: #EF4444;
+    --esc-wp-green: #10B981;
+    --esc-wp-gray: #6B7280;
+    /* SLA */
+    --esc-wp-sla-ok-bg: #edfcf2;
+    --esc-wp-sla-ok-text: #059669;
+    --esc-wp-sla-ok-border: #a7f3d0;
+    --esc-wp-sla-warn-bg: #fffbeb;
+    --esc-wp-sla-warn-text: #d97706;
+    --esc-wp-sla-warn-border: #fcd34d;
+    --esc-wp-sla-breach-bg: #fef2f2;
+    --esc-wp-sla-breach-text: #dc2626;
+    --esc-wp-sla-breach-border: #fca5a5;
+    /* Stat change */
+    --esc-wp-stat-up-bg: #edfcf2;
+    --esc-wp-stat-up-text: #059669;
+    --esc-wp-stat-down-bg: #fef2f2;
+    --esc-wp-stat-down-text: #dc2626;
+    /* Note */
+    --esc-wp-note-bg: #fef9e7;
+    --esc-wp-note-border: #F59E0B;
+    /* Notices */
+    --esc-wp-notice-info-bg: #f0f6fc;
+    --esc-wp-notice-info-border: #72aee6;
+    --esc-wp-notice-success-bg: #edfaef;
+    --esc-wp-notice-success-border: #00a32a;
+    --esc-wp-notice-error-bg: #fcf0f1;
+    --esc-wp-notice-error-border: #d63638;
+    --esc-wp-notice-warn-bg: #fcf9e8;
+    --esc-wp-notice-warn-border: #dba617;
+    /* Reply tab */
+    --esc-wp-tab-active-bg: #fff;
+    /* Progress bar track */
+    --esc-wp-progress-track: #f0f0f0;
+    /* SLA breach alert */
+    --esc-wp-sla-breach-alert-bg: #FEF2F2;
+    --esc-wp-sla-breach-alert-border: #FECACA;
+    --esc-wp-sla-breach-alert-text: #991B1B;
+    /* Warning accent */
+    --esc-wp-warning-accent: #92400E;
+}

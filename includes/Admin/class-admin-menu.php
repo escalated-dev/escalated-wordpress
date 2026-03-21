@@ -38,10 +38,33 @@ class Admin_Menu {
         }
         wp_enqueue_style( 'escalated-admin', ESCALATED_PLUGIN_URL . 'assets/css/admin.css', [], ESCALATED_VERSION );
         wp_enqueue_script( 'escalated-admin', ESCALATED_PLUGIN_URL . 'assets/js/admin.js', [ 'jquery' ], ESCALATED_VERSION, true );
+
+        // Determine panel theme class
+        $panel_theme = \Escalated\Models\Setting::get( 'panel_theme', 'auto' );
+        $theme_class = '';
+        if ( $panel_theme === 'dark' ) {
+            $theme_class = 'escalated-dark';
+        } elseif ( $panel_theme === 'light' ) {
+            $theme_class = 'escalated-light';
+        }
+        // 'auto' relies on prefers-color-scheme media query already in CSS
+
         wp_localize_script( 'escalated-admin', 'escalatedAdmin', [
-            'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-            'nonce'   => wp_create_nonce( 'escalated_admin' ),
-            'restUrl' => rest_url( 'escalated/v1/' ),
+            'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
+            'nonce'      => wp_create_nonce( 'escalated_admin' ),
+            'restUrl'    => rest_url( 'escalated/v1/' ),
+            'themeClass' => $theme_class,
         ] );
+
+        // Inject inline script to apply the theme class to the wrapper
+        if ( $theme_class ) {
+            wp_add_inline_script( 'escalated-admin', sprintf(
+                'document.addEventListener("DOMContentLoaded",function(){' .
+                'var w=document.querySelector(".escalated-wrap")||document.querySelector("#wpbody-content>.wrap");' .
+                'if(w){w.classList.add(%s);}' .
+                '});',
+                wp_json_encode( $theme_class )
+            ) );
+        }
     }
 }

@@ -78,6 +78,19 @@ $s = function( $key, $default = '' ) use ( $settings ) {
                     </label>
                 </td>
             </tr>
+            <tr>
+                <th scope="row">
+                    <label for="panel_theme"><?php esc_html_e( 'Panel Theme', 'escalated' ); ?></label>
+                </th>
+                <td>
+                    <select id="panel_theme" name="panel_theme">
+                        <option value="auto" <?php selected( $s( 'panel_theme', 'auto' ), 'auto' ); ?>><?php esc_html_e( 'Auto (follows system preference)', 'escalated' ); ?></option>
+                        <option value="light" <?php selected( $s( 'panel_theme' ), 'light' ); ?>><?php esc_html_e( 'Light', 'escalated' ); ?></option>
+                        <option value="dark" <?php selected( $s( 'panel_theme' ), 'dark' ); ?>><?php esc_html_e( 'Dark', 'escalated' ); ?></option>
+                    </select>
+                    <p class="description"><?php esc_html_e( 'Choose the color theme for the Escalated admin panel.', 'escalated' ); ?></p>
+                </td>
+            </tr>
         </table>
 
         <!-- SLA Settings -->
