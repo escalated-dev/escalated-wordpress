@@ -372,6 +372,13 @@ class Ticket_Controller extends Base_Controller {
             $filters['requester_id'] = absint( $request->get_param( 'requester_id' ) );
         }
 
+        if ( $request->has_param( 'ticket_type' ) ) {
+            $ticket_type = sanitize_text_field( $request->get_param( 'ticket_type' ) );
+            if ( in_array( $ticket_type, [ 'question', 'problem', 'incident', 'task' ], true ) ) {
+                $filters['ticket_type'] = $ticket_type;
+            }
+        }
+
         if ( $request->has_param( 'sort_by' ) ) {
             $filters['sort_by'] = sanitize_text_field( $request->get_param( 'sort_by' ) );
         }

@@ -29,6 +29,7 @@ class TicketService {
             'description'  => wp_kses_post( $data['description'] ),
             'status'       => 'open',
             'priority'     => sanitize_text_field( $priority ),
+            'ticket_type'  => in_array( $data['ticket_type'] ?? '', ['question', 'problem', 'incident', 'task'], true ) ? $data['ticket_type'] : 'question',
             'channel'      => sanitize_text_field( $data['channel'] ?? 'web' ),
             'department_id'=> ! empty( $data['department_id'] ) ? absint( $data['department_id'] ) : null,
             'metadata'     => ! empty( $data['metadata'] ) ? wp_json_encode( $data['metadata'] ) : null,
@@ -72,6 +73,7 @@ class TicketService {
             'description'  => wp_kses_post( $data['description'] ),
             'status'       => 'open',
             'priority'     => sanitize_text_field( $priority ),
+            'ticket_type'  => in_array( $data['ticket_type'] ?? '', ['question', 'problem', 'incident', 'task'], true ) ? $data['ticket_type'] : 'question',
             'channel'      => sanitize_text_field( $data['channel'] ?? 'web' ),
             'department_id'=> ! empty( $data['department_id'] ) ? absint( $data['department_id'] ) : null,
             'guest_name'   => sanitize_text_field( $data['guest_name'] ?? '' ),
@@ -101,7 +103,7 @@ class TicketService {
      * @return object The updated ticket.
      */
     public function update_ticket( int $ticket_id, array $data ): object {
-        $allowed = [ 'subject', 'description', 'metadata' ];
+        $allowed = [ 'subject', 'description', 'metadata', 'ticket_type' ];
         $update = [];
         foreach ( $allowed as $key ) {
             if ( isset( $data[ $key ] ) ) {
@@ -109,6 +111,10 @@ class TicketService {
                     $update[ $key ] = wp_json_encode( $data[ $key ] );
                 } elseif ( $key === 'description' ) {
                     $update[ $key ] = wp_kses_post( $data[ $key ] );
+                } elseif ( $key === 'ticket_type' ) {
+                    if ( in_array( $data[ $key ], [ 'question', 'problem', 'incident', 'task' ], true ) ) {
+                        $update[ $key ] = $data[ $key ];
+                    }
                 } else {
                     $update[ $key ] = sanitize_text_field( $data[ $key ] );
                 }

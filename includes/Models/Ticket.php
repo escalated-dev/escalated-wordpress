@@ -172,6 +172,12 @@ class Ticket {
             $values[] = $filters['priority'];
         }
 
+        // Ticket type filter.
+        if ( ! empty($filters['ticket_type'])) {
+            $where[]  = 't.ticket_type = %s';
+            $values[] = $filters['ticket_type'];
+        }
+
         // Assigned to filter.
         if ( ! empty($filters['assigned_to'])) {
             $where[]  = 't.assigned_to = %d';

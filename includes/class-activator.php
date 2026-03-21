@@ -81,6 +81,7 @@ class Activator {
             description LONGTEXT,
             status VARCHAR(50) DEFAULT 'open',
             priority VARCHAR(50) DEFAULT 'medium',
+            ticket_type VARCHAR(50) DEFAULT 'question',
             channel VARCHAR(50) DEFAULT 'web',
             department_id BIGINT UNSIGNED NULL,
             sla_policy_id BIGINT UNSIGNED NULL,
