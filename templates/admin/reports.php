@@ -30,55 +30,58 @@ if ( ! defined( 'ABSPATH' ) ) {
 
     <!-- Stats Cards -->
     <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 25px;">
-        <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; min-width: 180px; flex: 1;">
-            <div style="font-size: 32px; font-weight: 700; color: #1d2327;"><?php echo esc_html( number_format_i18n( $total_tickets ) ); ?></div>
-            <div style="font-size: 13px; color: #666; margin-top: 4px;"><?php esc_html_e( 'Total Tickets', 'escalated' ); ?></div>
+        <div class="escalated-card" style="padding: 20px; min-width: 180px; flex: 1;">
+            <div class="escalated-text-primary" style="font-size: 32px; font-weight: 700;"><?php echo esc_html( number_format_i18n( $total_tickets ) ); ?></div>
+            <div class="escalated-text-secondary" style="font-size: 13px; margin-top: 4px;"><?php esc_html_e( 'Total Tickets', 'escalated' ); ?></div>
         </div>
-        <div style="background: #fff; border: 1px solid #ccd0d4; border-left: 4px solid #3B82F6; border-radius: 4px; padding: 20px; min-width: 180px; flex: 1;">
-            <div style="font-size: 32px; font-weight: 700; color: #3B82F6;"><?php echo esc_html( number_format_i18n( $open_tickets ) ); ?></div>
-            <div style="font-size: 13px; color: #666; margin-top: 4px;"><?php esc_html_e( 'Open Tickets', 'escalated' ); ?></div>
+        <div class="escalated-card" style="border-left: 4px solid var(--esc-wp-blue); padding: 20px; min-width: 180px; flex: 1;">
+            <div style="font-size: 32px; font-weight: 700; color: var(--esc-wp-blue);"><?php echo esc_html( number_format_i18n( $open_tickets ) ); ?></div>
+            <div class="escalated-text-secondary" style="font-size: 13px; margin-top: 4px;"><?php esc_html_e( 'Open Tickets', 'escalated' ); ?></div>
         </div>
-        <div style="background: #fff; border: 1px solid #ccd0d4; border-left: 4px solid #10B981; border-radius: 4px; padding: 20px; min-width: 180px; flex: 1;">
-            <div style="font-size: 32px; font-weight: 700; color: #10B981;"><?php echo esc_html( number_format_i18n( $resolved_tickets ) ); ?></div>
-            <div style="font-size: 13px; color: #666; margin-top: 4px;"><?php esc_html_e( 'Resolved', 'escalated' ); ?></div>
+        <div class="escalated-card" style="border-left: 4px solid var(--esc-wp-green); padding: 20px; min-width: 180px; flex: 1;">
+            <div style="font-size: 32px; font-weight: 700; color: var(--esc-wp-green);"><?php echo esc_html( number_format_i18n( $resolved_tickets ) ); ?></div>
+            <div class="escalated-text-secondary" style="font-size: 13px; margin-top: 4px;"><?php esc_html_e( 'Resolved', 'escalated' ); ?></div>
         </div>
-        <div style="background: #fff; border: 1px solid #ccd0d4; border-left: 4px solid #6B7280; border-radius: 4px; padding: 20px; min-width: 180px; flex: 1;">
-            <div style="font-size: 32px; font-weight: 700; color: #6B7280;"><?php echo esc_html( number_format_i18n( $closed_tickets ) ); ?></div>
-            <div style="font-size: 13px; color: #666; margin-top: 4px;"><?php esc_html_e( 'Closed', 'escalated' ); ?></div>
+        <div class="escalated-card" style="border-left: 4px solid var(--esc-wp-gray); padding: 20px; min-width: 180px; flex: 1;">
+            <div style="font-size: 32px; font-weight: 700; color: var(--esc-wp-gray);"><?php echo esc_html( number_format_i18n( $closed_tickets ) ); ?></div>
+            <div class="escalated-text-secondary" style="font-size: 13px; margin-top: 4px;"><?php esc_html_e( 'Closed', 'escalated' ); ?></div>
         </div>
-        <div style="background: #fff; border: 1px solid #ccd0d4; border-left: 4px solid #8B5CF6; border-radius: 4px; padding: 20px; min-width: 180px; flex: 1;">
-            <div style="font-size: 32px; font-weight: 700; color: #8B5CF6;"><?php echo esc_html( number_format_i18n( $recent_tickets ) ); ?></div>
-            <div style="font-size: 13px; color: #666; margin-top: 4px;"><?php esc_html_e( 'Last 30 Days', 'escalated' ); ?></div>
+        <div class="escalated-card" style="border-left: 4px solid var(--esc-wp-purple); padding: 20px; min-width: 180px; flex: 1;">
+            <div style="font-size: 32px; font-weight: 700; color: var(--esc-wp-purple);"><?php echo esc_html( number_format_i18n( $recent_tickets ) ); ?></div>
+            <div class="escalated-text-secondary" style="font-size: 13px; margin-top: 4px;"><?php esc_html_e( 'Last 30 Days', 'escalated' ); ?></div>
         </div>
     </div>
 
     <!-- SLA Stats Cards -->
+    <?php
+    $sla_color_var = $sla_compliance_rate >= 90 ? '--esc-wp-green' : ( $sla_compliance_rate >= 70 ? '--esc-wp-amber' : '--esc-wp-red' );
+    ?>
     <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 25px;">
-        <div style="background: #fff; border: 1px solid #ccd0d4; border-left: 4px solid <?php echo $sla_compliance_rate >= 90 ? '#10B981' : ( $sla_compliance_rate >= 70 ? '#F59E0B' : '#EF4444' ); ?>; border-radius: 4px; padding: 20px; min-width: 200px; flex: 1;">
-            <div style="font-size: 32px; font-weight: 700; color: <?php echo $sla_compliance_rate >= 90 ? '#10B981' : ( $sla_compliance_rate >= 70 ? '#F59E0B' : '#EF4444' ); ?>;">
+        <div class="escalated-card" style="border-left: 4px solid var(<?php echo esc_attr( $sla_color_var ); ?>); padding: 20px; min-width: 200px; flex: 1;">
+            <div style="font-size: 32px; font-weight: 700; color: var(<?php echo esc_attr( $sla_color_var ); ?>);">
                 <?php echo esc_html( $sla_compliance_rate ); ?>%
             </div>
-            <div style="font-size: 13px; color: #666; margin-top: 4px;"><?php esc_html_e( 'SLA Compliance Rate', 'escalated' ); ?></div>
+            <div class="escalated-text-secondary" style="font-size: 13px; margin-top: 4px;"><?php esc_html_e( 'SLA Compliance Rate', 'escalated' ); ?></div>
         </div>
-        <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; min-width: 200px; flex: 1;">
-            <div style="font-size: 32px; font-weight: 700; color: #EF4444;"><?php echo esc_html( number_format_i18n( $sla_first_response_breached ) ); ?></div>
-            <div style="font-size: 13px; color: #666; margin-top: 4px;"><?php esc_html_e( 'First Response Breaches', 'escalated' ); ?></div>
+        <div class="escalated-card" style="padding: 20px; min-width: 200px; flex: 1;">
+            <div class="escalated-text-danger" style="font-size: 32px; font-weight: 700;"><?php echo esc_html( number_format_i18n( $sla_first_response_breached ) ); ?></div>
+            <div class="escalated-text-secondary" style="font-size: 13px; margin-top: 4px;"><?php esc_html_e( 'First Response Breaches', 'escalated' ); ?></div>
         </div>
-        <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; min-width: 200px; flex: 1;">
-            <div style="font-size: 32px; font-weight: 700; color: #EF4444;"><?php echo esc_html( number_format_i18n( $sla_resolution_breached ) ); ?></div>
-            <div style="font-size: 13px; color: #666; margin-top: 4px;"><?php esc_html_e( 'Resolution Breaches', 'escalated' ); ?></div>
+        <div class="escalated-card" style="padding: 20px; min-width: 200px; flex: 1;">
+            <div class="escalated-text-danger" style="font-size: 32px; font-weight: 700;"><?php echo esc_html( number_format_i18n( $sla_resolution_breached ) ); ?></div>
+            <div class="escalated-text-secondary" style="font-size: 13px; margin-top: 4px;"><?php esc_html_e( 'Resolution Breaches', 'escalated' ); ?></div>
         </div>
-        <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; min-width: 200px; flex: 1;">
-            <div style="font-size: 32px; font-weight: 700; color: #1d2327;">
+        <div class="escalated-card" style="padding: 20px; min-width: 200px; flex: 1;">
+            <div class="escalated-text-primary" style="font-size: 32px; font-weight: 700;">
                 <?php echo $avg_first_response !== null ? esc_html( $avg_first_response . 'h' ) : '&mdash;'; ?>
             </div>
-            <div style="font-size: 13px; color: #666; margin-top: 4px;"><?php esc_html_e( 'Avg. First Response', 'escalated' ); ?></div>
+            <div class="escalated-text-secondary" style="font-size: 13px; margin-top: 4px;"><?php esc_html_e( 'Avg. First Response', 'escalated' ); ?></div>
         </div>
-        <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; min-width: 200px; flex: 1;">
-            <div style="font-size: 32px; font-weight: 700; color: #1d2327;">
+        <div class="escalated-card" style="padding: 20px; min-width: 200px; flex: 1;">
+            <div class="escalated-text-primary" style="font-size: 32px; font-weight: 700;">
                 <?php echo $avg_resolution !== null ? esc_html( $avg_resolution . 'h' ) : '&mdash;'; ?>
             </div>
-            <div style="font-size: 13px; color: #666; margin-top: 4px;"><?php esc_html_e( 'Avg. Resolution Time', 'escalated' ); ?></div>
+            <div class="escalated-text-secondary" style="font-size: 13px; margin-top: 4px;"><?php esc_html_e( 'Avg. Resolution Time', 'escalated' ); ?></div>
         </div>
     </div>
 
@@ -86,7 +89,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
         <!-- Tickets by Status -->
         <div style="flex: 1; min-width: 300px;">
-            <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 15px;">
+            <div class="escalated-card" style="padding: 15px;">
                 <h3 style="margin-top: 0; font-size: 14px;"><?php esc_html_e( 'Tickets by Status', 'escalated' ); ?></h3>
                 <table class="wp-list-table widefat striped">
                     <thead>
@@ -108,9 +111,9 @@ if ( ! defined( 'ABSPATH' ) ) {
                                 </td>
                                 <td style="text-align: right; font-weight: 600;"><?php echo esc_html( number_format_i18n( $count ) ); ?></td>
                                 <td>
-                                    <div style="background: #f0f0f0; border-radius: 3px; height: 18px; position: relative;">
+                                    <div class="escalated-progress-track" style="height: 18px; position: relative;">
                                         <div style="background: <?php echo esc_attr( $data['color'] ); ?>; height: 100%; border-radius: 3px; width: <?php echo esc_attr( $pct ); ?>%; min-width: <?php echo $pct > 0 ? '2px' : '0'; ?>;"></div>
-                                        <span style="position: absolute; right: 5px; top: 0; line-height: 18px; font-size: 11px; color: #555;"><?php echo esc_html( $pct ); ?>%</span>
+                                        <span class="escalated-text-secondary" style="position: absolute; right: 5px; top: 0; line-height: 18px; font-size: 11px;"><?php echo esc_html( $pct ); ?>%</span>
                                     </div>
                                 </td>
                             </tr>
@@ -122,7 +125,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
         <!-- Tickets by Priority -->
         <div style="flex: 1; min-width: 300px;">
-            <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 15px;">
+            <div class="escalated-card" style="padding: 15px;">
                 <h3 style="margin-top: 0; font-size: 14px;"><?php esc_html_e( 'Tickets by Priority', 'escalated' ); ?></h3>
                 <table class="wp-list-table widefat striped">
                     <thead>
@@ -144,9 +147,9 @@ if ( ! defined( 'ABSPATH' ) ) {
                                 </td>
                                 <td style="text-align: right; font-weight: 600;"><?php echo esc_html( number_format_i18n( $count ) ); ?></td>
                                 <td>
-                                    <div style="background: #f0f0f0; border-radius: 3px; height: 18px; position: relative;">
+                                    <div class="escalated-progress-track" style="height: 18px; position: relative;">
                                         <div style="background: <?php echo esc_attr( $data['color'] ); ?>; height: 100%; border-radius: 3px; width: <?php echo esc_attr( $pct ); ?>%; min-width: <?php echo $pct > 0 ? '2px' : '0'; ?>;"></div>
-                                        <span style="position: absolute; right: 5px; top: 0; line-height: 18px; font-size: 11px; color: #555;"><?php echo esc_html( $pct ); ?>%</span>
+                                        <span class="escalated-text-secondary" style="position: absolute; right: 5px; top: 0; line-height: 18px; font-size: 11px;"><?php echo esc_html( $pct ); ?>%</span>
                                     </div>
                                 </td>
                             </tr>
@@ -162,7 +165,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
         <!-- Tickets by Department -->
         <div style="flex: 1; min-width: 300px;">
-            <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 15px;">
+            <div class="escalated-card" style="padding: 15px;">
                 <h3 style="margin-top: 0; font-size: 14px;"><?php esc_html_e( 'Tickets by Department', 'escalated' ); ?></h3>
                 <table class="wp-list-table widefat striped">
                     <thead>
@@ -191,7 +194,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
         <!-- Tickets by Agent -->
         <div style="flex: 1; min-width: 300px;">
-            <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 15px;">
+            <div class="escalated-card" style="padding: 15px;">
                 <h3 style="margin-top: 0; font-size: 14px;"><?php esc_html_e( 'Top Agents by Ticket Count', 'escalated' ); ?></h3>
                 <table class="wp-list-table widefat striped">
                     <thead>

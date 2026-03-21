@@ -31,14 +31,15 @@ if ( ! defined( 'ABSPATH' ) ) {
     <?php endif; ?>
 
     <?php if ( $plain_token ) : ?>
-        <div class="notice notice-warning" style="border-left-color: #F59E0B;">
+        <div class="notice notice-warning" style="border-left-color: var(--esc-wp-amber);">
+
             <p>
                 <strong><?php esc_html_e( 'Your new API token:', 'escalated' ); ?></strong>
             </p>
             <p>
-                <code style="font-size: 14px; padding: 8px 12px; background: #f6f7f7; display: inline-block; word-break: break-all; user-select: all;"><?php echo esc_html( $plain_token ); ?></code>
+                <code style="font-size: 14px; padding: 8px 12px; background: var(--esc-wp-bg-section); display: inline-block; word-break: break-all; user-select: all;"><?php echo esc_html( $plain_token ); ?></code>
             </p>
-            <p style="color: #92400E;">
+            <p class="escalated-text-warning-accent">
                 <strong><?php esc_html_e( 'Make sure to copy this token now. You will not be able to see it again!', 'escalated' ); ?></strong>
             </p>
         </div>
@@ -85,7 +86,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                         <td>
                             <strong><?php echo esc_html( $token->name ); ?></strong>
                             <?php if ( $is_expired ) : ?>
-                                <span style="color: #EF4444; font-size: 11px; font-weight: 600;"><?php esc_html_e( '(Expired)', 'escalated' ); ?></span>
+                                <span class="escalated-text-danger" style="font-size: 11px; font-weight: 600;"><?php esc_html_e( '(Expired)', 'escalated' ); ?></span>
                             <?php endif; ?>
                         </td>
                         <td>
@@ -101,19 +102,19 @@ if ( ! defined( 'ABSPATH' ) ) {
                                     <?php echo esc_html( human_time_diff( strtotime( $token->last_used_at ), current_time( 'timestamp' ) ) . ' ' . __( 'ago', 'escalated' ) ); ?>
                                 </span>
                                 <?php if ( $token->last_used_ip ) : ?>
-                                    <br><small style="color: #999;"><?php echo esc_html( $token->last_used_ip ); ?></small>
+                                    <br><small class="escalated-text-muted"><?php echo esc_html( $token->last_used_ip ); ?></small>
                                 <?php endif; ?>
                             <?php else : ?>
-                                <span style="color: #999;"><?php esc_html_e( 'Never', 'escalated' ); ?></span>
+                                <span class="escalated-text-muted"><?php esc_html_e( 'Never', 'escalated' ); ?></span>
                             <?php endif; ?>
                         </td>
                         <td>
                             <?php if ( $token->expires_at ) : ?>
-                                <span title="<?php echo esc_attr( $token->expires_at ); ?>" style="<?php echo $is_expired ? 'color: #EF4444;' : ''; ?>">
+                                <span title="<?php echo esc_attr( $token->expires_at ); ?>"<?php echo $is_expired ? ' class="escalated-text-danger"' : ''; ?>>
                                     <?php echo esc_html( wp_date( get_option( 'date_format' ), strtotime( $token->expires_at ) ) ); ?>
                                 </span>
                             <?php else : ?>
-                                <span style="color: #999;"><?php esc_html_e( 'Never', 'escalated' ); ?></span>
+                                <span class="escalated-text-muted"><?php esc_html_e( 'Never', 'escalated' ); ?></span>
                             <?php endif; ?>
                         </td>
                         <td>
@@ -136,7 +137,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     </table>
 
     <!-- Create Token Form -->
-    <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 15px; max-width: 600px;">
+    <div class="escalated-card" style="padding: 15px; max-width: 600px;">
         <h2 style="margin-top: 0; font-size: 15px;"><?php esc_html_e( 'Create New Token', 'escalated' ); ?></h2>
 
         <form method="post">

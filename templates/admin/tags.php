@@ -35,7 +35,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
         <!-- Form -->
         <div style="width: 350px; flex-shrink: 0;">
-            <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 15px;">
+            <div class="escalated-card" style="padding: 15px;">
                 <h2 style="margin-top: 0; font-size: 15px;">
                     <?php echo $edit_item ? esc_html__( 'Edit Tag', 'escalated' ) : esc_html__( 'Add New Tag', 'escalated' ); ?>
                 </h2>

@@ -63,9 +63,9 @@ if ( $edit_item ) {
                         <td><?php echo esc_html( wp_trim_words( $policy->description ?? '', 15 ) ); ?></td>
                         <td>
                             <?php if ( $policy->is_default ) : ?>
-                                <span style="color: #10B981; font-weight: 600;"><?php esc_html_e( 'Yes', 'escalated' ); ?></span>
+                                <span class="escalated-text-success"><?php esc_html_e( 'Yes', 'escalated' ); ?></span>
                             <?php else : ?>
-                                <span style="color: #999;"><?php esc_html_e( 'No', 'escalated' ); ?></span>
+                                <span class="escalated-text-muted"><?php esc_html_e( 'No', 'escalated' ); ?></span>
                             <?php endif; ?>
                         </td>
                         <td>
@@ -73,9 +73,9 @@ if ( $edit_item ) {
                         </td>
                         <td>
                             <?php if ( $policy->is_active ) : ?>
-                                <span style="color: #10B981; font-weight: 600;"><?php esc_html_e( 'Yes', 'escalated' ); ?></span>
+                                <span class="escalated-text-success"><?php esc_html_e( 'Yes', 'escalated' ); ?></span>
                             <?php else : ?>
-                                <span style="color: #EF4444;"><?php esc_html_e( 'No', 'escalated' ); ?></span>
+                                <span class="escalated-text-danger"><?php esc_html_e( 'No', 'escalated' ); ?></span>
                             <?php endif; ?>
                         </td>
                         <td>
@@ -98,7 +98,7 @@ if ( $edit_item ) {
     </table>
 
     <!-- Form -->
-    <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 15px; max-width: 800px;">
+    <div class="escalated-card" style="padding: 15px; max-width: 800px;">
         <h2 style="margin-top: 0; font-size: 15px;">
             <?php echo $edit_item ? esc_html__( 'Edit SLA Policy', 'escalated' ) : esc_html__( 'Add New SLA Policy', 'escalated' ); ?>
         </h2>

@@ -67,10 +67,10 @@ $nonce = wp_create_nonce( 'escalated_ticket_action_' . $ticket->id );
     <?php endif; ?>
 
     <!-- Ticket Header -->
-    <div style="margin-bottom: 20px; padding: 15px; background: #fff; border: 1px solid #ccd0d4; border-radius: 4px;">
+    <div class="escalated-card" style="margin-bottom: 20px; padding: 15px;">
         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
             <h2 style="margin: 0; font-size: 18px;">
-                <span style="color: #666;"><?php echo esc_html( $ticket->reference ); ?></span>
+                <span class="escalated-text-secondary"><?php echo esc_html( $ticket->reference ); ?></span>
                 &mdash;
                 <?php echo esc_html( $ticket->subject ); ?>
             </h2>
@@ -81,7 +81,7 @@ $nonce = wp_create_nonce( 'escalated_ticket_action_' . $ticket->id );
                 <?php echo esc_html( $priority_info['label'] ); ?>
             </span>
         </div>
-        <p style="margin: 8px 0 0; color: #666; font-size: 13px;">
+        <p class="escalated-text-secondary" style="margin: 8px 0 0; font-size: 13px;">
             <?php
             /* translators: 1: requester name, 2: time ago */
             printf(
@@ -103,15 +103,15 @@ $nonce = wp_create_nonce( 'escalated_ticket_action_' . $ticket->id );
         <div style="flex: 1; min-width: 0;">
 
             <!-- Ticket Description -->
-            <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 15px; margin-bottom: 15px;">
-                <h3 style="margin-top: 0; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 8px;">
+            <div class="escalated-card" style="padding: 15px; margin-bottom: 15px;">
+                <h3 style="margin-top: 0; font-size: 14px; border-bottom: 1px solid var(--esc-wp-border-light); padding-bottom: 8px;">
                     <?php esc_html_e( 'Description', 'escalated' ); ?>
                 </h3>
                 <div class="escalated-ticket-body">
                     <?php echo wp_kses_post( $ticket->description ); ?>
                 </div>
                 <?php if ( ! empty( $attachments ) ) : ?>
-                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee;">
+                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--esc-wp-border-light);">
                         <strong><?php esc_html_e( 'Attachments:', 'escalated' ); ?></strong>
                         <ul style="margin: 5px 0 0; padding-left: 20px;">
                             <?php foreach ( $attachments as $att ) : ?>
@@ -119,7 +119,7 @@ $nonce = wp_create_nonce( 'escalated_ticket_action_' . $ticket->id );
                                     <a href="<?php echo esc_url( wp_upload_dir()['baseurl'] . '/' . $att->path ); ?>" target="_blank">
                                         <?php echo esc_html( $att->original_filename ); ?>
                                     </a>
-                                    <span style="color: #999; font-size: 12px;">(<?php echo esc_html( size_format( $att->size ) ); ?>)</span>
+                                    <span class="escalated-text-muted" style="font-size: 12px;">(<?php echo esc_html( size_format( $att->size ) ); ?>)</span>
                                 </li>
                             <?php endforeach; ?>
                         </ul>
@@ -132,7 +132,7 @@ $nonce = wp_create_nonce( 'escalated_ticket_action_' . $ticket->id );
                 <h3 style="font-size: 14px;"><?php esc_html_e( 'Conversation', 'escalated' ); ?></h3>
 
                 <?php if ( empty( $replies ) ) : ?>
-                    <p style="color: #666;"><?php esc_html_e( 'No replies yet.', 'escalated' ); ?></p>
+                    <p class="escalated-text-secondary"><?php esc_html_e( 'No replies yet.', 'escalated' ); ?></p>
                 <?php else : ?>
                     <?php foreach ( $replies as $reply ) :
                         $is_note     = (bool) $reply->is_internal_note;
@@ -141,20 +141,18 @@ $nonce = wp_create_nonce( 'escalated_ticket_action_' . $ticket->id );
 
                         $reply_attachments = \Escalated\Models\Attachment::for_attachable( 'reply', $reply->id );
 
-                        $border_color = $is_note ? '#F59E0B' : '#ccd0d4';
-                        $bg_color     = $is_note ? '#FFFBEB' : '#fff';
                     ?>
-                        <div style="background: <?php echo esc_attr( $bg_color ); ?>; border: 1px solid <?php echo esc_attr( $border_color ); ?>; border-left-width: 4px; border-radius: 4px; padding: 12px 15px; margin-bottom: 10px;">
+                        <div class="<?php echo $is_note ? 'escalated-reply-card--note' : 'escalated-reply-card'; ?>" style="border-left-width: 4px; padding: 12px 15px; margin-bottom: 10px;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                 <div>
                                     <strong><?php echo esc_html( $author_name ); ?></strong>
                                     <?php if ( $is_note ) : ?>
-                                        <span style="background: #F59E0B; color: #fff; padding: 2px 6px; border-radius: 3px; font-size: 11px; margin-left: 5px;">
+                                        <span style="background: var(--esc-wp-amber); color: #fff; padding: 2px 6px; border-radius: 3px; font-size: 11px; margin-left: 5px;">
                                             <?php esc_html_e( 'Internal Note', 'escalated' ); ?>
                                         </span>
                                     <?php endif; ?>
                                 </div>
-                                <span style="color: #999; font-size: 12px;" title="<?php echo esc_attr( $reply->created_at ); ?>">
+                                <span class="escalated-text-muted" style="font-size: 12px;" title="<?php echo esc_attr( $reply->created_at ); ?>">
                                     <?php echo esc_html( human_time_diff( strtotime( $reply->created_at ), current_time( 'timestamp' ) ) . ' ' . __( 'ago', 'escalated' ) ); ?>
                                 </span>
                             </div>
@@ -162,7 +160,7 @@ $nonce = wp_create_nonce( 'escalated_ticket_action_' . $ticket->id );
                                 <?php echo wp_kses_post( $reply->body ); ?>
                             </div>
                             <?php if ( ! empty( $reply_attachments ) ) : ?>
-                                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
+                                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--esc-wp-border-light);">
                                     <small><?php esc_html_e( 'Attachments:', 'escalated' ); ?></small>
                                     <?php foreach ( $reply_attachments as $att ) : ?>
                                         <a href="<?php echo esc_url( wp_upload_dir()['baseurl'] . '/' . $att->path ); ?>" target="_blank" style="margin-left: 5px; font-size: 12px;">
@@ -178,7 +176,7 @@ $nonce = wp_create_nonce( 'escalated_ticket_action_' . $ticket->id );
 
             <!-- Reply Form -->
             <?php if ( current_user_can( 'escalated_reply_tickets' ) ) : ?>
-                <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 15px; margin-bottom: 15px;">
+                <div class="escalated-card" style="padding: 15px; margin-bottom: 15px;">
                     <h3 style="margin-top: 0; font-size: 14px;"><?php esc_html_e( 'Add Reply', 'escalated' ); ?></h3>
                     <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
                         <input type="hidden" name="escalated_ticket_action" value="reply">
@@ -204,8 +202,8 @@ $nonce = wp_create_nonce( 'escalated_ticket_action_' . $ticket->id );
 
             <!-- Internal Note Form -->
             <?php if ( current_user_can( 'escalated_add_internal_notes' ) ) : ?>
-                <div style="background: #FFFBEB; border: 1px solid #F59E0B; border-radius: 4px; padding: 15px; margin-bottom: 15px;">
-                    <h3 style="margin-top: 0; font-size: 14px; color: #92400E;"><?php esc_html_e( 'Add Internal Note', 'escalated' ); ?></h3>
+                <div class="escalated-note-card" style="padding: 15px; margin-bottom: 15px;">
+                    <h3 class="escalated-text-warning-accent" style="margin-top: 0; font-size: 14px;"><?php esc_html_e( 'Add Internal Note', 'escalated' ); ?></h3>
                     <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
                         <input type="hidden" name="escalated_ticket_action" value="note">
                         <input type="hidden" name="ticket_id" value="<?php echo esc_attr( $ticket->id ); ?>">
@@ -229,11 +227,11 @@ $nonce = wp_create_nonce( 'escalated_ticket_action_' . $ticket->id );
             <?php endif; ?>
 
             <!-- Activity Timeline -->
-            <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 15px;">
+            <div class="escalated-card" style="padding: 15px;">
                 <h3 style="margin-top: 0; font-size: 14px;"><?php esc_html_e( 'Activity Timeline', 'escalated' ); ?></h3>
 
                 <?php if ( empty( $activities ) ) : ?>
-                    <p style="color: #666;"><?php esc_html_e( 'No activity recorded.', 'escalated' ); ?></p>
+                    <p class="escalated-text-secondary"><?php esc_html_e( 'No activity recorded.', 'escalated' ); ?></p>
                 <?php else : ?>
                     <?php
                     $activity_labels = \Escalated\Helpers\Enums::activity_types();
@@ -250,13 +248,13 @@ $nonce = wp_create_nonce( 'escalated_ticket_action_' . $ticket->id );
                             $type_label = $activity_labels[ $activity->type ] ?? ucfirst( str_replace( '_', ' ', $activity->type ) );
                             $props      = $activity->properties ? json_decode( $activity->properties, true ) : [];
                         ?>
-                            <li style="padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 13px; color: #555;">
-                                <span style="color: #999; font-size: 12px;"><?php echo esc_html( $activity->created_at ); ?></span>
+                            <li style="padding: 8px 0; border-bottom: 1px solid var(--esc-wp-border-light); font-size: 13px;" class="escalated-text-secondary">
+                                <span class="escalated-text-muted" style="font-size: 12px;"><?php echo esc_html( $activity->created_at ); ?></span>
                                 &mdash;
                                 <strong><?php echo esc_html( $causer_name ); ?></strong>:
                                 <?php echo esc_html( $type_label ); ?>
                                 <?php if ( ! empty( $props ) ) : ?>
-                                    <span style="color: #888;">
+                                    <span class="escalated-text-muted">
                                         <?php
                                         $details = [];
                                         if ( isset( $props['old_status'] ) ) {
@@ -289,8 +287,8 @@ $nonce = wp_create_nonce( 'escalated_ticket_action_' . $ticket->id );
         <div style="width: 300px; flex-shrink: 0;">
 
             <!-- Status -->
-            <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 12px; margin-bottom: 12px;">
-                <h4 style="margin: 0 0 8px; font-size: 13px; color: #23282d;"><?php esc_html_e( 'Status', 'escalated' ); ?></h4>
+            <div class="escalated-card" style="padding: 12px; margin-bottom: 12px;">
+                <h4 class="escalated-text-primary" style="margin: 0 0 8px; font-size: 13px;"><?php esc_html_e( 'Status', 'escalated' ); ?></h4>
                 <form method="post">
                     <input type="hidden" name="escalated_ticket_action" value="change_status">
                     <input type="hidden" name="ticket_id" value="<?php echo esc_attr( $ticket->id ); ?>">
@@ -307,8 +305,8 @@ $nonce = wp_create_nonce( 'escalated_ticket_action_' . $ticket->id );
             </div>
 
             <!-- Priority -->
-            <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 12px; margin-bottom: 12px;">
-                <h4 style="margin: 0 0 8px; font-size: 13px; color: #23282d;"><?php esc_html_e( 'Priority', 'escalated' ); ?></h4>
+            <div class="escalated-card" style="padding: 12px; margin-bottom: 12px;">
+                <h4 class="escalated-text-primary" style="margin: 0 0 8px; font-size: 13px;"><?php esc_html_e( 'Priority', 'escalated' ); ?></h4>
                 <form method="post">
                     <input type="hidden" name="escalated_ticket_action" value="change_priority">
                     <input type="hidden" name="ticket_id" value="<?php echo esc_attr( $ticket->id ); ?>">
@@ -325,8 +323,8 @@ $nonce = wp_create_nonce( 'escalated_ticket_action_' . $ticket->id );
             </div>
 
             <!-- Assignee -->
-            <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 12px; margin-bottom: 12px;">
-                <h4 style="margin: 0 0 8px; font-size: 13px; color: #23282d;"><?php esc_html_e( 'Assignee', 'escalated' ); ?></h4>
+            <div class="escalated-card" style="padding: 12px; margin-bottom: 12px;">
+                <h4 class="escalated-text-primary" style="margin: 0 0 8px; font-size: 13px;"><?php esc_html_e( 'Assignee', 'escalated' ); ?></h4>
                 <form method="post">
                     <input type="hidden" name="escalated_ticket_action" value="assign">
                     <input type="hidden" name="ticket_id" value="<?php echo esc_attr( $ticket->id ); ?>">
@@ -344,8 +342,8 @@ $nonce = wp_create_nonce( 'escalated_ticket_action_' . $ticket->id );
             </div>
 
             <!-- Department -->
-            <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 12px; margin-bottom: 12px;">
-                <h4 style="margin: 0 0 8px; font-size: 13px; color: #23282d;"><?php esc_html_e( 'Department', 'escalated' ); ?></h4>
+            <div class="escalated-card" style="padding: 12px; margin-bottom: 12px;">
+                <h4 class="escalated-text-primary" style="margin: 0 0 8px; font-size: 13px;"><?php esc_html_e( 'Department', 'escalated' ); ?></h4>
                 <form method="post">
                     <input type="hidden" name="escalated_ticket_action" value="change_department">
                     <input type="hidden" name="ticket_id" value="<?php echo esc_attr( $ticket->id ); ?>">
@@ -363,8 +361,8 @@ $nonce = wp_create_nonce( 'escalated_ticket_action_' . $ticket->id );
             </div>
 
             <!-- Tags -->
-            <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 12px; margin-bottom: 12px;">
-                <h4 style="margin: 0 0 8px; font-size: 13px; color: #23282d;"><?php esc_html_e( 'Tags', 'escalated' ); ?></h4>
+            <div class="escalated-card" style="padding: 12px; margin-bottom: 12px;">
+                <h4 class="escalated-text-primary" style="margin: 0 0 8px; font-size: 13px;"><?php esc_html_e( 'Tags', 'escalated' ); ?></h4>
                 <?php if ( ! empty( $tags ) ) : ?>
                     <div style="margin-bottom: 8px;">
                         <?php foreach ( $tags as $tag ) : ?>
@@ -392,8 +390,8 @@ $nonce = wp_create_nonce( 'escalated_ticket_action_' . $ticket->id );
             </div>
 
             <!-- SLA Info -->
-            <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 12px; margin-bottom: 12px;">
-                <h4 style="margin: 0 0 8px; font-size: 13px; color: #23282d;"><?php esc_html_e( 'SLA Information', 'escalated' ); ?></h4>
+            <div class="escalated-card" style="padding: 12px; margin-bottom: 12px;">
+                <h4 class="escalated-text-primary" style="margin: 0 0 8px; font-size: 13px;"><?php esc_html_e( 'SLA Information', 'escalated' ); ?></h4>
                 <?php if ( $sla_policy ) : ?>
                     <p style="margin: 0 0 5px; font-size: 13px;">
                         <strong><?php esc_html_e( 'Policy:', 'escalated' ); ?></strong>
@@ -404,14 +402,14 @@ $nonce = wp_create_nonce( 'escalated_ticket_action_' . $ticket->id );
                 <p style="margin: 0 0 5px; font-size: 13px;">
                     <strong><?php esc_html_e( 'First Response:', 'escalated' ); ?></strong>
                     <?php if ( $ticket->first_response_at ) : ?>
-                        <span style="color: #10B981;"><?php echo esc_html( $ticket->first_response_at ); ?></span>
+                        <span class="escalated-text-success"><?php echo esc_html( $ticket->first_response_at ); ?></span>
                     <?php elseif ( $ticket->first_response_due_at ) : ?>
                         <?php
                         $due_ts = strtotime( $ticket->first_response_due_at );
                         $now_ts = current_time( 'timestamp' );
                         $is_overdue = $now_ts > $due_ts;
                         ?>
-                        <span style="color: <?php echo $is_overdue ? '#EF4444' : '#F59E0B'; ?>;">
+                        <span class="<?php echo $is_overdue ? 'escalated-text-danger' : 'escalated-text-warning'; ?>">
                             <?php
                             if ( $is_overdue ) {
                                 /* translators: %s: time elapsed */
@@ -423,21 +421,21 @@ $nonce = wp_create_nonce( 'escalated_ticket_action_' . $ticket->id );
                             ?>
                         </span>
                     <?php else : ?>
-                        <span style="color: #999;"><?php esc_html_e( 'N/A', 'escalated' ); ?></span>
+                        <span class="escalated-text-muted"><?php esc_html_e( 'N/A', 'escalated' ); ?></span>
                     <?php endif; ?>
                 </p>
 
                 <p style="margin: 0 0 5px; font-size: 13px;">
                     <strong><?php esc_html_e( 'Resolution Due:', 'escalated' ); ?></strong>
                     <?php if ( $ticket->resolved_at ) : ?>
-                        <span style="color: #10B981;"><?php echo esc_html( $ticket->resolved_at ); ?></span>
+                        <span class="escalated-text-success"><?php echo esc_html( $ticket->resolved_at ); ?></span>
                     <?php elseif ( $ticket->resolution_due_at ) : ?>
                         <?php
                         $due_ts = strtotime( $ticket->resolution_due_at );
                         $now_ts = current_time( 'timestamp' );
                         $is_overdue = $now_ts > $due_ts;
                         ?>
-                        <span style="color: <?php echo $is_overdue ? '#EF4444' : '#F59E0B'; ?>;">
+                        <span class="<?php echo $is_overdue ? 'escalated-text-danger' : 'escalated-text-warning'; ?>">
                             <?php
                             if ( $is_overdue ) {
                                 printf( esc_html__( 'Overdue by %s', 'escalated' ), esc_html( human_time_diff( $due_ts, $now_ts ) ) );
@@ -447,12 +445,12 @@ $nonce = wp_create_nonce( 'escalated_ticket_action_' . $ticket->id );
                             ?>
                         </span>
                     <?php else : ?>
-                        <span style="color: #999;"><?php esc_html_e( 'N/A', 'escalated' ); ?></span>
+                        <span class="escalated-text-muted"><?php esc_html_e( 'N/A', 'escalated' ); ?></span>
                     <?php endif; ?>
                 </p>
 
                 <?php if ( $ticket->sla_first_response_breached || $ticket->sla_resolution_breached ) : ?>
-                    <p style="margin: 5px 0 0; padding: 5px 8px; background: #FEF2F2; border: 1px solid #FECACA; border-radius: 3px; font-size: 12px; color: #991B1B;">
+                    <p class="escalated-sla-breach-alert" style="margin: 5px 0 0; padding: 5px 8px; border-radius: 3px; font-size: 12px;">
                         <?php if ( $ticket->sla_first_response_breached ) : ?>
                             <?php esc_html_e( 'First response SLA breached', 'escalated' ); ?><br>
                         <?php endif; ?>
@@ -464,10 +462,10 @@ $nonce = wp_create_nonce( 'escalated_ticket_action_' . $ticket->id );
             </div>
 
             <!-- Followers -->
-            <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 12px; margin-bottom: 12px;">
-                <h4 style="margin: 0 0 8px; font-size: 13px; color: #23282d;"><?php esc_html_e( 'Followers', 'escalated' ); ?></h4>
+            <div class="escalated-card" style="padding: 12px; margin-bottom: 12px;">
+                <h4 class="escalated-text-primary" style="margin: 0 0 8px; font-size: 13px;"><?php esc_html_e( 'Followers', 'escalated' ); ?></h4>
                 <?php if ( empty( $followers ) ) : ?>
-                    <p style="color: #999; font-size: 13px; margin: 0;"><?php esc_html_e( 'No followers.', 'escalated' ); ?></p>
+                    <p class="escalated-text-muted" style="font-size: 13px; margin: 0;"><?php esc_html_e( 'No followers.', 'escalated' ); ?></p>
                 <?php else : ?>
                     <ul style="margin: 0; padding: 0; list-style: none;">
                         <?php foreach ( $followers as $follower ) : ?>
@@ -481,26 +479,26 @@ $nonce = wp_create_nonce( 'escalated_ticket_action_' . $ticket->id );
             </div>
 
             <!-- Ticket Metadata -->
-            <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 12px;">
-                <h4 style="margin: 0 0 8px; font-size: 13px; color: #23282d;"><?php esc_html_e( 'Details', 'escalated' ); ?></h4>
+            <div class="escalated-card" style="padding: 12px;">
+                <h4 class="escalated-text-primary" style="margin: 0 0 8px; font-size: 13px;"><?php esc_html_e( 'Details', 'escalated' ); ?></h4>
                 <table style="width: 100%; font-size: 13px;" cellpadding="3">
                     <tr>
-                        <td style="color: #666;"><?php esc_html_e( 'Created:', 'escalated' ); ?></td>
+                        <td class="escalated-text-secondary"><?php esc_html_e( 'Created:', 'escalated' ); ?></td>
                         <td><?php echo esc_html( $ticket->created_at ); ?></td>
                     </tr>
                     <tr>
-                        <td style="color: #666;"><?php esc_html_e( 'Updated:', 'escalated' ); ?></td>
+                        <td class="escalated-text-secondary"><?php esc_html_e( 'Updated:', 'escalated' ); ?></td>
                         <td><?php echo esc_html( $ticket->updated_at ); ?></td>
                     </tr>
                     <?php if ( $ticket->resolved_at ) : ?>
                     <tr>
-                        <td style="color: #666;"><?php esc_html_e( 'Resolved:', 'escalated' ); ?></td>
+                        <td class="escalated-text-secondary"><?php esc_html_e( 'Resolved:', 'escalated' ); ?></td>
                         <td><?php echo esc_html( $ticket->resolved_at ); ?></td>
                     </tr>
                     <?php endif; ?>
                     <?php if ( $ticket->closed_at ) : ?>
                     <tr>
-                        <td style="color: #666;"><?php esc_html_e( 'Closed:', 'escalated' ); ?></td>
+                        <td class="escalated-text-secondary"><?php esc_html_e( 'Closed:', 'escalated' ); ?></td>
                         <td><?php echo esc_html( $ticket->closed_at ); ?></td>
                     </tr>
                     <?php endif; ?>
