@@ -29,8 +29,11 @@ class Escalated {
         ( new Mail\Inbound_Controller() )->register();
         ( new Cron\Sla_Check() )->register();
         ( new Cron\Escalation_Check() )->register();
+        ( new Cron\Automation_Check() )->register();
         ( new Cron\Auto_Close() )->register();
         ( new Cron\Activity_Purge() )->register();
+
+        Cli\AutomationCommand::register();
     }
 
     public static function table( string $name ): string {

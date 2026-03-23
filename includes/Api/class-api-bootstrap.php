@@ -32,6 +32,7 @@ class Api_Bootstrap {
             new Canned_Response_Controller(),
             new Macro_Controller(),
             new Agent_Controller(),
+            new Automation_Controller(),
             new Dashboard_Controller(),
             new Api_Token_Controller(),
         ];
