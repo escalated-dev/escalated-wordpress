@@ -22,6 +22,7 @@ class Admin_Menu {
         add_submenu_page( 'escalated', __( 'Tickets', 'escalated' ), __( 'Tickets', 'escalated' ), 'escalated_view_tickets', 'escalated', [ new Admin_Tickets(), 'render_list' ] );
         add_submenu_page( 'escalated', __( 'Departments', 'escalated' ), __( 'Departments', 'escalated' ), 'escalated_manage_departments', 'escalated-departments', [ new Admin_Departments(), 'render' ] );
         add_submenu_page( 'escalated', __( 'SLA Policies', 'escalated' ), __( 'SLA Policies', 'escalated' ), 'escalated_manage_sla', 'escalated-sla-policies', [ new Admin_Sla_Policies(), 'render' ] );
+        add_submenu_page( 'escalated', __( 'Automations', 'escalated' ), __( 'Automations', 'escalated' ), 'escalated_automation_manage', 'escalated-automations', [ new Admin_Automations(), 'render' ] );
         add_submenu_page( 'escalated', __( 'Escalation Rules', 'escalated' ), __( 'Escalation Rules', 'escalated' ), 'escalated_manage_escalation_rules', 'escalated-escalation-rules', [ new Admin_Escalation_Rules(), 'render' ] );
         add_submenu_page( 'escalated', __( 'Tags', 'escalated' ), __( 'Tags', 'escalated' ), 'escalated_manage_tags', 'escalated-tags', [ new Admin_Tags(), 'render' ] );
         add_submenu_page( 'escalated', __( 'Canned Responses', 'escalated' ), __( 'Canned Responses', 'escalated' ), 'escalated_use_canned_responses', 'escalated-canned-responses', [ new Admin_Canned_Responses(), 'render' ] );

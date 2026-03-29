@@ -335,6 +335,22 @@ class Activator {
             PRIMARY KEY  (role_id, user_id)
         ) $charset_collate;";
         dbDelta( $sql );
+
+        // 22. escalated_automations
+        $sql = "CREATE TABLE {$prefix}automations (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            name VARCHAR(255) NOT NULL,
+            conditions LONGTEXT NOT NULL,
+            actions LONGTEXT NOT NULL,
+            active TINYINT(1) NOT NULL DEFAULT 1,
+            position INT UNSIGNED NOT NULL DEFAULT 0,
+            last_run_at DATETIME DEFAULT NULL,
+            created_at DATETIME NOT NULL,
+            updated_at DATETIME NOT NULL,
+            PRIMARY KEY  (id),
+            KEY active (active)
+        ) $charset_collate;";
+        dbDelta( $sql );
     }
 
     /**
@@ -710,6 +726,10 @@ class Activator {
 
         if ( ! wp_next_scheduled( 'escalated_purge_activities' ) ) {
             wp_schedule_event( time(), 'weekly', 'escalated_purge_activities' );
+        }
+
+        if ( ! wp_next_scheduled( 'escalated_run_automations' ) ) {
+            wp_schedule_event( time(), 'escalated_every_five_minutes', 'escalated_run_automations' );
         }
     }
 
