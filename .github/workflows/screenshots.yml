@@ -72,9 +72,87 @@ jobs:
           wp plugin activate escalated --allow-root 2>&1 || echo "Plugin activation had warnings"
           wp plugin list --allow-root
 
+          # Force activation hook to create roles, capabilities, and tables
+          wp eval 'do_action("activate_escalated/escalated.php");' --allow-root 2>&1 || true
+
           # Ensure the admin user has all Escalated capabilities
           wp cap add administrator escalated_manage_tickets escalated_view_tickets escalated_create_tickets escalated_manage_departments escalated_manage_sla escalated_manage_escalation_rules escalated_manage_tags escalated_manage_canned_responses escalated_manage_macros escalated_manage_settings escalated_manage_api_tokens escalated_view_reports escalated_manage_automations --allow-root 2>&1 || true
           wp user add-role 1 administrator --allow-root 2>&1 || true
+
+          # Seed sample data for screenshots
+          wp eval '
+            global $wpdb;
+            $table = $wpdb->prefix . "escalated_departments";
+            $wpdb->insert($table, ["name" => "General Support", "is_active" => 1, "created_at" => current_time("mysql"), "updated_at" => current_time("mysql")]);
+            $dept_id = $wpdb->insert_id;
+            $wpdb->insert($table, ["name" => "Billing", "is_active" => 1, "created_at" => current_time("mysql"), "updated_at" => current_time("mysql")]);
+
+            $tickets_table = $wpdb->prefix . "escalated_tickets";
+            $wpdb->insert($tickets_table, [
+              "reference" => "ESC-00001",
+              "subject" => "Cannot login to my account",
+              "description" => "I keep getting an error when trying to login. Please help.",
+              "status" => "open",
+              "priority" => "high",
+              "requester_id" => 1,
+              "department_id" => $dept_id,
+              "channel" => "web",
+              "created_at" => current_time("mysql"),
+              "updated_at" => current_time("mysql"),
+            ]);
+            $ticket_id = $wpdb->insert_id;
+            $wpdb->insert($tickets_table, [
+              "reference" => "ESC-00002",
+              "subject" => "Feature request: dark mode",
+              "description" => "Would love to see a dark mode option.",
+              "status" => "in_progress",
+              "priority" => "medium",
+              "requester_id" => 1,
+              "assigned_to" => 1,
+              "department_id" => $dept_id,
+              "channel" => "web",
+              "created_at" => current_time("mysql"),
+              "updated_at" => current_time("mysql"),
+            ]);
+            $wpdb->insert($tickets_table, [
+              "reference" => "ESC-00003",
+              "subject" => "Billing question about upgrade",
+              "description" => "I want to upgrade my plan but have questions.",
+              "status" => "waiting_on_customer",
+              "priority" => "low",
+              "requester_id" => 1,
+              "channel" => "email",
+              "created_at" => current_time("mysql"),
+              "updated_at" => current_time("mysql"),
+            ]);
+
+            $replies_table = $wpdb->prefix . "escalated_replies";
+            $wpdb->insert($replies_table, [
+              "ticket_id" => $ticket_id,
+              "author_id" => 1,
+              "body" => "Hi, thanks for reaching out. Can you share a screenshot of the error?",
+              "is_internal_note" => 0,
+              "type" => "reply",
+              "created_at" => current_time("mysql"),
+              "updated_at" => current_time("mysql"),
+            ]);
+            $wpdb->insert($replies_table, [
+              "ticket_id" => $ticket_id,
+              "author_id" => 1,
+              "body" => "Looks like a password reset issue. Investigating now.",
+              "is_internal_note" => 1,
+              "type" => "note",
+              "created_at" => current_time("mysql"),
+              "updated_at" => current_time("mysql"),
+            ]);
+
+            $tags_table = $wpdb->prefix . "escalated_tags";
+            $wpdb->insert($tags_table, ["name" => "bug", "color" => "#e74c3c", "created_at" => current_time("mysql"), "updated_at" => current_time("mysql")]);
+            $wpdb->insert($tags_table, ["name" => "feature-request", "color" => "#3498db", "created_at" => current_time("mysql"), "updated_at" => current_time("mysql")]);
+            $wpdb->insert($tags_table, ["name" => "billing", "color" => "#2ecc71", "created_at" => current_time("mysql"), "updated_at" => current_time("mysql")]);
+
+            echo "Seeded: 2 departments, 3 tickets, 2 replies, 3 tags\n";
+          ' --allow-root 2>&1
 
           # Start PHP built-in server
           php -S localhost:8080 -t /tmp/wordpress &
