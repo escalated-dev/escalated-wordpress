@@ -21,6 +21,7 @@ class TicketService {
         $reference = Ticket::generate_reference();
         $now = current_time( 'mysql' );
         $priority = $data['priority'] ?? \Escalated\Models\Setting::get( 'default_priority', 'medium' );
+        $valid_priorities = array_keys( \Escalated\Helpers\Enums::ticket_priorities() );
 
         $ticket_data = [
             'reference'    => $reference,
@@ -28,7 +29,7 @@ class TicketService {
             'subject'      => sanitize_text_field( $data['subject'] ),
             'description'  => wp_kses_post( $data['description'] ),
             'status'       => 'open',
-            'priority'     => sanitize_text_field( $priority ),
+            'priority'     => in_array( $priority, $valid_priorities, true ) ? $priority : 'medium',
             'ticket_type'  => in_array( $data['ticket_type'] ?? '', ['question', 'problem', 'incident', 'task'], true ) ? $data['ticket_type'] : 'question',
             'channel'      => sanitize_text_field( $data['channel'] ?? 'web' ),
             'department_id'=> ! empty( $data['department_id'] ) ? absint( $data['department_id'] ) : null,
@@ -65,6 +66,7 @@ class TicketService {
         $reference = Ticket::generate_reference();
         $now = current_time( 'mysql' );
         $priority = $data['priority'] ?? \Escalated\Models\Setting::get( 'default_priority', 'medium' );
+        $valid_priorities = array_keys( \Escalated\Helpers\Enums::ticket_priorities() );
 
         $ticket_data = [
             'reference'    => $reference,
@@ -72,7 +74,7 @@ class TicketService {
             'subject'      => sanitize_text_field( $data['subject'] ),
             'description'  => wp_kses_post( $data['description'] ),
             'status'       => 'open',
-            'priority'     => sanitize_text_field( $priority ),
+            'priority'     => in_array( $priority, $valid_priorities, true ) ? $priority : 'medium',
             'ticket_type'  => in_array( $data['ticket_type'] ?? '', ['question', 'problem', 'incident', 'task'], true ) ? $data['ticket_type'] : 'question',
             'channel'      => sanitize_text_field( $data['channel'] ?? 'web' ),
             'department_id'=> ! empty( $data['department_id'] ) ? absint( $data['department_id'] ) : null,
