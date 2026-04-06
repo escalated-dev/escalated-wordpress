@@ -1,0 +1,97 @@
+name: Generate Screenshots
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wordpress
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mysql, gd, zip
+
+      - name: Install WordPress
+        run: |
+          # Download WordPress
+          mkdir -p /tmp/wordpress
+          curl -sL https://wordpress.org/latest.tar.gz | tar xz -C /tmp/wordpress --strip-components=1
+
+          # Create wp-config
+          cp /tmp/wordpress/wp-config-sample.php /tmp/wordpress/wp-config.php
+          sed -i "s/database_name_here/wordpress/" /tmp/wordpress/wp-config.php
+          sed -i "s/username_here/root/" /tmp/wordpress/wp-config.php
+          sed -i "s/password_here/root/" /tmp/wordpress/wp-config.php
+          sed -i "s/localhost/127.0.0.1/" /tmp/wordpress/wp-config.php
+
+          # Install WP-CLI
+          curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+          chmod +x wp-cli.phar
+          sudo mv wp-cli.phar /usr/local/bin/wp
+
+          # Install WordPress
+          cd /tmp/wordpress
+          wp core install --url=http://localhost:8080 --title="Escalated Demo" --admin_user=admin --admin_password=admin --admin_email=admin@example.com --allow-root
+
+          # Link plugin
+          ln -s $GITHUB_WORKSPACE /tmp/wordpress/wp-content/plugins/escalated
+
+          # Activate plugin
+          wp plugin activate escalated --allow-root
+
+          # Start PHP built-in server
+          php -S localhost:8080 -t /tmp/wordpress &
+          sleep 2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Playwright
+        run: |
+          cd $GITHUB_WORKSPACE
+          npm init -y
+          npm install @playwright/test
+          npx playwright install chromium --with-deps
+
+      - name: Take Screenshots
+        run: |
+          cd $GITHUB_WORKSPACE
+          npx playwright test screenshots/wp-admin.spec.js --reporter=list
+
+      - name: Upload Screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: escalated-wp-screenshots
+          path: screenshots/results/
+
+      - name: Commit Screenshots
+        if: github.ref_type == 'tag'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add screenshots/results/
+          git commit -m "docs: update wp-admin screenshots" || true
+          git push origin HEAD:main || true
