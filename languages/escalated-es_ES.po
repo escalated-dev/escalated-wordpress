@@ -1,0 +1,1957 @@
+# Spanish translation for Escalated
+# Copyright (C) 2025 Escalated
+# This file is distributed under the GPL-2.0-or-later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Escalated 1.0.0\n"
+"Report-Msgid-Bugs-To: https://github.com/escalated-dev/escalated-wordpress/issues\n"
+"Last-Translator: Escalated Team\n"
+"Language-Team: Spanish\n"
+"Language: es_ES\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-04-05T00:00:00+00:00\n"
+"PO-Revision-Date: 2026-04-05T00:00:00+00:00\n"
+"X-Generator: Escalated\n"
+"X-Domain: escalated\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: templates/admin/tickets-list.php
+msgid "%1$s of %2$s"
+msgstr "%1$s de %2$s"
+
+#: includes/Services/NotificationService.php
+msgid "%1$s replied to ticket %2$s:"
+msgstr "%1$s respondio al ticket %2$s:"
+
+#: templates/admin/tickets-list.php
+msgid "%s item"
+msgstr "%s elemento"
+
+#: templates/admin/tickets-list.php
+msgid "%s items"
+msgstr "%s elementos"
+
+#: templates/admin/tickets-list.php
+msgid "%s ticket"
+msgstr "%s ticket"
+
+#: templates/admin/tickets-list.php
+msgid "%s tickets"
+msgstr "%s tickets"
+
+#: templates/admin/api-tokens.php
+msgid "(Expired)"
+msgstr "(Expirado)"
+
+#: includes/Services/InboundEmailService.php
+msgid "(No Subject)"
+msgstr "(Sin asunto)"
+
+#: templates/admin/ticket-detail.php
+msgid "-- None --"
+msgstr "-- Ninguno --"
+
+#: templates/frontend/guest-create.php
+#: templates/frontend/ticket-create.php
+msgid "-- Select Department --"
+msgstr "-- Seleccionar departamento --"
+
+#: templates/admin/ticket-detail.php
+msgid "-- Unassigned --"
+msgstr "-- Sin asignar --"
+
+#: templates/admin/api-tokens.php
+msgid "A descriptive name to identify this token."
+msgstr "Un nombre descriptivo para identificar este token."
+
+#: includes/Services/NotificationService.php
+msgid "A new support ticket has been submitted on %s."
+msgstr "Se ha enviado un nuevo ticket de soporte en %s."
+
+#: templates/admin/settings.php
+msgid "API & Webhooks"
+msgstr "API y Webhooks"
+
+#: includes/Admin/class-admin-menu.php
+#: templates/admin/api-tokens.php
+msgid "API Tokens"
+msgstr "Tokens de API"
+
+#: templates/admin/api-tokens.php
+msgid "API token created successfully."
+msgstr "Token de API creado correctamente."
+
+#: includes/Api/class-api-token-controller.php
+msgid "API token created successfully. Store this token securely - it will not be shown again."
+msgstr "Token de API creado correctamente. Guarda este token de forma segura; no se mostrara de nuevo."
+
+#: templates/admin/api-tokens.php
+msgid "API token deleted successfully."
+msgstr "Token de API eliminado correctamente."
+
+#: includes/Api/class-api-token-controller.php
+msgid "API token not found."
+msgstr "Token de API no encontrado."
+
+#: includes/Api/class-api-token-controller.php
+msgid "API token revoked successfully."
+msgstr "Token de API revocado correctamente."
+
+#: templates/admin/api-tokens.php
+msgid "Abilities"
+msgstr "Permisos"
+
+#: templates/admin/api-tokens.php
+#: templates/admin/automations.php
+#: templates/admin/canned-responses.php
+#: templates/admin/departments.php
+#: templates/admin/escalation-rules.php
+#: templates/admin/macros.php
+#: templates/admin/sla-policies.php
+#: templates/admin/tags.php
+#: templates/admin/ticket-detail.php
+#: templates/admin/tickets-list.php
+msgid "Action completed."
+msgstr "Accion completada."
+
+#: templates/admin/api-tokens.php
+#: templates/admin/automations.php
+#: templates/admin/canned-responses.php
+#: templates/admin/departments.php
+#: templates/admin/escalation-rules.php
+#: templates/admin/macros.php
+#: templates/admin/sla-policies.php
+#: templates/admin/tags.php
+msgid "Actions"
+msgstr "Acciones"
+
+#: templates/admin/macros.php
+msgid "Actions #"
+msgstr "N.o de acciones"
+
+#: templates/admin/automations.php
+#: templates/admin/escalation-rules.php
+#: templates/admin/macros.php
+msgid "Actions (JSON)"
+msgstr "Acciones (JSON)"
+
+#: templates/admin/automations.php
+#: templates/admin/departments.php
+#: templates/admin/escalation-rules.php
+#: templates/admin/sla-policies.php
+msgid "Active"
+msgstr "Activo"
+
+#: templates/admin/settings.php
+msgid "Activity Log Retention (days)"
+msgstr "Retencion del registro de actividad (dias)"
+
+#: templates/admin/ticket-detail.php
+msgid "Activity Timeline"
+msgstr "Historial de actividad"
+
+#: templates/admin/settings.php
+msgid "Activity log entries older than this will be automatically deleted. Set to 0 to keep forever."
+msgstr "Las entradas del registro de actividad mas antiguas se eliminaran automaticamente. Establecer en 0 para conservar indefinidamente."
+
+#: templates/admin/automations.php
+msgid "Add Automation"
+msgstr "Agregar automatizacion"
+
+#: templates/admin/departments.php
+msgid "Add Department"
+msgstr "Agregar departamento"
+
+#: templates/admin/automations.php
+#: templates/admin/ticket-detail.php
+msgid "Add Internal Note"
+msgstr "Agregar nota interna"
+
+#: templates/admin/macros.php
+msgid "Add Macro"
+msgstr "Agregar macro"
+
+#: templates/admin/automations.php
+msgid "Add New Automation"
+msgstr "Agregar nueva automatizacion"
+
+#: templates/admin/canned-responses.php
+msgid "Add New Canned Response"
+msgstr "Agregar nueva respuesta predefinida"
+
+#: templates/admin/departments.php
+msgid "Add New Department"
+msgstr "Agregar nuevo departamento"
+
+#: templates/admin/escalation-rules.php
+msgid "Add New Escalation Rule"
+msgstr "Agregar nueva regla de escalamiento"
+
+#: templates/admin/macros.php
+msgid "Add New Macro"
+msgstr "Agregar nuevo macro"
+
+#: templates/admin/sla-policies.php
+msgid "Add New SLA Policy"
+msgstr "Agregar nueva politica SLA"
+
+#: templates/admin/tags.php
+msgid "Add New Tag"
+msgstr "Agregar nueva etiqueta"
+
+#: templates/admin/ticket-detail.php
+msgid "Add Note"
+msgstr "Agregar nota"
+
+#: templates/admin/sla-policies.php
+msgid "Add Policy"
+msgstr "Agregar politica"
+
+#: templates/admin/ticket-detail.php
+msgid "Add Reply"
+msgstr "Agregar respuesta"
+
+#: templates/admin/canned-responses.php
+msgid "Add Response"
+msgstr "Agregar respuesta"
+
+#: templates/admin/escalation-rules.php
+msgid "Add Rule"
+msgstr "Agregar regla"
+
+#: templates/admin/automations.php
+#: templates/admin/tags.php
+msgid "Add Tag"
+msgstr "Agregar etiqueta"
+
+#: templates/admin/reports.php
+msgid "Agent"
+msgstr "Agente"
+
+#: includes/Api/class-ticket-controller.php
+msgid "Agent not found."
+msgstr "Agente no encontrado."
+
+#: templates/admin/departments.php
+msgid "Agents"
+msgstr "Agentes"
+
+#: templates/admin/tickets-list.php
+msgid "All Agents"
+msgstr "Todos los agentes"
+
+#: templates/admin/tickets-list.php
+msgid "All Departments"
+msgstr "Todos los departamentos"
+
+#: templates/admin/tickets-list.php
+msgid "All Priorities"
+msgstr "Todas las prioridades"
+
+#: templates/admin/tickets-list.php
+#: templates/frontend/ticket-list.php
+msgid "All Statuses"
+msgstr "Todos los estados"
+
+#: includes/Frontend/class-ajax-handler.php
+msgid "All fields are required."
+msgstr "Todos los campos son obligatorios."
+
+#: templates/admin/settings.php
+msgid "Allow guests (non-logged-in users) to submit tickets"
+msgstr "Permitir que los invitados (usuarios no registrados) envien tickets"
+
+#: templates/admin/settings.php
+msgid "Allow ticket creation and replies via email"
+msgstr "Permitir creacion de tickets y respuestas por correo"
+
+#: templates/admin/ticket-detail.php
+msgid "An error occurred."
+msgstr "Ocurrio un error."
+
+#: templates/admin/api-tokens.php
+#: templates/admin/automations.php
+#: templates/admin/canned-responses.php
+#: templates/admin/departments.php
+#: templates/admin/escalation-rules.php
+#: templates/admin/macros.php
+#: templates/admin/sla-policies.php
+#: templates/admin/tags.php
+msgid "An error occurred. Please try again."
+msgstr "Ocurrio un error. Por favor intenta de nuevo."
+
+#: templates/admin/sla-policies.php
+msgid "Are you sure you want to delete this SLA policy?"
+msgstr "Estas seguro de que deseas eliminar esta politica SLA?"
+
+#: templates/admin/automations.php
+msgid "Are you sure you want to delete this automation?"
+msgstr "Estas seguro de que deseas eliminar esta automatizacion?"
+
+#: templates/admin/canned-responses.php
+msgid "Are you sure you want to delete this canned response?"
+msgstr "Estas seguro de que deseas eliminar esta respuesta predefinida?"
+
+#: templates/admin/departments.php
+msgid "Are you sure you want to delete this department?"
+msgstr "Estas seguro de que deseas eliminar este departamento?"
+
+#: templates/admin/macros.php
+msgid "Are you sure you want to delete this macro?"
+msgstr "Estas seguro de que deseas eliminar este macro?"
+
+#: templates/admin/escalation-rules.php
+msgid "Are you sure you want to delete this rule?"
+msgstr "Estas seguro de que deseas eliminar esta regla?"
+
+#: templates/admin/tags.php
+msgid "Are you sure you want to delete this tag?"
+msgstr "Estas seguro de que deseas eliminar esta etiqueta?"
+
+#: templates/admin/api-tokens.php
+msgid "Are you sure you want to revoke this token?"
+msgstr "Estas seguro de que deseas revocar este token?"
+
+#: templates/admin/automations.php
+msgid "Assign to Agent"
+msgstr "Asignar al agente"
+
+#: includes/Helpers/class-enums.php
+msgid "Assigned"
+msgstr "Asignado"
+
+#: templates/admin/automations.php
+msgid "Assigned / Unassigned"
+msgstr "Asignado / Sin asignar"
+
+#: templates/admin/ticket-detail.php
+#: templates/admin/tickets-list.php
+msgid "Assignee"
+msgstr "Asignado"
+
+#: templates/admin/ticket-detail.php
+#: templates/admin/tickets-list.php
+msgid "Assignment updated."
+msgstr "Asignacion actualizada."
+
+#: templates/admin/settings.php
+#: templates/frontend/guest-view.php
+#: templates/frontend/ticket-create.php
+#: templates/frontend/ticket-view.php
+msgid "Attachments"
+msgstr "Adjuntos"
+
+#: templates/admin/ticket-detail.php
+msgid "Attachments:"
+msgstr "Adjuntos:"
+
+#: includes/Frontend/class-ajax-handler.php
+msgid "Authentication required."
+msgstr "Se requiere autenticacion."
+
+#: templates/frontend/guest-view.php
+#: templates/frontend/ticket-view.php
+msgid "Author"
+msgstr "Autor"
+
+#: templates/admin/settings.php
+msgid "Auto (follows system preference)"
+msgstr "Automatico (sigue la preferencia del sistema)"
+
+#: templates/admin/settings.php
+msgid "Auto-Close"
+msgstr "Cierre automatico"
+
+#: templates/admin/settings.php
+msgid "Auto-Close After (days)"
+msgstr "Cierre automatico despues de (dias)"
+
+#: templates/admin/settings.php
+msgid "Automatically close resolved tickets after a period of inactivity"
+msgstr "Cerrar automaticamente los tickets resueltos despues de un periodo de inactividad"
+
+#: templates/admin/automations.php
+msgid "Automation created successfully."
+msgstr "Automatizacion creada correctamente."
+
+#: templates/admin/automations.php
+msgid "Automation deleted successfully."
+msgstr "Automatizacion eliminada correctamente."
+
+#: templates/admin/automations.php
+msgid "Automation is active"
+msgstr "La automatizacion esta activa"
+
+#: includes/Api/class-automation-controller.php
+msgid "Automation not found."
+msgstr "Automatizacion no encontrada."
+
+#: templates/admin/automations.php
+msgid "Automation updated successfully."
+msgstr "Automatizacion actualizada correctamente."
+
+#: includes/Admin/class-admin-menu.php
+#: templates/admin/automations.php
+msgid "Automations"
+msgstr "Automatizaciones"
+
+#: templates/admin/reports.php
+msgid "Avg. First Response"
+msgstr "Prom. primera respuesta"
+
+#: templates/admin/reports.php
+msgid "Avg. Resolution Time"
+msgstr "Prom. tiempo de resolucion"
+
+#: templates/frontend/ticket-create.php
+#: templates/frontend/ticket-view.php
+msgid "Back to My Tickets"
+msgstr "Volver a mis tickets"
+
+#: templates/admin/canned-responses.php
+msgid "Body"
+msgstr "Cuerpo"
+
+#: templates/frontend/guest-create.php
+#: templates/frontend/ticket-create.php
+msgid "Brief summary of your issue"
+msgstr "Resumen breve de tu problema"
+
+#: templates/admin/sla-policies.php
+msgid "Business Hours"
+msgstr "Horario laboral"
+
+#: templates/admin/sla-policies.php
+msgid "Calculate SLA during business hours only"
+msgstr "Calcular SLA solo durante horario laboral"
+
+#: templates/admin/automations.php
+#: templates/admin/canned-responses.php
+#: templates/admin/departments.php
+#: templates/admin/escalation-rules.php
+#: templates/admin/macros.php
+#: templates/admin/sla-policies.php
+#: templates/admin/tags.php
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: includes/Admin/class-admin-menu.php
+#: templates/admin/canned-responses.php
+msgid "Canned Responses"
+msgstr "Respuestas predefinidas"
+
+#: templates/admin/canned-responses.php
+msgid "Canned response created successfully."
+msgstr "Respuesta predefinida creada correctamente."
+
+#: templates/admin/canned-responses.php
+msgid "Canned response deleted successfully."
+msgstr "Respuesta predefinida eliminada correctamente."
+
+#: templates/admin/canned-responses.php
+msgid "Canned response updated successfully."
+msgstr "Respuesta predefinida actualizada correctamente."
+
+#: includes/Api/class-ticket-controller.php
+msgid "Cannot transition from \"%1$s\" to \"%2$s\"."
+msgstr "No se puede cambiar de \"%1$s\" a \"%2$s\"."
+
+#: templates/admin/canned-responses.php
+msgid "Category"
+msgstr "Categoria"
+
+#: templates/admin/automations.php
+msgid "Change Priority"
+msgstr "Cambiar prioridad"
+
+#: templates/admin/automations.php
+msgid "Change Status"
+msgstr "Cambiar estado"
+
+#: templates/admin/settings.php
+msgid "Choose the color theme for the Escalated admin panel."
+msgstr "Elige el tema de color para el panel de administracion de Escalated."
+
+#: templates/admin/tickets-list.php
+msgid "Clear"
+msgstr "Limpiar"
+
+#: templates/frontend/ticket-view.php
+msgid "Close Ticket"
+msgstr "Cerrar ticket"
+
+#: includes/Helpers/class-enums.php
+#: templates/admin/reports.php
+msgid "Closed"
+msgstr "Cerrado"
+
+#: templates/admin/ticket-detail.php
+msgid "Closed:"
+msgstr "Cerrado:"
+
+#: templates/admin/tags.php
+msgid "Color"
+msgstr "Color"
+
+#: templates/frontend/ticket-view.php
+msgid "Comments (optional)"
+msgstr "Comentarios (opcional)"
+
+#: templates/admin/automations.php
+msgid "Conditions"
+msgstr "Condiciones"
+
+#: templates/admin/automations.php
+#: templates/admin/escalation-rules.php
+msgid "Conditions (JSON)"
+msgstr "Condiciones (JSON)"
+
+#: templates/admin/ticket-detail.php
+msgid "Conversation"
+msgstr "Conversacion"
+
+#: templates/admin/reports.php
+msgid "Count"
+msgstr "Cantidad"
+
+#: templates/frontend/ticket-list.php
+msgid "Create New Ticket"
+msgstr "Crear nuevo ticket"
+
+#: templates/admin/api-tokens.php
+msgid "Create New Token"
+msgstr "Crear nuevo token"
+
+#: templates/admin/api-tokens.php
+msgid "Create Token"
+msgstr "Crear token"
+
+#: templates/frontend/ticket-list.php
+msgid "Create Your First Ticket"
+msgstr "Crea tu primer ticket"
+
+#: templates/frontend/ticket-create.php
+msgid "Create a New Ticket"
+msgstr "Crear un nuevo ticket"
+
+#: templates/admin/api-tokens.php
+msgid "Create replies"
+msgstr "Crear respuestas"
+
+#: templates/admin/api-tokens.php
+msgid "Create/update tickets"
+msgstr "Crear/actualizar tickets"
+
+#: templates/admin/api-tokens.php
+#: templates/admin/tickets-list.php
+msgid "Created"
+msgstr "Creado"
+
+#: templates/admin/canned-responses.php
+#: templates/admin/macros.php
+msgid "Created By"
+msgstr "Creado por"
+
+#: templates/admin/ticket-detail.php
+#: templates/frontend/guest-view.php
+#: templates/frontend/ticket-view.php
+msgid "Created:"
+msgstr "Creado:"
+
+#: includes/Helpers/class-enums.php
+msgid "Critical"
+msgstr "Critica"
+
+#: templates/admin/settings.php
+msgid "Dark"
+msgstr "Oscuro"
+
+#: templates/frontend/ticket-list.php
+msgid "Date"
+msgstr "Fecha"
+
+#: templates/admin/sla-policies.php
+msgid "Default"
+msgstr "Predeterminado"
+
+#: templates/admin/settings.php
+msgid "Default Priority"
+msgstr "Prioridad predeterminada"
+
+#: templates/admin/macros.php
+msgid "Define macro actions as a JSON array. Supported action types: change_status, change_priority, assign_to, add_tag, remove_tag, add_reply, add_note, change_department."
+msgstr "Define las acciones del macro como un arreglo JSON. Tipos de accion soportados: change_status, change_priority, assign_to, add_tag, remove_tag, add_reply, add_note, change_department."
+
+#: templates/admin/automations.php
+#: templates/admin/canned-responses.php
+#: templates/admin/departments.php
+#: templates/admin/escalation-rules.php
+#: templates/admin/macros.php
+#: templates/admin/sla-policies.php
+#: templates/admin/tags.php
+msgid "Delete"
+msgstr "Eliminar"
+
+#: templates/admin/reports.php
+#: templates/admin/ticket-detail.php
+#: templates/admin/tickets-list.php
+#: templates/frontend/guest-create.php
+#: templates/frontend/ticket-create.php
+msgid "Department"
+msgstr "Departamento"
+
+#: includes/Helpers/class-enums.php
+msgid "Department changed"
+msgstr "Departamento cambiado"
+
+#: templates/admin/departments.php
+msgid "Department created successfully."
+msgstr "Departamento creado correctamente."
+
+#: templates/admin/departments.php
+msgid "Department deleted successfully."
+msgstr "Departamento eliminado correctamente."
+
+#: templates/admin/departments.php
+msgid "Department is active"
+msgstr "El departamento esta activo"
+
+#: templates/admin/departments.php
+msgid "Department updated successfully."
+msgstr "Departamento actualizado correctamente."
+
+#: templates/admin/ticket-detail.php
+#: templates/admin/tickets-list.php
+msgid "Department updated."
+msgstr "Departamento actualizado."
+
+#: includes/Admin/class-admin-menu.php
+#: templates/admin/departments.php
+msgid "Departments"
+msgstr "Departamentos"
+
+#: templates/frontend/ticket-create.php
+msgid "Describe your issue in detail..."
+msgstr "Describe tu problema en detalle..."
+
+#: templates/admin/departments.php
+#: templates/admin/escalation-rules.php
+#: templates/admin/macros.php
+#: templates/admin/sla-policies.php
+#: templates/admin/ticket-detail.php
+#: templates/frontend/guest-create.php
+#: templates/frontend/ticket-create.php
+msgid "Description"
+msgstr "Descripcion"
+
+#: includes/Api/class-ticket-controller.php
+msgid "Description is required."
+msgstr "La descripcion es obligatoria."
+
+#: includes/Services/NotificationService.php
+msgid "Description:"
+msgstr "Descripcion:"
+
+#: templates/admin/ticket-detail.php
+msgid "Details"
+msgstr "Detalles"
+
+#: templates/admin/ticket-detail.php
+msgid "Due in %s"
+msgstr "Vence en %s"
+
+#: templates/admin/automations.php
+#: templates/admin/canned-responses.php
+#: templates/admin/departments.php
+#: templates/admin/escalation-rules.php
+#: templates/admin/macros.php
+#: templates/admin/sla-policies.php
+#: templates/admin/tags.php
+msgid "Edit"
+msgstr "Editar"
+
+#: templates/admin/automations.php
+msgid "Edit Automation"
+msgstr "Editar automatizacion"
+
+#: templates/admin/canned-responses.php
+msgid "Edit Canned Response"
+msgstr "Editar respuesta predefinida"
+
+#: templates/admin/departments.php
+msgid "Edit Department"
+msgstr "Editar departamento"
+
+#: templates/admin/escalation-rules.php
+msgid "Edit Escalation Rule"
+msgstr "Editar regla de escalamiento"
+
+#: templates/admin/macros.php
+msgid "Edit Macro"
+msgstr "Editar macro"
+
+#: templates/admin/sla-policies.php
+msgid "Edit SLA Policy"
+msgstr "Editar politica SLA"
+
+#: templates/admin/tags.php
+msgid "Edit Tag"
+msgstr "Editar etiqueta"
+
+#: templates/admin/settings.php
+#: templates/frontend/guest-create.php
+msgid "Email Address"
+msgstr "Direccion de correo"
+
+#: templates/admin/settings.php
+msgid "Email Notifications"
+msgstr "Notificaciones por correo"
+
+#: templates/admin/settings.php
+msgid "Enable Inbound Email"
+msgstr "Habilitar correo entrante"
+
+#: templates/admin/settings.php
+msgid "Encryption"
+msgstr "Cifrado"
+
+#: templates/admin/escalation-rules.php
+msgid "Enter actions as a JSON array. Each action should have \"type\" and \"value\" keys."
+msgstr "Ingresa las acciones como un arreglo JSON. Cada accion debe tener las claves \"type\" y \"value\"."
+
+#: templates/admin/escalation-rules.php
+msgid "Enter conditions as a JSON array. Each condition should have \"field\", \"operator\", and \"value\" keys."
+msgstr "Ingresa las condiciones como un arreglo JSON. Cada condicion debe tener las claves \"field\", \"operator\" y \"value\"."
+
+#: includes/Admin/class-admin-menu.php
+#: includes/Helpers/class-enums.php
+msgid "Escalated"
+msgstr "Escalado"
+
+#: templates/admin/settings.php
+msgid "Escalated Settings"
+msgstr "Configuracion de Escalated"
+
+#: includes/Admin/class-admin-menu.php
+#: templates/admin/escalation-rules.php
+msgid "Escalation Rules"
+msgstr "Reglas de escalamiento"
+
+#: templates/admin/escalation-rules.php
+msgid "Escalation rule created successfully."
+msgstr "Regla de escalamiento creada correctamente."
+
+#: templates/admin/escalation-rules.php
+msgid "Escalation rule deleted successfully."
+msgstr "Regla de escalamiento eliminada correctamente."
+
+#: templates/admin/escalation-rules.php
+msgid "Escalation rule updated successfully."
+msgstr "Regla de escalamiento actualizada correctamente."
+
+#: includes/class-activator.php
+msgid "Every Five Minutes (Escalated)"
+msgstr "Cada cinco minutos (Escalated)"
+
+#: includes/class-activator.php
+msgid "Every Minute (Escalated)"
+msgstr "Cada minuto (Escalated)"
+
+#: templates/admin/api-tokens.php
+msgid "Expiration Date"
+msgstr "Fecha de expiracion"
+
+#: templates/admin/api-tokens.php
+msgid "Expires"
+msgstr "Expira"
+
+#: includes/Api/class-api-token-controller.php
+msgid "Expiry date must be in the future."
+msgstr "La fecha de expiracion debe ser en el futuro."
+
+#: includes/Api/class-api-token-controller.php
+msgid "Failed to create API token."
+msgstr "Error al crear el token de API."
+
+#: includes/Api/class-automation-controller.php
+msgid "Failed to create automation."
+msgstr "Error al crear la automatizacion."
+
+#: includes/Api/class-ticket-controller.php
+msgid "Failed to create note."
+msgstr "Error al crear la nota."
+
+#: includes/Api/class-ticket-controller.php
+msgid "Failed to create reply."
+msgstr "Error al crear la respuesta."
+
+#: includes/Api/class-ticket-controller.php
+msgid "Failed to create ticket."
+msgstr "Error al crear el ticket."
+
+#: includes/Api/class-ticket-controller.php
+msgid "Failed to delete ticket."
+msgstr "Error al eliminar el ticket."
+
+#: includes/Api/class-api-token-controller.php
+msgid "Failed to revoke API token."
+msgstr "Error al revocar el token de API."
+
+#: templates/frontend/guest-create.php
+msgid "Fill out the form below to create a support ticket. You will receive a link to track your request."
+msgstr "Completa el formulario a continuacion para crear un ticket de soporte. Recibiras un enlace para seguir tu solicitud."
+
+#: templates/admin/tickets-list.php
+msgid "Filter"
+msgstr "Filtrar"
+
+#: templates/frontend/ticket-list.php
+msgid "Filter by status"
+msgstr "Filtrar por estado"
+
+#: templates/admin/sla-policies.php
+msgid "First Response (hrs)"
+msgstr "Primera respuesta (hrs)"
+
+#: templates/admin/reports.php
+msgid "First Response Breaches"
+msgstr "Incumplimientos de primera respuesta"
+
+#: templates/admin/ticket-detail.php
+msgid "First Response:"
+msgstr "Primera respuesta:"
+
+#: templates/admin/ticket-detail.php
+msgid "First response SLA breached"
+msgstr "SLA de primera respuesta incumplido"
+
+#: templates/admin/ticket-detail.php
+msgid "Followers"
+msgstr "Seguidores"
+
+#: includes/Api/class-ticket-controller.php
+msgid "Following ticket."
+msgstr "Siguiendo el ticket."
+
+#: templates/admin/settings.php
+msgid "From Email"
+msgstr "Correo del remitente"
+
+#: templates/admin/settings.php
+msgid "From Name"
+msgstr "Nombre del remitente"
+
+#: includes/Services/NotificationService.php
+msgid "From: %s"
+msgstr "De: %s"
+
+#: templates/admin/api-tokens.php
+msgid "Full access (all abilities)"
+msgstr "Acceso completo (todos los permisos)"
+
+#: templates/admin/settings.php
+msgid "General"
+msgstr "General"
+
+#: templates/admin/ticket-detail.php
+#: templates/admin/tickets-list.php
+#: templates/frontend/guest-view.php
+#: templates/frontend/ticket-view.php
+msgid "Guest"
+msgstr "Invitado"
+
+#: templates/admin/settings.php
+msgid "Guest Tickets"
+msgstr "Tickets de invitados"
+
+#: includes/Frontend/class-ajax-handler.php
+msgid "Guest tickets are disabled."
+msgstr "Los tickets de invitados estan deshabilitados."
+
+#: includes/Frontend/class-shortcodes.php
+msgid "Guest tickets are not available."
+msgstr "Los tickets de invitados no estan disponibles."
+
+#: includes/Helpers/class-enums.php
+msgid "High"
+msgstr "Alta"
+
+#: templates/admin/automations.php
+msgid "Hours Since Assigned"
+msgstr "Horas desde la asignacion"
+
+#: templates/admin/automations.php
+msgid "Hours Since Created"
+msgstr "Horas desde la creacion"
+
+#: templates/admin/automations.php
+msgid "Hours Since Updated"
+msgstr "Horas desde la actualizacion"
+
+#: templates/frontend/ticket-view.php
+msgid "How was your experience?"
+msgstr "Como fue tu experiencia?"
+
+#: templates/admin/settings.php
+msgid "IMAP Port"
+msgstr "Puerto IMAP"
+
+#: templates/admin/settings.php
+msgid "IMAP Server"
+msgstr "Servidor IMAP"
+
+#: templates/admin/canned-responses.php
+msgid "If unchecked, only you can use this canned response."
+msgstr "Si no esta marcado, solo tu puedes usar esta respuesta predefinida."
+
+#: templates/admin/macros.php
+msgid "If unchecked, only you can use this macro."
+msgstr "Si no esta marcado, solo tu puedes usar este macro."
+
+#: includes/Helpers/class-enums.php
+msgid "In Progress"
+msgstr "En progreso"
+
+#: templates/admin/settings.php
+msgid "Inbound Email"
+msgstr "Correo entrante"
+
+#: templates/admin/ticket-detail.php
+msgid "Internal Note"
+msgstr "Nota interna"
+
+#: includes/Api/class-ticket-controller.php
+msgid "Internal note added successfully."
+msgstr "Nota interna agregada correctamente."
+
+#: templates/admin/ticket-detail.php
+#: templates/admin/tickets-list.php
+msgid "Internal note added."
+msgstr "Nota interna agregada."
+
+#: includes/Frontend/class-ajax-handler.php
+msgid "Invalid email address."
+msgstr "Direccion de correo no valida."
+
+#: includes/Api/class-api-token-controller.php
+#: includes/Api/class-auth-controller.php
+#: includes/Api/class-base-controller.php
+msgid "Invalid or expired API token."
+msgstr "Token de API no valido o expirado."
+
+#: includes/Api/class-ticket-controller.php
+msgid "Invalid priority value."
+msgstr "Valor de prioridad no valido."
+
+#: includes/Frontend/class-ajax-handler.php
+msgid "Invalid rating."
+msgstr "Calificacion no valida."
+
+#: includes/Frontend/class-ajax-handler.php
+msgid "Invalid request."
+msgstr "Solicitud no valida."
+
+#: includes/Api/class-ticket-controller.php
+msgid "Invalid status value."
+msgstr "Valor de estado no valido."
+
+#: templates/admin/automations.php
+msgid "JSON array of actions. Supported types: %s"
+msgstr "Arreglo JSON de acciones. Tipos soportados: %s"
+
+#: templates/admin/automations.php
+msgid "JSON array of conditions. Supported fields: %s"
+msgstr "Arreglo JSON de condiciones. Campos soportados: %s"
+
+#: templates/frontend/guest-create.php
+msgid "John Doe"
+msgstr "Juan Perez"
+
+#: templates/admin/reports.php
+msgid "Last 30 Days"
+msgstr "Ultimos 30 dias"
+
+#: templates/admin/automations.php
+msgid "Last Run"
+msgstr "Ultima ejecucion"
+
+#: templates/admin/api-tokens.php
+msgid "Last Used"
+msgstr "Ultimo uso"
+
+#: templates/admin/api-tokens.php
+msgid "Leave blank for a token that never expires."
+msgstr "Dejar en blanco para un token que nunca expire."
+
+#: templates/admin/departments.php
+#: templates/admin/tags.php
+msgid "Leave blank to auto-generate from name."
+msgstr "Dejar en blanco para generar automaticamente desde el nombre."
+
+#: templates/admin/settings.php
+msgid "Light"
+msgstr "Claro"
+
+#: includes/Helpers/class-enums.php
+msgid "Low"
+msgstr "Baja"
+
+#: templates/admin/automations.php
+#: templates/admin/escalation-rules.php
+msgid "Lower numbers execute first."
+msgstr "Los numeros mas bajos se ejecutan primero."
+
+#: includes/Api/class-ticket-controller.php
+msgid "Macro ID is required."
+msgstr "El ID del macro es obligatorio."
+
+#: includes/Api/class-ticket-controller.php
+msgid "Macro applied successfully."
+msgstr "Macro aplicado correctamente."
+
+#: templates/admin/macros.php
+msgid "Macro created successfully."
+msgstr "Macro creado correctamente."
+
+#: templates/admin/macros.php
+msgid "Macro deleted successfully."
+msgstr "Macro eliminado correctamente."
+
+#: templates/admin/macros.php
+msgid "Macro updated successfully."
+msgstr "Macro actualizado correctamente."
+
+#: includes/Admin/class-admin-menu.php
+#: templates/admin/macros.php
+msgid "Macros"
+msgstr "Macros"
+
+#: templates/admin/settings.php
+msgid "Maintenance"
+msgstr "Mantenimiento"
+
+#: templates/admin/api-tokens.php
+msgid "Make sure to copy this token now. You will not be able to see it again!"
+msgstr "Asegurate de copiar este token ahora. No podras verlo de nuevo!"
+
+#: templates/admin/settings.php
+msgid "Max Attachments Per Reply"
+msgstr "Adjuntos maximos por respuesta"
+
+#: templates/admin/settings.php
+msgid "Max File Size (KB)"
+msgstr "Tamano maximo de archivo (KB)"
+
+#: templates/admin/settings.php
+msgid "Maximum file size for attachments in kilobytes (10240 = 10 MB)."
+msgstr "Tamano maximo de archivo para adjuntos en kilobytes (10240 = 10 MB)."
+
+#: includes/Helpers/class-enums.php
+msgid "Medium"
+msgstr "Media"
+
+#: templates/frontend/ticket-list.php
+msgid "My Tickets"
+msgstr "Mis tickets"
+
+#: templates/admin/ticket-detail.php
+msgid "N/A"
+msgstr "N/D"
+
+#: templates/admin/api-tokens.php
+#: templates/admin/automations.php
+#: templates/admin/departments.php
+#: templates/admin/escalation-rules.php
+#: templates/admin/macros.php
+#: templates/admin/sla-policies.php
+#: templates/admin/tags.php
+msgid "Name"
+msgstr "Nombre"
+
+#: templates/admin/api-tokens.php
+#: templates/admin/automations.php
+msgid "Never"
+msgstr "Nunca"
+
+#: templates/admin/settings.php
+msgid "New reply on ticket"
+msgstr "Nueva respuesta en ticket"
+
+#: templates/admin/settings.php
+msgid "New ticket created"
+msgstr "Nuevo ticket creado"
+
+#: templates/frontend/ticket-list.php
+msgid "Next"
+msgstr "Siguiente"
+
+#: templates/admin/automations.php
+#: templates/admin/canned-responses.php
+#: templates/admin/departments.php
+#: templates/admin/escalation-rules.php
+#: templates/admin/macros.php
+#: templates/admin/sla-policies.php
+msgid "No"
+msgstr "No"
+
+#: templates/admin/api-tokens.php
+msgid "No API tokens found."
+msgstr "No se encontraron tokens de API."
+
+#: templates/admin/escalation-rules.php
+msgid "No Response"
+msgstr "Sin respuesta"
+
+#: templates/admin/sla-policies.php
+msgid "No SLA policies found."
+msgstr "No se encontraron politicas SLA."
+
+#: templates/admin/ticket-detail.php
+msgid "No activity recorded."
+msgstr "Sin actividad registrada."
+
+#: templates/admin/automations.php
+msgid "No automations found."
+msgstr "No se encontraron automatizaciones."
+
+#: templates/admin/canned-responses.php
+msgid "No canned responses found."
+msgstr "No se encontraron respuestas predefinidas."
+
+#: templates/admin/reports.php
+msgid "No data available."
+msgstr "Sin datos disponibles."
+
+#: templates/admin/departments.php
+msgid "No departments found."
+msgstr "No se encontraron departamentos."
+
+#: templates/admin/escalation-rules.php
+msgid "No escalation rules found."
+msgstr "No se encontraron reglas de escalamiento."
+
+#: templates/admin/ticket-detail.php
+msgid "No followers."
+msgstr "Sin seguidores."
+
+#: templates/admin/macros.php
+msgid "No macros found."
+msgstr "No se encontraron macros."
+
+#: templates/admin/ticket-detail.php
+msgid "No replies yet."
+msgstr "Sin respuestas aun."
+
+#: templates/admin/tags.php
+msgid "No tags found."
+msgstr "No se encontraron etiquetas."
+
+#: includes/Frontend/class-shortcodes.php
+msgid "No ticket specified."
+msgstr "No se especifico un ticket."
+
+#: templates/admin/tickets-list.php
+msgid "No tickets found."
+msgstr "No se encontraron tickets."
+
+#: templates/admin/settings.php
+msgid "None"
+msgstr "Ninguno"
+
+#: includes/Helpers/class-enums.php
+msgid "Note added"
+msgstr "Nota agregada"
+
+#: includes/Api/class-ticket-controller.php
+msgid "Note body is required."
+msgstr "El cuerpo de la nota es obligatorio."
+
+#: templates/admin/settings.php
+msgid "Notifications"
+msgstr "Notificaciones"
+
+#: templates/admin/settings.php
+msgid "Number of days after which resolved tickets are automatically closed."
+msgstr "Numero de dias despues de los cuales los tickets resueltos se cierran automaticamente."
+
+#: includes/Helpers/class-enums.php
+msgid "Open"
+msgstr "Abierto"
+
+#: templates/admin/reports.php
+msgid "Open Tickets"
+msgstr "Tickets abiertos"
+
+#: templates/admin/ticket-detail.php
+msgid "Opened by %1$s %2$s ago"
+msgstr "Abierto por %1$s hace %2$s"
+
+#: templates/admin/sla-policies.php
+msgid "Options"
+msgstr "Opciones"
+
+#: templates/admin/escalation-rules.php
+#: templates/admin/macros.php
+msgid "Order"
+msgstr "Orden"
+
+#: templates/admin/ticket-detail.php
+msgid "Overdue by %s"
+msgstr "Vencido hace %s"
+
+#: templates/admin/settings.php
+msgid "Panel Theme"
+msgstr "Tema del panel"
+
+#: templates/admin/settings.php
+msgid "Password"
+msgstr "Contrasena"
+
+#: templates/admin/reports.php
+msgid "Percentage"
+msgstr "Porcentaje"
+
+#: includes/Admin/class-admin-api-tokens.php
+#: includes/Admin/class-admin-automations.php
+#: includes/Admin/class-admin-canned-responses.php
+#: includes/Admin/class-admin-departments.php
+#: includes/Admin/class-admin-escalation-rules.php
+#: includes/Admin/class-admin-macros.php
+#: includes/Admin/class-admin-settings.php
+#: includes/Admin/class-admin-sla-policies.php
+#: includes/Admin/class-admin-tags.php
+#: includes/Admin/class-admin-tickets.php
+msgid "Permission denied."
+msgstr "Permiso denegado."
+
+#: templates/frontend/guest-create.php
+msgid "Please describe your issue in detail..."
+msgstr "Por favor describe tu problema en detalle..."
+
+#: includes/Frontend/class-shortcodes.php
+msgid "Please log in to create a ticket."
+msgstr "Por favor inicia sesion para crear un ticket."
+
+#: includes/Frontend/class-shortcodes.php
+msgid "Please log in to view tickets."
+msgstr "Por favor inicia sesion para ver tickets."
+
+#: includes/Frontend/class-shortcodes.php
+msgid "Please log in to view your tickets."
+msgstr "Por favor inicia sesion para ver tus tickets."
+
+#: templates/frontend/ticket-view.php
+msgid "Please rate the support you received for this ticket."
+msgstr "Por favor califica el soporte que recibiste para este ticket."
+
+#: templates/admin/sla-policies.php
+msgid "Policy is active"
+msgstr "La politica esta activa"
+
+#: templates/admin/ticket-detail.php
+msgid "Policy:"
+msgstr "Politica:"
+
+#: templates/admin/automations.php
+msgid "Position"
+msgstr "Posicion"
+
+#: includes/Frontend/class-shortcodes.php
+#: templates/admin/settings.php
+msgid "Powered by Escalated"
+msgstr "Desarrollado con Escalated"
+
+#: templates/admin/settings.php
+msgid "Prefix for ticket references (e.g., ESC-00001)."
+msgstr "Prefijo para referencias de tickets (ej., ESC-00001)."
+
+#: templates/admin/tags.php
+msgid "Preview"
+msgstr "Vista previa"
+
+#: templates/frontend/ticket-list.php
+msgid "Previous"
+msgstr "Anterior"
+
+#: templates/admin/automations.php
+#: templates/admin/reports.php
+#: templates/admin/sla-policies.php
+#: templates/admin/ticket-detail.php
+#: templates/admin/tickets-list.php
+#: templates/frontend/ticket-create.php
+#: templates/frontend/ticket-list.php
+msgid "Priority"
+msgstr "Prioridad"
+
+#: templates/admin/escalation-rules.php
+msgid "Priority Based"
+msgstr "Basado en prioridad"
+
+#: includes/Helpers/class-enums.php
+msgid "Priority changed"
+msgstr "Prioridad cambiada"
+
+#: includes/Api/class-ticket-controller.php
+msgid "Priority updated successfully."
+msgstr "Prioridad actualizada correctamente."
+
+#: templates/admin/ticket-detail.php
+#: templates/admin/tickets-list.php
+msgid "Priority updated."
+msgstr "Prioridad actualizada."
+
+#: templates/frontend/guest-view.php
+#: templates/frontend/ticket-view.php
+msgid "Priority:"
+msgstr "Prioridad:"
+
+#: includes/Services/NotificationService.php
+msgid "Priority: %s"
+msgstr "Prioridad: %s"
+
+#: includes/Services/NotificationService.php
+msgid "Re: [%1$s] %2$s"
+msgstr "Re: [%1$s] %2$s"
+
+#: templates/admin/api-tokens.php
+msgid "Read reports"
+msgstr "Leer reportes"
+
+#: templates/admin/api-tokens.php
+msgid "Read tickets"
+msgstr "Leer tickets"
+
+#: templates/frontend/guest-view.php
+#: templates/frontend/ticket-view.php
+msgid "Ref:"
+msgstr "Ref:"
+
+#: templates/admin/tickets-list.php
+#: templates/frontend/ticket-list.php
+msgid "Reference"
+msgstr "Referencia"
+
+#: includes/Services/NotificationService.php
+msgid "Reference: %s"
+msgstr "Referencia: %s"
+
+#: includes/Helpers/class-enums.php
+msgid "Reopened"
+msgstr "Reabierto"
+
+#: includes/Helpers/class-enums.php
+msgid "Replied"
+msgstr "Respondido"
+
+#: templates/frontend/guest-view.php
+#: templates/frontend/ticket-view.php
+msgid "Reply"
+msgstr "Responder"
+
+#: includes/Api/class-ticket-controller.php
+#: templates/admin/ticket-detail.php
+#: templates/admin/tickets-list.php
+msgid "Reply added successfully."
+msgstr "Respuesta agregada correctamente."
+
+#: includes/Api/class-ticket-controller.php
+msgid "Reply body is required."
+msgstr "El cuerpo de la respuesta es obligatorio."
+
+#: includes/Frontend/class-ajax-handler.php
+msgid "Reply sent."
+msgstr "Respuesta enviada."
+
+#: includes/Admin/class-admin-menu.php
+#: templates/admin/reports.php
+msgid "Reports"
+msgstr "Reportes"
+
+#: templates/admin/tickets-list.php
+msgid "Requester"
+msgstr "Solicitante"
+
+#: templates/admin/sla-policies.php
+msgid "Resolution (hrs)"
+msgstr "Resolucion (hrs)"
+
+#: templates/admin/reports.php
+msgid "Resolution Breaches"
+msgstr "Incumplimientos de resolucion"
+
+#: templates/admin/ticket-detail.php
+msgid "Resolution Due:"
+msgstr "Fecha limite de resolucion:"
+
+#: templates/admin/ticket-detail.php
+msgid "Resolution SLA breached"
+msgstr "SLA de resolucion incumplido"
+
+#: includes/Helpers/class-enums.php
+#: templates/admin/reports.php
+msgid "Resolved"
+msgstr "Resuelto"
+
+#: templates/admin/ticket-detail.php
+msgid "Resolved:"
+msgstr "Resuelto:"
+
+#: templates/admin/api-tokens.php
+msgid "Revoke"
+msgstr "Revocar"
+
+#: templates/admin/escalation-rules.php
+msgid "Rule is active"
+msgstr "La regla esta activa"
+
+#: templates/admin/settings.php
+msgid "SLA & Automation"
+msgstr "SLA y automatizacion"
+
+#: templates/admin/escalation-rules.php
+msgid "SLA Breach"
+msgstr "Incumplimiento de SLA"
+
+#: templates/admin/reports.php
+msgid "SLA Compliance Rate"
+msgstr "Tasa de cumplimiento SLA"
+
+#: templates/admin/ticket-detail.php
+msgid "SLA Information"
+msgstr "Informacion de SLA"
+
+#: includes/Admin/class-admin-menu.php
+#: templates/admin/sla-policies.php
+msgid "SLA Policies"
+msgstr "Politicas SLA"
+
+#: templates/admin/sla-policies.php
+msgid "SLA Targets (Hours)"
+msgstr "Objetivos SLA (horas)"
+
+#: templates/admin/settings.php
+msgid "SLA Warning (minutes)"
+msgstr "Advertencia SLA (minutos)"
+
+#: templates/admin/settings.php
+msgid "SLA breach"
+msgstr "Incumplimiento de SLA"
+
+#: includes/Helpers/class-enums.php
+msgid "SLA breached"
+msgstr "SLA incumplido"
+
+#: templates/admin/sla-policies.php
+msgid "SLA policy created successfully."
+msgstr "Politica SLA creada correctamente."
+
+#: templates/admin/sla-policies.php
+msgid "SLA policy deleted successfully."
+msgstr "Politica SLA eliminada correctamente."
+
+#: templates/admin/sla-policies.php
+msgid "SLA policy updated successfully."
+msgstr "Politica SLA actualizada correctamente."
+
+#: templates/admin/settings.php
+msgid "SLA warning (approaching deadline)"
+msgstr "Advertencia SLA (fecha limite cercana)"
+
+#: templates/admin/settings.php
+msgid "SSL"
+msgstr "SSL"
+
+#: templates/admin/settings.php
+msgid "Save Settings"
+msgstr "Guardar configuracion"
+
+#: templates/admin/tickets-list.php
+msgid "Search tickets..."
+msgstr "Buscar tickets..."
+
+#: templates/admin/settings.php
+msgid "Secret key used to sign webhook payloads."
+msgstr "Clave secreta utilizada para firmar las cargas de webhook."
+
+#: includes/Admin/class-admin-api-tokens.php
+#: includes/Admin/class-admin-automations.php
+#: includes/Admin/class-admin-canned-responses.php
+#: includes/Admin/class-admin-departments.php
+#: includes/Admin/class-admin-escalation-rules.php
+#: includes/Admin/class-admin-macros.php
+#: includes/Admin/class-admin-settings.php
+#: includes/Admin/class-admin-sla-policies.php
+#: includes/Admin/class-admin-tags.php
+#: includes/Admin/class-admin-tickets.php
+msgid "Security check failed."
+msgstr "La verificacion de seguridad fallo."
+
+#: templates/admin/ticket-detail.php
+#: templates/frontend/guest-view.php
+#: templates/frontend/ticket-view.php
+msgid "Send Reply"
+msgstr "Enviar respuesta"
+
+#: templates/admin/settings.php
+msgid "Send a warning notification this many minutes before SLA breach."
+msgstr "Enviar una notificacion de advertencia estos minutos antes del incumplimiento de SLA."
+
+#: templates/admin/automations.php
+msgid "Set Ticket Type"
+msgstr "Establecer tipo de ticket"
+
+#: templates/admin/sla-policies.php
+msgid "Set as default policy"
+msgstr "Establecer como politica predeterminada"
+
+#: includes/Admin/class-admin-menu.php
+msgid "Settings"
+msgstr "Configuracion"
+
+#: templates/admin/settings.php
+msgid "Settings saved successfully."
+msgstr "Configuracion guardada correctamente."
+
+#: templates/admin/canned-responses.php
+#: templates/admin/macros.php
+msgid "Shared"
+msgstr "Compartido"
+
+#: templates/admin/canned-responses.php
+#: templates/admin/macros.php
+msgid "Shared with all agents"
+msgstr "Compartido con todos los agentes"
+
+#: templates/admin/settings.php
+msgid "Show \"Powered by Escalated\" footer on customer portal pages"
+msgstr "Mostrar \"Powered by Escalated\" en el pie de pagina del portal del cliente"
+
+#: templates/admin/departments.php
+#: templates/admin/tags.php
+msgid "Slug"
+msgstr "Slug"
+
+#: templates/admin/escalation-rules.php
+#: templates/admin/macros.php
+msgid "Sort Order"
+msgstr "Orden de clasificacion"
+
+#: templates/admin/automations.php
+#: templates/admin/reports.php
+#: templates/admin/ticket-detail.php
+#: templates/admin/tickets-list.php
+#: templates/frontend/ticket-list.php
+msgid "Status"
+msgstr "Estado"
+
+#: templates/admin/escalation-rules.php
+msgid "Status Change"
+msgstr "Cambio de estado"
+
+#: includes/Helpers/class-enums.php
+msgid "Status changed"
+msgstr "Estado cambiado"
+
+#: includes/Api/class-ticket-controller.php
+msgid "Status updated successfully."
+msgstr "Estado actualizado correctamente."
+
+#: templates/admin/ticket-detail.php
+#: templates/admin/tickets-list.php
+msgid "Status updated."
+msgstr "Estado actualizado."
+
+#: templates/frontend/guest-view.php
+#: templates/frontend/ticket-view.php
+msgid "Status:"
+msgstr "Estado:"
+
+#: templates/admin/tickets-list.php
+#: templates/frontend/guest-create.php
+#: templates/frontend/ticket-create.php
+#: templates/frontend/ticket-list.php
+msgid "Subject"
+msgstr "Asunto"
+
+#: templates/admin/automations.php
+msgid "Subject Contains"
+msgstr "El asunto contiene"
+
+#: includes/Frontend/class-ajax-handler.php
+msgid "Subject and description are required."
+msgstr "El asunto y la descripcion son obligatorios."
+
+#: includes/Api/class-ticket-controller.php
+msgid "Subject is required."
+msgstr "El asunto es obligatorio."
+
+#: includes/Services/NotificationService.php
+msgid "Subject: %s"
+msgstr "Asunto: %s"
+
+#: templates/frontend/ticket-view.php
+msgid "Submit Rating"
+msgstr "Enviar calificacion"
+
+#: templates/frontend/guest-create.php
+msgid "Submit Request"
+msgstr "Enviar solicitud"
+
+#: templates/frontend/ticket-create.php
+msgid "Submit Ticket"
+msgstr "Enviar ticket"
+
+#: templates/frontend/guest-create.php
+msgid "Submit a Support Request"
+msgstr "Enviar una solicitud de soporte"
+
+#: templates/frontend/guest-view.php
+#: templates/frontend/ticket-view.php
+msgid "Support"
+msgstr "Soporte"
+
+#: includes/Services/NotificationService.php
+#: templates/admin/ticket-detail.php
+msgid "System"
+msgstr "Sistema"
+
+#: templates/admin/settings.php
+msgid "TLS"
+msgstr "TLS"
+
+#: includes/Helpers/class-enums.php
+msgid "Tag added"
+msgstr "Etiqueta agregada"
+
+#: templates/admin/tags.php
+msgid "Tag created successfully."
+msgstr "Etiqueta creada correctamente."
+
+#: templates/admin/tags.php
+msgid "Tag deleted successfully."
+msgstr "Etiqueta eliminada correctamente."
+
+#: includes/Helpers/class-enums.php
+msgid "Tag removed"
+msgstr "Etiqueta eliminada"
+
+#: templates/admin/tags.php
+msgid "Tag updated successfully."
+msgstr "Etiqueta actualizada correctamente."
+
+#: includes/Admin/class-admin-menu.php
+#: templates/admin/tags.php
+#: templates/admin/ticket-detail.php
+msgid "Tags"
+msgstr "Etiquetas"
+
+#: includes/Api/class-ticket-controller.php
+msgid "Tags updated successfully."
+msgstr "Etiquetas actualizadas correctamente."
+
+#: templates/admin/ticket-detail.php
+#: templates/admin/tickets-list.php
+msgid "Tags updated."
+msgstr "Etiquetas actualizadas."
+
+#: templates/frontend/ticket-view.php
+msgid "Tell us more about your experience..."
+msgstr "Cuentanos mas sobre tu experiencia..."
+
+#: includes/Frontend/class-ajax-handler.php
+msgid "Thank you for your feedback!"
+msgstr "Gracias por tus comentarios!"
+
+#: templates/frontend/guest-view.php
+msgid "This ticket is closed. No further replies can be added."
+msgstr "Este ticket esta cerrado. No se pueden agregar mas respuestas."
+
+#: templates/admin/settings.php
+msgid "Ticket Reference Prefix"
+msgstr "Prefijo de referencia de ticket"
+
+#: templates/admin/automations.php
+msgid "Ticket Type"
+msgstr "Tipo de ticket"
+
+#: includes/Api/class-ticket-controller.php
+msgid "Ticket assigned successfully."
+msgstr "Ticket asignado correctamente."
+
+#: templates/admin/settings.php
+msgid "Ticket assigned to agent"
+msgstr "Ticket asignado al agente"
+
+#: includes/Frontend/class-ajax-handler.php
+msgid "Ticket closed."
+msgstr "Ticket cerrado."
+
+#: includes/Api/class-ticket-controller.php
+#: includes/Frontend/class-ajax-handler.php
+msgid "Ticket created successfully."
+msgstr "Ticket creado correctamente."
+
+#: includes/Api/class-ticket-controller.php
+msgid "Ticket deleted successfully."
+msgstr "Ticket eliminado correctamente."
+
+#: includes/Admin/class-admin-tickets.php
+#: includes/Api/class-ticket-controller.php
+#: includes/Frontend/class-ajax-handler.php
+#: includes/Frontend/class-shortcodes.php
+msgid "Ticket not found."
+msgstr "Ticket no encontrado."
+
+#: includes/Admin/class-admin-menu.php
+#: templates/admin/reports.php
+#: templates/admin/ticket-detail.php
+#: templates/admin/tickets-list.php
+msgid "Tickets"
+msgstr "Tickets"
+
+#: templates/admin/reports.php
+msgid "Tickets by Department"
+msgstr "Tickets por departamento"
+
+#: templates/admin/reports.php
+msgid "Tickets by Priority"
+msgstr "Tickets por prioridad"
+
+#: templates/admin/reports.php
+msgid "Tickets by Status"
+msgstr "Tickets por estado"
+
+#: templates/admin/escalation-rules.php
+msgid "Time Based"
+msgstr "Basado en tiempo"
+
+#: templates/admin/canned-responses.php
+msgid "Title"
+msgstr "Titulo"
+
+#: templates/admin/api-tokens.php
+msgid "Token"
+msgstr "Token"
+
+#: templates/admin/api-tokens.php
+msgid "Token Name"
+msgstr "Nombre del token"
+
+#: includes/Api/class-api-token-controller.php
+msgid "Token name is required."
+msgstr "El nombre del token es obligatorio."
+
+#: templates/admin/reports.php
+msgid "Top Agents by Ticket Count"
+msgstr "Mejores agentes por cantidad de tickets"
+
+#: templates/admin/reports.php
+msgid "Total Tickets"
+msgstr "Tickets totales"
+
+#: templates/admin/escalation-rules.php
+msgid "Trigger"
+msgstr "Disparador"
+
+#: templates/admin/escalation-rules.php
+msgid "Trigger Type"
+msgstr "Tipo de disparador"
+
+#: templates/frontend/guest-view.php
+#: templates/frontend/ticket-view.php
+msgid "Type your reply here..."
+msgstr "Escribe tu respuesta aqui..."
+
+#: templates/admin/settings.php
+msgid "URL to send webhook notifications for ticket events."
+msgstr "URL para enviar notificaciones de webhook para eventos de tickets."
+
+#: includes/Helpers/class-enums.php
+#: templates/admin/reports.php
+#: templates/admin/tickets-list.php
+msgid "Unassigned"
+msgstr "Sin asignar"
+
+#: includes/Api/class-agent-controller.php
+#: includes/Api/class-automation-controller.php
+#: includes/Api/class-canned-response-controller.php
+#: includes/Api/class-dashboard-controller.php
+#: includes/Api/class-department-controller.php
+#: includes/Api/class-macro-controller.php
+#: includes/Api/class-tag-controller.php
+#: includes/Api/class-ticket-controller.php
+msgid "Unauthorized."
+msgstr "No autorizado."
+
+#: includes/Api/class-ticket-controller.php
+msgid "Unfollowed ticket."
+msgstr "Dejaste de seguir el ticket."
+
+#: includes/Services/NotificationService.php
+#: templates/admin/api-tokens.php
+#: templates/admin/canned-responses.php
+#: templates/admin/macros.php
+#: templates/admin/reports.php
+#: templates/frontend/ticket-view.php
+msgid "Unknown"
+msgstr "Desconocido"
+
+#: templates/admin/ticket-detail.php
+msgid "Update"
+msgstr "Actualizar"
+
+#: templates/admin/automations.php
+msgid "Update Automation"
+msgstr "Actualizar automatizacion"
+
+#: templates/admin/departments.php
+msgid "Update Department"
+msgstr "Actualizar departamento"
+
+#: templates/admin/macros.php
+msgid "Update Macro"
+msgstr "Actualizar macro"
+
+#: templates/admin/sla-policies.php
+msgid "Update Policy"
+msgstr "Actualizar politica"
+
+#: templates/admin/canned-responses.php
+msgid "Update Response"
+msgstr "Actualizar respuesta"
+
+#: templates/admin/escalation-rules.php
+msgid "Update Rule"
+msgstr "Actualizar regla"
+
+#: templates/admin/tags.php
+msgid "Update Tag"
+msgstr "Actualizar etiqueta"
+
+#: templates/admin/ticket-detail.php
+msgid "Update Tags"
+msgstr "Actualizar etiquetas"
+
+#: templates/admin/ticket-detail.php
+msgid "Updated:"
+msgstr "Actualizado:"
+
+#: includes/Helpers/class-enums.php
+msgid "Urgent"
+msgstr "Urgente"
+
+#: templates/admin/api-tokens.php
+msgid "User"
+msgstr "Usuario"
+
+#: includes/Api/class-auth-controller.php
+msgid "User associated with this token no longer exists."
+msgstr "El usuario asociado con este token ya no existe."
+
+#: includes/Api/class-ticket-controller.php
+msgid "User is not an agent."
+msgstr "El usuario no es un agente."
+
+#: includes/Api/class-api-token-controller.php
+msgid "User not found."
+msgstr "Usuario no encontrado."
+
+#: templates/admin/settings.php
+msgid "Username"
+msgstr "Nombre de usuario"
+
+#: includes/Services/NotificationService.php
+msgid "View ticket: %s"
+msgstr "Ver ticket: %s"
+
+#: templates/admin/canned-responses.php
+#: templates/admin/macros.php
+msgid "Visibility"
+msgstr "Visibilidad"
+
+#: includes/Helpers/class-enums.php
+msgid "Waiting on Agent"
+msgstr "Esperando al agente"
+
+#: includes/Helpers/class-enums.php
+msgid "Waiting on Customer"
+msgstr "Esperando al cliente"
+
+#: templates/admin/settings.php
+msgid "Webhook Secret"
+msgstr "Secreto de Webhook"
+
+#: templates/admin/settings.php
+msgid "Webhook URL"
+msgstr "URL de Webhook"
+
+#: templates/admin/automations.php
+#: templates/admin/canned-responses.php
+#: templates/admin/departments.php
+#: templates/admin/escalation-rules.php
+#: templates/admin/macros.php
+#: templates/admin/sla-policies.php
+msgid "Yes"
+msgstr "Si"
+
+#: templates/frontend/guest-view.php
+msgid "You are viewing this ticket as a guest. Bookmark this page to access your ticket later."
+msgstr "Estas viendo este ticket como invitado. Guarda esta pagina para acceder a tu ticket mas tarde."
+
+#: templates/frontend/ticket-create.php
+msgid "You can attach up to 5 files. Max 10 MB each."
+msgstr "Puedes adjuntar hasta 5 archivos. Maximo 10 MB cada uno."
+
+#: includes/Api/class-api-token-controller.php
+msgid "You do not have permission to manage API tokens."
+msgstr "No tienes permiso para gestionar tokens de API."
+
+#: templates/frontend/ticket-list.php
+msgid "You have no tickets yet."
+msgstr "Aun no tienes tickets."
+
+#: templates/frontend/guest-create.php
+msgid "Your Name"
+msgstr "Tu nombre"
+
+#: templates/frontend/ticket-view.php
+msgid "Your Rating"
+msgstr "Tu calificacion"
+
+#: templates/admin/api-tokens.php
+msgid "Your new API token:"
+msgstr "Tu nuevo token de API:"
+
+#: templates/frontend/guest-view.php
+#: templates/frontend/ticket-view.php
+msgid "Your reply"
+msgstr "Tu respuesta"
+
+#: includes/Services/NotificationService.php
+msgid "[%1$s] New Ticket: %2$s"
+msgstr "[%1$s] Nuevo ticket: %2$s"
+
+#: includes/Services/NotificationService.php
+msgid "[Internal Note]"
+msgstr "[Nota interna]"
+
+#: templates/admin/api-tokens.php
+#: templates/admin/ticket-detail.php
+#: templates/admin/tickets-list.php
+msgid "ago"
+msgstr "atras"
+
+#: templates/admin/canned-responses.php
+msgid "e.g., Billing, Support, General"
+msgstr "ej., Facturacion, Soporte, General"
+
+#: templates/admin/api-tokens.php
+msgid "e.g., My Integration"
+msgstr "ej., Mi integracion"
+
+#: templates/frontend/guest-create.php
+msgid "you@example.com"
+msgstr "tu@ejemplo.com"
+
