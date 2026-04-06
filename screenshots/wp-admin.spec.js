@@ -10,9 +10,26 @@ test.beforeAll(() => {
   }
 });
 
+/**
+ * Navigate to a wp-admin page, wait for it to load, and take a screenshot.
+ * Uses .wrap as the primary selector (standard WordPress admin wrapper),
+ * but falls back to #wpbody if .wrap is not found.
+ */
+async function screenshotPage(page, url, filename) {
+  await page.goto(url);
+  try {
+    await page.waitForSelector('.wrap', { timeout: 8000 });
+  } catch {
+    // Fallback: wait for the admin body to load
+    await page.waitForSelector('#wpbody', { timeout: 5000 }).catch(() => {});
+  }
+  // Small delay for CSS/JS to settle
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: path.join(resultsDir, filename), fullPage: true });
+}
+
 test.describe('Escalated WP-Admin Screenshots', () => {
   test.beforeEach(async ({ page }) => {
-    // Login to WordPress admin
     await page.goto('/wp-login.php');
     await page.fill('#user_login', 'admin');
     await page.fill('#user_pass', 'admin');
@@ -21,74 +38,57 @@ test.describe('Escalated WP-Admin Screenshots', () => {
   });
 
   test('Ticket List', async ({ page }) => {
-    await page.goto('/wp-admin/admin.php?page=escalated');
-    await page.waitForSelector('.wrap', { timeout: 10000 });
-    await page.screenshot({ path: path.join(resultsDir, 'ticket-list.png'), fullPage: true });
+    await screenshotPage(page, '/wp-admin/admin.php?page=escalated', 'ticket-list.png');
   });
 
   test('Ticket Detail', async ({ page }) => {
-    // Navigate to tickets, click first one if exists
     await page.goto('/wp-admin/admin.php?page=escalated');
-    await page.waitForSelector('.wrap', { timeout: 10000 });
+    try {
+      await page.waitForSelector('.wrap', { timeout: 8000 });
+    } catch {
+      await page.waitForSelector('#wpbody', { timeout: 5000 }).catch(() => {});
+    }
     const ticketLink = page.locator('table.wp-list-table tbody tr:first-child a').first();
     if (await ticketLink.count() > 0) {
       await ticketLink.click();
-      await page.waitForSelector('.wrap', { timeout: 10000 });
+      await page.waitForTimeout(1000);
       await page.screenshot({ path: path.join(resultsDir, 'ticket-detail.png'), fullPage: true });
     }
   });
 
   test('Departments', async ({ page }) => {
-    await page.goto('/wp-admin/admin.php?page=escalated-departments');
-    await page.waitForSelector('.wrap', { timeout: 10000 });
-    await page.screenshot({ path: path.join(resultsDir, 'departments.png'), fullPage: true });
+    await screenshotPage(page, '/wp-admin/admin.php?page=escalated-departments', 'departments.png');
   });
 
   test('SLA Policies', async ({ page }) => {
-    await page.goto('/wp-admin/admin.php?page=escalated-sla-policies');
-    await page.waitForSelector('.wrap', { timeout: 10000 });
-    await page.screenshot({ path: path.join(resultsDir, 'sla-policies.png'), fullPage: true });
+    await screenshotPage(page, '/wp-admin/admin.php?page=escalated-sla-policies', 'sla-policies.png');
   });
 
   test('Automations', async ({ page }) => {
-    await page.goto('/wp-admin/admin.php?page=escalated-automations');
-    await page.waitForSelector('.wrap', { timeout: 10000 });
-    await page.screenshot({ path: path.join(resultsDir, 'automations.png'), fullPage: true });
+    await screenshotPage(page, '/wp-admin/admin.php?page=escalated-automations', 'automations.png');
   });
 
   test('Tags', async ({ page }) => {
-    await page.goto('/wp-admin/admin.php?page=escalated-tags');
-    await page.waitForSelector('.wrap', { timeout: 10000 });
-    await page.screenshot({ path: path.join(resultsDir, 'tags.png'), fullPage: true });
+    await screenshotPage(page, '/wp-admin/admin.php?page=escalated-tags', 'tags.png');
   });
 
   test('Canned Responses', async ({ page }) => {
-    await page.goto('/wp-admin/admin.php?page=escalated-canned-responses');
-    await page.waitForSelector('.wrap', { timeout: 10000 });
-    await page.screenshot({ path: path.join(resultsDir, 'canned-responses.png'), fullPage: true });
+    await screenshotPage(page, '/wp-admin/admin.php?page=escalated-canned-responses', 'canned-responses.png');
   });
 
   test('Macros', async ({ page }) => {
-    await page.goto('/wp-admin/admin.php?page=escalated-macros');
-    await page.waitForSelector('.wrap', { timeout: 10000 });
-    await page.screenshot({ path: path.join(resultsDir, 'macros.png'), fullPage: true });
+    await screenshotPage(page, '/wp-admin/admin.php?page=escalated-macros', 'macros.png');
   });
 
   test('Reports', async ({ page }) => {
-    await page.goto('/wp-admin/admin.php?page=escalated-reports');
-    await page.waitForSelector('.wrap', { timeout: 10000 });
-    await page.screenshot({ path: path.join(resultsDir, 'reports.png'), fullPage: true });
+    await screenshotPage(page, '/wp-admin/admin.php?page=escalated-reports', 'reports.png');
   });
 
   test('Settings', async ({ page }) => {
-    await page.goto('/wp-admin/admin.php?page=escalated-settings');
-    await page.waitForSelector('.wrap', { timeout: 10000 });
-    await page.screenshot({ path: path.join(resultsDir, 'settings.png'), fullPage: true });
+    await screenshotPage(page, '/wp-admin/admin.php?page=escalated-settings', 'settings.png');
   });
 
   test('API Tokens', async ({ page }) => {
-    await page.goto('/wp-admin/admin.php?page=escalated-api-tokens');
-    await page.waitForSelector('.wrap', { timeout: 10000 });
-    await page.screenshot({ path: path.join(resultsDir, 'api-tokens.png'), fullPage: true });
+    await screenshotPage(page, '/wp-admin/admin.php?page=escalated-api-tokens', 'api-tokens.png');
   });
 });

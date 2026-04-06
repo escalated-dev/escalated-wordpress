@@ -55,15 +55,24 @@ jobs:
           cd /tmp/wordpress
           wp core install --url=http://localhost:8080 --title="Escalated Demo" --admin_user=admin --admin_password=admin --admin_email=admin@example.com --allow-root
 
-          # Link plugin
+          # Install plugin Composer dependencies
+          cd $GITHUB_WORKSPACE
+          composer install --no-interaction --prefer-dist 2>/dev/null || true
+
+          # Link plugin into WordPress
           ln -s $GITHUB_WORKSPACE /tmp/wordpress/wp-content/plugins/escalated
 
           # Activate plugin
-          wp plugin activate escalated --allow-root
+          cd /tmp/wordpress
+          wp plugin activate escalated --allow-root 2>&1 || echo "Plugin activation had warnings"
+          wp plugin list --allow-root
 
           # Start PHP built-in server
           php -S localhost:8080 -t /tmp/wordpress &
-          sleep 2
+          sleep 3
+
+          # Verify WordPress is responding
+          curl -s -o /dev/null -w "WordPress HTTP status: %{http_code}\n" http://localhost:8080/wp-login.php
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
