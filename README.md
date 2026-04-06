@@ -10,6 +10,26 @@ A full-featured helpdesk and ticketing system for WordPress with multi-role supp
 
 > **[escalated.dev](https://escalated.dev)** — Learn more, view demos, and compare Cloud vs Self-Hosted options.
 
+## Screenshots
+
+| Ticket List | Ticket Detail |
+|:-----------:|:-------------:|
+| ![Ticket List](screenshots/results/ticket-list.png) | ![Ticket Detail](screenshots/results/ticket-detail.png) |
+
+| Departments | SLA Policies |
+|:-----------:|:------------:|
+| ![Departments](screenshots/results/departments.png) | ![SLA Policies](screenshots/results/sla-policies.png) |
+
+| Reports | Settings |
+|:-------:|:--------:|
+| ![Reports](screenshots/results/reports.png) | ![Settings](screenshots/results/settings.png) |
+
+| Automations | Macros |
+|:-----------:|:------:|
+| ![Automations](screenshots/results/automations.png) | ![Macros](screenshots/results/macros.png) |
+
+> Screenshots are auto-generated via Playwright on every release. See `.github/workflows/screenshots.yml`.
+
 ## Download
 
 [![Download Latest Release](https://img.shields.io/badge/Download-Latest%20Release-2ea44f?style=for-the-badge&logo=github)](https://github.com/escalated-dev/escalated-wordpress/releases/latest)

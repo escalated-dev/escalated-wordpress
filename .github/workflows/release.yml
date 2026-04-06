@@ -25,6 +25,8 @@ jobs:
             --exclude='.gitignore' \
             --exclude='.github' \
             --exclude='tests' \
+            --exclude='screenshots' \
+            --exclude='node_modules' \
             --exclude='phpunit.xml.dist' \
             --exclude='composer.json' \
             --exclude='composer.lock' \
