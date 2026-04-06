@@ -6,7 +6,9 @@
 [![WordPress](https://img.shields.io/badge/wordpress-%3E%3D6.0-21759B)](https://wordpress.org/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-A full-featured helpdesk and ticketing system for WordPress with multi-role support, SLA tracking, escalation rules, inbound email processing, macros, and a REST API.
+A full-featured helpdesk and ticketing system for WordPress with multi-role support, SLA tracking, escalation rules, inbound email processing, macros, and a REST API. No external services required.
+
+> **[escalated.dev](https://escalated.dev)** — Learn more, view demos, and compare Cloud vs Self-Hosted options.
 
 ## Download
 
@@ -112,6 +114,16 @@ vendor/bin/phpunit -c phpunit.xml.dist
 
 If needed, set `WP_TESTS_DIR` to your local WordPress tests library path before running PHPUnit.
 
+## Also Available For
+
+- **[Escalated for Laravel](https://github.com/escalated-dev/escalated-laravel)** — Laravel Composer package
+- **[Escalated for Rails](https://github.com/escalated-dev/escalated-rails)** — Ruby on Rails engine
+- **[Escalated for Django](https://github.com/escalated-dev/escalated-django)** — Django reusable app
+- **[Escalated for AdonisJS](https://github.com/escalated-dev/escalated-adonis)** — AdonisJS v6 package
+- **[Escalated for Filament](https://github.com/escalated-dev/escalated-filament)** — Filament v3 admin panel plugin
+- **[Escalated for WordPress](https://github.com/escalated-dev/escalated-wordpress)** — WordPress plugin (you are here)
+- **[Shared Frontend](https://github.com/escalated-dev/escalated)** — Vue 3 + Inertia.js UI components
+
 ## License
 
-MIT. See [LICENSE](LICENSE) for details.
+MIT
