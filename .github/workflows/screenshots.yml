@@ -67,10 +67,14 @@ jobs:
           # Link plugin into WordPress
           ln -s $GITHUB_WORKSPACE /tmp/wordpress/wp-content/plugins/escalated
 
-          # Activate plugin
+          # Activate plugin (triggers activation hook which creates roles/tables)
           cd /tmp/wordpress
           wp plugin activate escalated --allow-root 2>&1 || echo "Plugin activation had warnings"
           wp plugin list --allow-root
+
+          # Ensure the admin user has all Escalated capabilities
+          wp cap add administrator escalated_manage_tickets escalated_view_tickets escalated_create_tickets escalated_manage_departments escalated_manage_sla escalated_manage_escalation_rules escalated_manage_tags escalated_manage_canned_responses escalated_manage_macros escalated_manage_settings escalated_manage_api_tokens escalated_view_reports escalated_manage_automations --allow-root 2>&1 || true
+          wp user add-role 1 administrator --allow-root 2>&1 || true
 
           # Start PHP built-in server
           php -S localhost:8080 -t /tmp/wordpress &
