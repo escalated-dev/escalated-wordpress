@@ -72,11 +72,32 @@ jobs:
           wp plugin activate escalated --allow-root 2>&1 || echo "Plugin activation had warnings"
           wp plugin list --allow-root
 
-          # Force activation hook to create roles, capabilities, and tables
-          wp eval 'do_action("activate_escalated/escalated.php");' --allow-root 2>&1 || true
+          # Force activation hook to run (creates roles and capabilities)
+          wp eval 'require_once ABSPATH . "wp-content/plugins/escalated/includes/class-activator.php"; Escalated\Activator::activate();' --allow-root 2>&1 || true
 
-          # Ensure the admin user has all Escalated capabilities
-          wp cap add administrator escalated_manage_tickets escalated_view_tickets escalated_create_tickets escalated_manage_departments escalated_manage_sla escalated_manage_escalation_rules escalated_manage_tags escalated_manage_canned_responses escalated_manage_macros escalated_manage_settings escalated_manage_api_tokens escalated_view_reports escalated_manage_automations --allow-root 2>&1 || true
+          # Ensure the admin user has ALL 52 Escalated capabilities
+          wp cap add administrator \
+            escalated_ticket_view escalated_ticket_create escalated_ticket_edit escalated_ticket_delete \
+            escalated_ticket_assign escalated_ticket_merge escalated_ticket_close escalated_ticket_export \
+            escalated_reply_create escalated_reply_create_internal escalated_reply_edit escalated_reply_delete \
+            escalated_kb_view escalated_kb_create escalated_kb_edit escalated_kb_delete escalated_kb_publish \
+            escalated_department_view escalated_department_create escalated_department_edit escalated_department_delete \
+            escalated_report_view escalated_report_export \
+            escalated_sla_view escalated_sla_manage \
+            escalated_automation_view escalated_automation_manage \
+            escalated_escalation_view escalated_escalation_manage \
+            escalated_macro_view escalated_macro_create escalated_macro_manage \
+            escalated_tag_view escalated_tag_manage \
+            escalated_custom_field_view escalated_custom_field_manage \
+            escalated_role_view escalated_role_manage \
+            escalated_user_view escalated_user_manage \
+            escalated_settings_view escalated_settings_manage \
+            escalated_webhook_view escalated_webhook_manage \
+            escalated_api_token_view escalated_api_token_manage \
+            escalated_audit_view \
+            escalated_plugin_view escalated_plugin_manage \
+            escalated_custom_object_view escalated_custom_object_manage escalated_custom_object_data \
+            --allow-root 2>&1 || true
           wp user add-role 1 administrator --allow-root 2>&1 || true
 
           # Seed sample data for screenshots
