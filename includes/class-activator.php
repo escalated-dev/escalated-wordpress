@@ -2,15 +2,16 @@
 
 namespace Escalated;
 
-class Activator {
-
+class Activator
+{
     /**
      * Run on plugin activation.
      *
      * Creates all 21 database tables, registers custom roles and capabilities,
      * inserts default settings, and schedules cron events.
      */
-    public static function activate(): void {
+    public static function activate(): void
+    {
         self::create_tables();
         self::seed_permissions();
         self::create_roles();
@@ -18,20 +19,21 @@ class Activator {
         self::insert_default_settings();
         self::schedule_cron_events();
 
-        update_option( 'escalated_version', ESCALATED_VERSION );
+        update_option('escalated_version', ESCALATED_VERSION);
         flush_rewrite_rules();
     }
 
     /**
      * Create all 21 database tables using dbDelta.
      */
-    private static function create_tables(): void {
+    private static function create_tables(): void
+    {
         global $wpdb;
 
         $charset_collate = $wpdb->get_charset_collate();
-        $prefix          = $wpdb->prefix . 'escalated_';
+        $prefix = $wpdb->prefix.'escalated_';
 
-        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        require_once ABSPATH.'wp-admin/includes/upgrade.php';
 
         // 1. escalated_departments
         $sql = "CREATE TABLE {$prefix}departments (
@@ -45,7 +47,7 @@ class Activator {
             PRIMARY KEY  (id),
             UNIQUE KEY slug (slug)
         ) $charset_collate;";
-        dbDelta( $sql );
+        dbDelta($sql);
 
         // 2. escalated_department_agent
         $sql = "CREATE TABLE {$prefix}department_agent (
@@ -53,7 +55,7 @@ class Activator {
             user_id BIGINT UNSIGNED NOT NULL,
             PRIMARY KEY  (department_id, user_id)
         ) $charset_collate;";
-        dbDelta( $sql );
+        dbDelta($sql);
 
         // 3. escalated_sla_policies
         $sql = "CREATE TABLE {$prefix}sla_policies (
@@ -69,7 +71,7 @@ class Activator {
             updated_at DATETIME,
             PRIMARY KEY  (id)
         ) $charset_collate;";
-        dbDelta( $sql );
+        dbDelta($sql);
 
         // 4. escalated_tickets
         $sql = "CREATE TABLE {$prefix}tickets (
@@ -103,7 +105,7 @@ class Activator {
             UNIQUE KEY reference (reference),
             UNIQUE KEY guest_token (guest_token)
         ) $charset_collate;";
-        dbDelta( $sql );
+        dbDelta($sql);
 
         // 5. escalated_replies
         $sql = "CREATE TABLE {$prefix}replies (
@@ -121,7 +123,7 @@ class Activator {
             PRIMARY KEY  (id),
             KEY ticket_id (ticket_id)
         ) $charset_collate;";
-        dbDelta( $sql );
+        dbDelta($sql);
 
         // 6. escalated_attachments
         $sql = "CREATE TABLE {$prefix}attachments (
@@ -137,7 +139,7 @@ class Activator {
             PRIMARY KEY  (id),
             KEY attachable (attachable_type, attachable_id)
         ) $charset_collate;";
-        dbDelta( $sql );
+        dbDelta($sql);
 
         // 7. escalated_tags
         $sql = "CREATE TABLE {$prefix}tags (
@@ -150,7 +152,7 @@ class Activator {
             PRIMARY KEY  (id),
             UNIQUE KEY slug (slug)
         ) $charset_collate;";
-        dbDelta( $sql );
+        dbDelta($sql);
 
         // 8. escalated_ticket_tag
         $sql = "CREATE TABLE {$prefix}ticket_tag (
@@ -158,7 +160,7 @@ class Activator {
             tag_id BIGINT UNSIGNED NOT NULL,
             PRIMARY KEY  (ticket_id, tag_id)
         ) $charset_collate;";
-        dbDelta( $sql );
+        dbDelta($sql);
 
         // 9. escalated_ticket_activities
         $sql = "CREATE TABLE {$prefix}ticket_activities (
@@ -171,7 +173,7 @@ class Activator {
             PRIMARY KEY  (id),
             KEY ticket_id (ticket_id)
         ) $charset_collate;";
-        dbDelta( $sql );
+        dbDelta($sql);
 
         // 10. escalated_escalation_rules
         $sql = "CREATE TABLE {$prefix}escalation_rules (
@@ -187,7 +189,7 @@ class Activator {
             updated_at DATETIME,
             PRIMARY KEY  (id)
         ) $charset_collate;";
-        dbDelta( $sql );
+        dbDelta($sql);
 
         // 11. escalated_canned_responses
         $sql = "CREATE TABLE {$prefix}canned_responses (
@@ -201,7 +203,7 @@ class Activator {
             updated_at DATETIME,
             PRIMARY KEY  (id)
         ) $charset_collate;";
-        dbDelta( $sql );
+        dbDelta($sql);
 
         // 12. escalated_macros
         $sql = "CREATE TABLE {$prefix}macros (
@@ -216,7 +218,7 @@ class Activator {
             updated_at DATETIME,
             PRIMARY KEY  (id)
         ) $charset_collate;";
-        dbDelta( $sql );
+        dbDelta($sql);
 
         // 13. escalated_inbound_emails
         $sql = "CREATE TABLE {$prefix}inbound_emails (
@@ -239,7 +241,7 @@ class Activator {
             PRIMARY KEY  (id),
             UNIQUE KEY message_id (message_id)
         ) $charset_collate;";
-        dbDelta( $sql );
+        dbDelta($sql);
 
         // 14. escalated_ticket_followers
         $sql = "CREATE TABLE {$prefix}ticket_followers (
@@ -248,7 +250,7 @@ class Activator {
             created_at DATETIME,
             PRIMARY KEY  (ticket_id, user_id)
         ) $charset_collate;";
-        dbDelta( $sql );
+        dbDelta($sql);
 
         // 15. escalated_satisfaction_ratings
         $sql = "CREATE TABLE {$prefix}satisfaction_ratings (
@@ -261,7 +263,7 @@ class Activator {
             PRIMARY KEY  (id),
             UNIQUE KEY ticket_id (ticket_id)
         ) $charset_collate;";
-        dbDelta( $sql );
+        dbDelta($sql);
 
         // 16. escalated_settings
         $sql = "CREATE TABLE {$prefix}settings (
@@ -273,7 +275,7 @@ class Activator {
             PRIMARY KEY  (id),
             UNIQUE KEY option_key (option_key)
         ) $charset_collate;";
-        dbDelta( $sql );
+        dbDelta($sql);
 
         // 17. escalated_api_tokens
         $sql = "CREATE TABLE {$prefix}api_tokens (
@@ -290,7 +292,7 @@ class Activator {
             PRIMARY KEY  (id),
             UNIQUE KEY token (token)
         ) $charset_collate;";
-        dbDelta( $sql );
+        dbDelta($sql);
 
         // 18. escalated_permissions
         $sql = "CREATE TABLE {$prefix}permissions (
@@ -304,7 +306,7 @@ class Activator {
             PRIMARY KEY  (id),
             UNIQUE KEY slug (slug)
         ) $charset_collate;";
-        dbDelta( $sql );
+        dbDelta($sql);
 
         // 19. escalated_roles
         $sql = "CREATE TABLE {$prefix}roles (
@@ -318,7 +320,7 @@ class Activator {
             PRIMARY KEY  (id),
             UNIQUE KEY slug (slug)
         ) $charset_collate;";
-        dbDelta( $sql );
+        dbDelta($sql);
 
         // 20. escalated_role_permissions (pivot)
         $sql = "CREATE TABLE {$prefix}role_permissions (
@@ -326,7 +328,7 @@ class Activator {
             permission_id BIGINT UNSIGNED NOT NULL,
             PRIMARY KEY  (role_id, permission_id)
         ) $charset_collate;";
-        dbDelta( $sql );
+        dbDelta($sql);
 
         // 21. escalated_role_users (pivot)
         $sql = "CREATE TABLE {$prefix}role_users (
@@ -334,7 +336,7 @@ class Activator {
             user_id BIGINT UNSIGNED NOT NULL,
             PRIMARY KEY  (role_id, user_id)
         ) $charset_collate;";
-        dbDelta( $sql );
+        dbDelta($sql);
 
         // 22. escalated_automations
         $sql = "CREATE TABLE {$prefix}automations (
@@ -350,7 +352,7 @@ class Activator {
             PRIMARY KEY  (id),
             KEY active (active)
         ) $charset_collate;";
-        dbDelta( $sql );
+        dbDelta($sql);
     }
 
     /**
@@ -361,79 +363,80 @@ class Activator {
      *
      * @return array<array{slug: string, name: string, group: string, description: string}>
      */
-    private static function get_permission_definitions(): array {
+    private static function get_permission_definitions(): array
+    {
         return [
             // Tickets
-            [ 'slug' => 'ticket.view',    'name' => 'View tickets',           'group' => 'Tickets',          'description' => 'View tickets' ],
-            [ 'slug' => 'ticket.create',  'name' => 'Create tickets',         'group' => 'Tickets',          'description' => 'Create tickets' ],
-            [ 'slug' => 'ticket.edit',    'name' => 'Edit ticket properties', 'group' => 'Tickets',          'description' => 'Edit ticket properties' ],
-            [ 'slug' => 'ticket.delete',  'name' => 'Delete tickets',         'group' => 'Tickets',          'description' => 'Delete tickets' ],
-            [ 'slug' => 'ticket.assign',  'name' => 'Assign tickets',         'group' => 'Tickets',          'description' => 'Assign tickets to agents' ],
-            [ 'slug' => 'ticket.merge',   'name' => 'Merge tickets',          'group' => 'Tickets',          'description' => 'Merge tickets together' ],
-            [ 'slug' => 'ticket.close',   'name' => 'Close tickets',          'group' => 'Tickets',          'description' => 'Close and reopen tickets' ],
-            [ 'slug' => 'ticket.export',  'name' => 'Export tickets',         'group' => 'Tickets',          'description' => 'Export ticket data' ],
+            ['slug' => 'ticket.view',    'name' => 'View tickets',           'group' => 'Tickets',          'description' => 'View tickets'],
+            ['slug' => 'ticket.create',  'name' => 'Create tickets',         'group' => 'Tickets',          'description' => 'Create tickets'],
+            ['slug' => 'ticket.edit',    'name' => 'Edit ticket properties', 'group' => 'Tickets',          'description' => 'Edit ticket properties'],
+            ['slug' => 'ticket.delete',  'name' => 'Delete tickets',         'group' => 'Tickets',          'description' => 'Delete tickets'],
+            ['slug' => 'ticket.assign',  'name' => 'Assign tickets',         'group' => 'Tickets',          'description' => 'Assign tickets to agents'],
+            ['slug' => 'ticket.merge',   'name' => 'Merge tickets',          'group' => 'Tickets',          'description' => 'Merge tickets together'],
+            ['slug' => 'ticket.close',   'name' => 'Close tickets',          'group' => 'Tickets',          'description' => 'Close and reopen tickets'],
+            ['slug' => 'ticket.export',  'name' => 'Export tickets',         'group' => 'Tickets',          'description' => 'Export ticket data'],
             // Replies
-            [ 'slug' => 'reply.create',          'name' => 'Reply to tickets',   'group' => 'Replies', 'description' => 'Reply to tickets' ],
-            [ 'slug' => 'reply.create_internal', 'name' => 'Add internal notes', 'group' => 'Replies', 'description' => 'Add internal notes' ],
-            [ 'slug' => 'reply.edit',            'name' => 'Edit replies',       'group' => 'Replies', 'description' => 'Edit replies' ],
-            [ 'slug' => 'reply.delete',          'name' => 'Delete replies',     'group' => 'Replies', 'description' => 'Delete replies' ],
+            ['slug' => 'reply.create',          'name' => 'Reply to tickets',   'group' => 'Replies', 'description' => 'Reply to tickets'],
+            ['slug' => 'reply.create_internal', 'name' => 'Add internal notes', 'group' => 'Replies', 'description' => 'Add internal notes'],
+            ['slug' => 'reply.edit',            'name' => 'Edit replies',       'group' => 'Replies', 'description' => 'Edit replies'],
+            ['slug' => 'reply.delete',          'name' => 'Delete replies',     'group' => 'Replies', 'description' => 'Delete replies'],
             // Knowledge Base
-            [ 'slug' => 'kb.view',    'name' => 'View knowledge base', 'group' => 'Knowledge Base', 'description' => 'View knowledge base' ],
-            [ 'slug' => 'kb.create',  'name' => 'Create articles',     'group' => 'Knowledge Base', 'description' => 'Create articles' ],
-            [ 'slug' => 'kb.edit',    'name' => 'Edit articles',       'group' => 'Knowledge Base', 'description' => 'Edit articles' ],
-            [ 'slug' => 'kb.delete',  'name' => 'Delete articles',     'group' => 'Knowledge Base', 'description' => 'Delete articles' ],
-            [ 'slug' => 'kb.publish', 'name' => 'Publish articles',    'group' => 'Knowledge Base', 'description' => 'Publish/unpublish articles' ],
+            ['slug' => 'kb.view',    'name' => 'View knowledge base', 'group' => 'Knowledge Base', 'description' => 'View knowledge base'],
+            ['slug' => 'kb.create',  'name' => 'Create articles',     'group' => 'Knowledge Base', 'description' => 'Create articles'],
+            ['slug' => 'kb.edit',    'name' => 'Edit articles',       'group' => 'Knowledge Base', 'description' => 'Edit articles'],
+            ['slug' => 'kb.delete',  'name' => 'Delete articles',     'group' => 'Knowledge Base', 'description' => 'Delete articles'],
+            ['slug' => 'kb.publish', 'name' => 'Publish articles',    'group' => 'Knowledge Base', 'description' => 'Publish/unpublish articles'],
             // Departments
-            [ 'slug' => 'department.view',   'name' => 'View departments',   'group' => 'Departments', 'description' => 'View departments' ],
-            [ 'slug' => 'department.create', 'name' => 'Create departments', 'group' => 'Departments', 'description' => 'Create departments' ],
-            [ 'slug' => 'department.edit',   'name' => 'Edit departments',   'group' => 'Departments', 'description' => 'Edit departments' ],
-            [ 'slug' => 'department.delete', 'name' => 'Delete departments', 'group' => 'Departments', 'description' => 'Delete departments' ],
+            ['slug' => 'department.view',   'name' => 'View departments',   'group' => 'Departments', 'description' => 'View departments'],
+            ['slug' => 'department.create', 'name' => 'Create departments', 'group' => 'Departments', 'description' => 'Create departments'],
+            ['slug' => 'department.edit',   'name' => 'Edit departments',   'group' => 'Departments', 'description' => 'Edit departments'],
+            ['slug' => 'department.delete', 'name' => 'Delete departments', 'group' => 'Departments', 'description' => 'Delete departments'],
             // Reports
-            [ 'slug' => 'report.view',   'name' => 'View reports',   'group' => 'Reports', 'description' => 'View reports and analytics' ],
-            [ 'slug' => 'report.export', 'name' => 'Export reports', 'group' => 'Reports', 'description' => 'Export report data' ],
+            ['slug' => 'report.view',   'name' => 'View reports',   'group' => 'Reports', 'description' => 'View reports and analytics'],
+            ['slug' => 'report.export', 'name' => 'Export reports', 'group' => 'Reports', 'description' => 'Export report data'],
             // SLA
-            [ 'slug' => 'sla.view',   'name' => 'View SLA policies',   'group' => 'SLA', 'description' => 'View SLA policies' ],
-            [ 'slug' => 'sla.manage', 'name' => 'Manage SLA policies', 'group' => 'SLA', 'description' => 'Create, edit, delete SLA policies' ],
+            ['slug' => 'sla.view',   'name' => 'View SLA policies',   'group' => 'SLA', 'description' => 'View SLA policies'],
+            ['slug' => 'sla.manage', 'name' => 'Manage SLA policies', 'group' => 'SLA', 'description' => 'Create, edit, delete SLA policies'],
             // Automations
-            [ 'slug' => 'automation.view',   'name' => 'View automations',   'group' => 'Automations', 'description' => 'View automations' ],
-            [ 'slug' => 'automation.manage', 'name' => 'Manage automations', 'group' => 'Automations', 'description' => 'Create, edit, delete automations' ],
+            ['slug' => 'automation.view',   'name' => 'View automations',   'group' => 'Automations', 'description' => 'View automations'],
+            ['slug' => 'automation.manage', 'name' => 'Manage automations', 'group' => 'Automations', 'description' => 'Create, edit, delete automations'],
             // Escalation Rules
-            [ 'slug' => 'escalation.view',   'name' => 'View escalation rules',   'group' => 'Escalation Rules', 'description' => 'View escalation rules' ],
-            [ 'slug' => 'escalation.manage', 'name' => 'Manage escalation rules', 'group' => 'Escalation Rules', 'description' => 'Create, edit, delete escalation rules' ],
+            ['slug' => 'escalation.view',   'name' => 'View escalation rules',   'group' => 'Escalation Rules', 'description' => 'View escalation rules'],
+            ['slug' => 'escalation.manage', 'name' => 'Manage escalation rules', 'group' => 'Escalation Rules', 'description' => 'Create, edit, delete escalation rules'],
             // Macros
-            [ 'slug' => 'macro.view',   'name' => 'View macros',   'group' => 'Macros', 'description' => 'View macros' ],
-            [ 'slug' => 'macro.create', 'name' => 'Create macros', 'group' => 'Macros', 'description' => 'Create personal macros' ],
-            [ 'slug' => 'macro.manage', 'name' => 'Manage macros', 'group' => 'Macros', 'description' => 'Create, edit, delete shared macros' ],
+            ['slug' => 'macro.view',   'name' => 'View macros',   'group' => 'Macros', 'description' => 'View macros'],
+            ['slug' => 'macro.create', 'name' => 'Create macros', 'group' => 'Macros', 'description' => 'Create personal macros'],
+            ['slug' => 'macro.manage', 'name' => 'Manage macros', 'group' => 'Macros', 'description' => 'Create, edit, delete shared macros'],
             // Tags
-            [ 'slug' => 'tag.view',   'name' => 'View tags',   'group' => 'Tags', 'description' => 'View tags' ],
-            [ 'slug' => 'tag.manage', 'name' => 'Manage tags', 'group' => 'Tags', 'description' => 'Create, edit, delete tags' ],
+            ['slug' => 'tag.view',   'name' => 'View tags',   'group' => 'Tags', 'description' => 'View tags'],
+            ['slug' => 'tag.manage', 'name' => 'Manage tags', 'group' => 'Tags', 'description' => 'Create, edit, delete tags'],
             // Custom Fields
-            [ 'slug' => 'custom_field.view',   'name' => 'View custom fields',   'group' => 'Custom Fields', 'description' => 'View custom fields' ],
-            [ 'slug' => 'custom_field.manage', 'name' => 'Manage custom fields', 'group' => 'Custom Fields', 'description' => 'Create, edit, delete custom fields' ],
+            ['slug' => 'custom_field.view',   'name' => 'View custom fields',   'group' => 'Custom Fields', 'description' => 'View custom fields'],
+            ['slug' => 'custom_field.manage', 'name' => 'Manage custom fields', 'group' => 'Custom Fields', 'description' => 'Create, edit, delete custom fields'],
             // Roles
-            [ 'slug' => 'role.view',   'name' => 'View roles',   'group' => 'Roles', 'description' => 'View roles' ],
-            [ 'slug' => 'role.manage', 'name' => 'Manage roles', 'group' => 'Roles', 'description' => 'Create, edit, delete roles and assign permissions' ],
+            ['slug' => 'role.view',   'name' => 'View roles',   'group' => 'Roles', 'description' => 'View roles'],
+            ['slug' => 'role.manage', 'name' => 'Manage roles', 'group' => 'Roles', 'description' => 'Create, edit, delete roles and assign permissions'],
             // Users
-            [ 'slug' => 'user.view',   'name' => 'View users',   'group' => 'Users', 'description' => 'View user profiles' ],
-            [ 'slug' => 'user.manage', 'name' => 'Manage users', 'group' => 'Users', 'description' => 'Manage user accounts and agent profiles' ],
+            ['slug' => 'user.view',   'name' => 'View users',   'group' => 'Users', 'description' => 'View user profiles'],
+            ['slug' => 'user.manage', 'name' => 'Manage users', 'group' => 'Users', 'description' => 'Manage user accounts and agent profiles'],
             // Settings
-            [ 'slug' => 'settings.view',   'name' => 'View settings',   'group' => 'Settings', 'description' => 'View settings' ],
-            [ 'slug' => 'settings.manage', 'name' => 'Manage settings', 'group' => 'Settings', 'description' => 'Manage system settings' ],
+            ['slug' => 'settings.view',   'name' => 'View settings',   'group' => 'Settings', 'description' => 'View settings'],
+            ['slug' => 'settings.manage', 'name' => 'Manage settings', 'group' => 'Settings', 'description' => 'Manage system settings'],
             // Webhooks
-            [ 'slug' => 'webhook.view',   'name' => 'View webhooks',   'group' => 'Webhooks', 'description' => 'View webhooks' ],
-            [ 'slug' => 'webhook.manage', 'name' => 'Manage webhooks', 'group' => 'Webhooks', 'description' => 'Create, edit, delete webhooks' ],
+            ['slug' => 'webhook.view',   'name' => 'View webhooks',   'group' => 'Webhooks', 'description' => 'View webhooks'],
+            ['slug' => 'webhook.manage', 'name' => 'Manage webhooks', 'group' => 'Webhooks', 'description' => 'Create, edit, delete webhooks'],
             // API Tokens
-            [ 'slug' => 'api_token.view',   'name' => 'View API tokens',   'group' => 'API Tokens', 'description' => 'View API tokens' ],
-            [ 'slug' => 'api_token.manage', 'name' => 'Manage API tokens', 'group' => 'API Tokens', 'description' => 'Create, revoke API tokens' ],
+            ['slug' => 'api_token.view',   'name' => 'View API tokens',   'group' => 'API Tokens', 'description' => 'View API tokens'],
+            ['slug' => 'api_token.manage', 'name' => 'Manage API tokens', 'group' => 'API Tokens', 'description' => 'Create, revoke API tokens'],
             // Audit Log
-            [ 'slug' => 'audit.view', 'name' => 'View audit log', 'group' => 'Audit Log', 'description' => 'View audit log' ],
+            ['slug' => 'audit.view', 'name' => 'View audit log', 'group' => 'Audit Log', 'description' => 'View audit log'],
             // Plugins
-            [ 'slug' => 'plugin.view',   'name' => 'View plugins',   'group' => 'Plugins', 'description' => 'View plugins' ],
-            [ 'slug' => 'plugin.manage', 'name' => 'Manage plugins', 'group' => 'Plugins', 'description' => 'Install, configure, remove plugins' ],
+            ['slug' => 'plugin.view',   'name' => 'View plugins',   'group' => 'Plugins', 'description' => 'View plugins'],
+            ['slug' => 'plugin.manage', 'name' => 'Manage plugins', 'group' => 'Plugins', 'description' => 'Install, configure, remove plugins'],
             // Custom Objects
-            [ 'slug' => 'custom_object.view',   'name' => 'View custom objects',       'group' => 'Custom Objects', 'description' => 'View custom objects' ],
-            [ 'slug' => 'custom_object.manage', 'name' => 'Manage custom objects',     'group' => 'Custom Objects', 'description' => 'Create, edit, delete custom object schemas' ],
-            [ 'slug' => 'custom_object.data',   'name' => 'Manage custom object data', 'group' => 'Custom Objects', 'description' => 'Manage custom object records' ],
+            ['slug' => 'custom_object.view',   'name' => 'View custom objects',       'group' => 'Custom Objects', 'description' => 'View custom objects'],
+            ['slug' => 'custom_object.manage', 'name' => 'Manage custom objects',     'group' => 'Custom Objects', 'description' => 'Create, edit, delete custom object schemas'],
+            ['slug' => 'custom_object.data',   'name' => 'Manage custom object data', 'group' => 'Custom Objects', 'description' => 'Manage custom object records'],
         ];
     }
 
@@ -441,28 +444,28 @@ class Activator {
      * Convert a permission slug to a WordPress capability name.
      *
      * Example: "ticket.view" → "escalated_ticket_view"
-     *
-     * @param string $slug
-     * @return string
      */
-    private static function slug_to_cap( string $slug ): string {
-        return 'escalated_' . str_replace( '.', '_', $slug );
+    private static function slug_to_cap(string $slug): string
+    {
+        return 'escalated_'.str_replace('.', '_', $slug);
     }
 
     /**
      * Get all escalated capabilities (derived from permission slugs).
      */
-    private static function get_escalated_caps(): array {
+    private static function get_escalated_caps(): array
+    {
         return array_map(
-            [ self::class, 'slug_to_cap' ],
-            array_column( self::get_permission_definitions(), 'slug' )
+            [self::class, 'slug_to_cap'],
+            array_column(self::get_permission_definitions(), 'slug')
         );
     }
 
     /**
      * Get the permission slugs assigned to the Agent role.
      */
-    private static function get_agent_permission_slugs(): array {
+    private static function get_agent_permission_slugs(): array
+    {
         return [
             'ticket.view', 'ticket.create', 'ticket.edit', 'ticket.delete',
             'ticket.assign', 'ticket.merge', 'ticket.close', 'ticket.export',
@@ -479,7 +482,8 @@ class Activator {
     /**
      * Get the permission slugs assigned to the Light Agent role.
      */
-    private static function get_light_agent_permission_slugs(): array {
+    private static function get_light_agent_permission_slugs(): array
+    {
         return [
             'ticket.view',
             'reply.create', 'reply.create_internal',
@@ -492,51 +496,53 @@ class Activator {
     /**
      * Register custom WordPress roles: escalated_admin, escalated_agent, escalated_light_agent.
      */
-    private static function create_roles(): void {
+    private static function create_roles(): void
+    {
         // --- Escalated Admin (all escalated capabilities) ---
-        $editor_role = get_role( 'editor' );
-        $admin_caps  = $editor_role ? $editor_role->capabilities : [];
+        $editor_role = get_role('editor');
+        $admin_caps = $editor_role ? $editor_role->capabilities : [];
 
-        foreach ( self::get_escalated_caps() as $cap ) {
-            $admin_caps[ $cap ] = true;
+        foreach (self::get_escalated_caps() as $cap) {
+            $admin_caps[$cap] = true;
         }
 
-        remove_role( 'escalated_admin' );
-        add_role( 'escalated_admin', 'Escalated Admin', $admin_caps );
+        remove_role('escalated_admin');
+        add_role('escalated_admin', 'Escalated Admin', $admin_caps);
 
         // --- Escalated Agent ---
-        $subscriber_role = get_role( 'subscriber' );
-        $agent_caps      = $subscriber_role ? $subscriber_role->capabilities : [];
+        $subscriber_role = get_role('subscriber');
+        $agent_caps = $subscriber_role ? $subscriber_role->capabilities : [];
 
-        foreach ( self::get_agent_permission_slugs() as $slug ) {
-            $agent_caps[ self::slug_to_cap( $slug ) ] = true;
+        foreach (self::get_agent_permission_slugs() as $slug) {
+            $agent_caps[self::slug_to_cap($slug)] = true;
         }
 
-        remove_role( 'escalated_agent' );
-        add_role( 'escalated_agent', 'Escalated Agent', $agent_caps );
+        remove_role('escalated_agent');
+        add_role('escalated_agent', 'Escalated Agent', $agent_caps);
 
         // --- Escalated Light Agent ---
         $light_caps = $subscriber_role ? $subscriber_role->capabilities : [];
 
-        foreach ( self::get_light_agent_permission_slugs() as $slug ) {
-            $light_caps[ self::slug_to_cap( $slug ) ] = true;
+        foreach (self::get_light_agent_permission_slugs() as $slug) {
+            $light_caps[self::slug_to_cap($slug)] = true;
         }
 
-        remove_role( 'escalated_light_agent' );
-        add_role( 'escalated_light_agent', 'Escalated Light Agent', $light_caps );
+        remove_role('escalated_light_agent');
+        add_role('escalated_light_agent', 'Escalated Light Agent', $light_caps);
     }
 
     /**
      * Add all escalated capabilities to the WordPress administrator role.
      */
-    private static function add_admin_caps(): void {
-        $admin_role = get_role( 'administrator' );
-        if ( ! $admin_role ) {
+    private static function add_admin_caps(): void
+    {
+        $admin_role = get_role('administrator');
+        if (! $admin_role) {
             return;
         }
 
-        foreach ( self::get_escalated_caps() as $cap ) {
-            $admin_role->add_cap( $cap );
+        foreach (self::get_escalated_caps() as $cap) {
+            $admin_role->add_cap($cap);
         }
     }
 
@@ -546,33 +552,34 @@ class Activator {
      *
      * This method is idempotent — safe to run multiple times.
      */
-    private static function seed_permissions(): void {
+    private static function seed_permissions(): void
+    {
         global $wpdb;
 
-        $perm_table      = $wpdb->prefix . 'escalated_permissions';
-        $role_table      = $wpdb->prefix . 'escalated_roles';
-        $pivot_table     = $wpdb->prefix . 'escalated_role_permissions';
-        $now             = current_time( 'mysql' );
-        $definitions     = self::get_permission_definitions();
+        $perm_table = $wpdb->prefix.'escalated_permissions';
+        $role_table = $wpdb->prefix.'escalated_roles';
+        $pivot_table = $wpdb->prefix.'escalated_role_permissions';
+        $now = current_time('mysql');
+        $definitions = self::get_permission_definitions();
 
         // ---- Upsert permissions ----
         // Note: `group` is a MySQL reserved word, so we use raw SQL with backtick-quoted column names.
-        foreach ( $definitions as $attrs ) {
+        foreach ($definitions as $attrs) {
             $exists = $wpdb->get_var(
-                $wpdb->prepare( "SELECT id FROM {$perm_table} WHERE slug = %s", $attrs['slug'] )
+                $wpdb->prepare("SELECT id FROM {$perm_table} WHERE slug = %s", $attrs['slug'])
             );
 
-            if ( $exists ) {
-                $wpdb->query( $wpdb->prepare(
+            if ($exists) {
+                $wpdb->query($wpdb->prepare(
                     "UPDATE {$perm_table} SET name = %s, `group` = %s, description = %s, updated_at = %s WHERE id = %d",
                     $attrs['name'],
                     $attrs['group'],
                     $attrs['description'],
                     $now,
                     $exists
-                ) );
+                ));
             } else {
-                $wpdb->query( $wpdb->prepare(
+                $wpdb->query($wpdb->prepare(
                     "INSERT INTO {$perm_table} (name, slug, `group`, description, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s)",
                     $attrs['name'],
                     $attrs['slug'],
@@ -580,80 +587,80 @@ class Activator {
                     $attrs['description'],
                     $now,
                     $now
-                ) );
+                ));
             }
         }
 
         // Build slug → id index.
-        $rows       = $wpdb->get_results( "SELECT id, slug FROM {$perm_table}", OBJECT );
+        $rows = $wpdb->get_results("SELECT id, slug FROM {$perm_table}", OBJECT);
         $slug_index = [];
-        foreach ( $rows as $row ) {
-            $slug_index[ $row->slug ] = (int) $row->id;
+        foreach ($rows as $row) {
+            $slug_index[$row->slug] = (int) $row->id;
         }
 
         // ---- Upsert roles ----
         $role_defs = [
             [
-                'slug'        => 'admin',
-                'name'        => 'Admin',
+                'slug' => 'admin',
+                'name' => 'Admin',
                 'description' => 'Full access to all features and settings.',
-                'permissions' => array_column( $definitions, 'slug' ), // all
+                'permissions' => array_column($definitions, 'slug'), // all
             ],
             [
-                'slug'        => 'agent',
-                'name'        => 'Agent',
+                'slug' => 'agent',
+                'name' => 'Agent',
                 'description' => 'Standard agent with ticket handling and limited administrative access.',
                 'permissions' => self::get_agent_permission_slugs(),
             ],
             [
-                'slug'        => 'light_agent',
-                'name'        => 'Light Agent',
+                'slug' => 'light_agent',
+                'name' => 'Light Agent',
                 'description' => 'Limited agent with read-only ticket access and internal note capability.',
                 'permissions' => self::get_light_agent_permission_slugs(),
             ],
         ];
 
-        foreach ( $role_defs as $def ) {
+        foreach ($role_defs as $def) {
             $role_id = $wpdb->get_var(
-                $wpdb->prepare( "SELECT id FROM {$role_table} WHERE slug = %s", $def['slug'] )
+                $wpdb->prepare("SELECT id FROM {$role_table} WHERE slug = %s", $def['slug'])
             );
 
-            if ( $role_id ) {
+            if ($role_id) {
                 $wpdb->update(
                     $role_table,
                     [
-                        'name'        => $def['name'],
+                        'name' => $def['name'],
                         'description' => $def['description'],
-                        'is_system'   => 1,
-                        'updated_at'  => $now,
+                        'is_system' => 1,
+                        'updated_at' => $now,
                     ],
-                    [ 'id' => $role_id ]
+                    ['id' => $role_id]
                 );
             } else {
                 $wpdb->insert(
                     $role_table,
                     [
-                        'name'        => $def['name'],
-                        'slug'        => $def['slug'],
+                        'name' => $def['name'],
+                        'slug' => $def['slug'],
                         'description' => $def['description'],
-                        'is_system'   => 1,
-                        'created_at'  => $now,
-                        'updated_at'  => $now,
+                        'is_system' => 1,
+                        'created_at' => $now,
+                        'updated_at' => $now,
                     ]
                 );
                 $role_id = $wpdb->insert_id;
             }
 
             // Sync pivot: delete existing, then re-insert.
-            $wpdb->delete( $pivot_table, [ 'role_id' => $role_id ] );
+            $wpdb->delete($pivot_table, ['role_id' => $role_id]);
 
-            foreach ( $def['permissions'] as $slug ) {
-                if ( isset( $slug_index[ $slug ] ) ) {
+            foreach ($def['permissions'] as $slug) {
+                if (isset($slug_index[$slug])) {
                     $wpdb->insert(
                         $pivot_table,
                         [
-                            'role_id'       => (int) $role_id,
-                            'permission_id' => $slug_index[ $slug ],
+                            'role_id' => (int) $role_id,
+                            'permission_id' => $slug_index[$slug],
                         ]
                     );
                 }
@@ -664,42 +671,43 @@ class Activator {
     /**
      * Insert default settings into the escalated_settings table.
      */
-    private static function insert_default_settings(): void {
+    private static function insert_default_settings(): void
+    {
         global $wpdb;
 
-        $table    = $wpdb->prefix . 'escalated_settings';
-        $now      = current_time( 'mysql' );
+        $table = $wpdb->prefix.'escalated_settings';
+        $now = current_time('mysql');
         $defaults = [
             'ticket_reference_prefix' => 'ESC',
-            'default_priority'        => 'medium',
-            'guest_tickets_enabled'   => '1',
-            'auto_close_days'         => '7',
-            'auto_close_enabled'      => '0',
-            'inbound_email_enabled'   => '0',
-            'sla_warning_minutes'     => '30',
-            'activity_purge_days'     => '90',
-            'max_attachment_size_kb'  => '10240',
+            'default_priority' => 'medium',
+            'guest_tickets_enabled' => '1',
+            'auto_close_days' => '7',
+            'auto_close_enabled' => '0',
+            'inbound_email_enabled' => '0',
+            'sla_warning_minutes' => '30',
+            'activity_purge_days' => '90',
+            'max_attachment_size_kb' => '10240',
             'max_attachments_per_reply' => '5',
-            'webhook_url'             => '',
-            'webhook_secret'          => '',
+            'webhook_url' => '',
+            'webhook_secret' => '',
         ];
 
-        foreach ( $defaults as $key => $value ) {
+        foreach ($defaults as $key => $value) {
             // Only insert if the setting does not already exist.
             $exists = $wpdb->get_var(
-                $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE option_key = %s", $key )
+                $wpdb->prepare("SELECT COUNT(*) FROM {$table} WHERE option_key = %s", $key)
             );
 
-            if ( ! $exists ) {
+            if (! $exists) {
                 $wpdb->insert(
                     $table,
                     [
-                        'option_key'   => $key,
+                        'option_key' => $key,
                         'option_value' => $value,
-                        'created_at'   => $now,
-                        'updated_at'   => $now,
+                        'created_at' => $now,
+                        'updated_at' => $now,
                     ],
-                    [ '%s', '%s', '%s', '%s' ]
+                    ['%s', '%s', '%s', '%s']
                 );
             }
         }
@@ -708,46 +716,48 @@ class Activator {
     /**
      * Schedule cron events and register custom cron intervals.
      */
-    private static function schedule_cron_events(): void {
+    private static function schedule_cron_events(): void
+    {
         // Register custom cron intervals via filter.
-        add_filter( 'cron_schedules', [ self::class, 'add_cron_schedules' ] );
+        add_filter('cron_schedules', [self::class, 'add_cron_schedules']);
 
-        if ( ! wp_next_scheduled( 'escalated_check_sla' ) ) {
-            wp_schedule_event( time(), 'escalated_every_minute', 'escalated_check_sla' );
+        if (! wp_next_scheduled('escalated_check_sla')) {
+            wp_schedule_event(time(), 'escalated_every_minute', 'escalated_check_sla');
         }
 
-        if ( ! wp_next_scheduled( 'escalated_evaluate_escalations' ) ) {
-            wp_schedule_event( time(), 'escalated_every_five_minutes', 'escalated_evaluate_escalations' );
+        if (! wp_next_scheduled('escalated_evaluate_escalations')) {
+            wp_schedule_event(time(), 'escalated_every_five_minutes', 'escalated_evaluate_escalations');
         }
 
-        if ( ! wp_next_scheduled( 'escalated_auto_close' ) ) {
-            wp_schedule_event( time(), 'daily', 'escalated_auto_close' );
+        if (! wp_next_scheduled('escalated_auto_close')) {
+            wp_schedule_event(time(), 'daily', 'escalated_auto_close');
         }
 
-        if ( ! wp_next_scheduled( 'escalated_purge_activities' ) ) {
-            wp_schedule_event( time(), 'weekly', 'escalated_purge_activities' );
+        if (! wp_next_scheduled('escalated_purge_activities')) {
+            wp_schedule_event(time(), 'weekly', 'escalated_purge_activities');
         }
 
-        if ( ! wp_next_scheduled( 'escalated_run_automations' ) ) {
-            wp_schedule_event( time(), 'escalated_every_five_minutes', 'escalated_run_automations' );
+        if (! wp_next_scheduled('escalated_run_automations')) {
+            wp_schedule_event(time(), 'escalated_every_five_minutes', 'escalated_run_automations');
         }
     }
 
     /**
      * Add custom cron schedule intervals.
      *
-     * @param array $schedules Existing cron schedules.
+     * @param  array  $schedules  Existing cron schedules.
      * @return array Modified cron schedules.
      */
-    public static function add_cron_schedules( array $schedules ): array {
+    public static function add_cron_schedules(array $schedules): array
+    {
         $schedules['escalated_every_minute'] = [
             'interval' => 60,
-            'display'  => __( 'Every Minute (Escalated)', 'escalated' ),
+            'display' => __('Every Minute (Escalated)', 'escalated'),
         ];
 
         $schedules['escalated_every_five_minutes'] = [
             'interval' => 300,
-            'display'  => __( 'Every Five Minutes (Escalated)', 'escalated' ),
+            'display' => __('Every Five Minutes (Escalated)', 'escalated'),
         ];
 
         return $schedules;

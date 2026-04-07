@@ -4,24 +4,26 @@ namespace Escalated\Models;
 
 use Escalated\Escalated;
 
-class InboundEmail {
-
+class InboundEmail
+{
     /**
      * Get the table name.
      *
      * @return string
      */
-    public static function table() {
+    public static function table()
+    {
         return Escalated::table('inbound_emails');
     }
 
     /**
      * Find an inbound email by ID.
      *
-     * @param int $id
+     * @param  int  $id
      * @return object|null
      */
-    public static function find($id) {
+    public static function find($id)
+    {
         global $wpdb;
         $table = static::table();
 
@@ -33,13 +35,13 @@ class InboundEmail {
     /**
      * Create a new inbound email record.
      *
-     * @param array $data
      * @return int|false Inserted ID or false on failure.
      */
-    public static function create(array $data) {
+    public static function create(array $data)
+    {
         global $wpdb;
         $table = static::table();
-        $now   = current_time('mysql');
+        $now = current_time('mysql');
 
         $data['created_at'] = $now;
         $data['updated_at'] = $now;
@@ -52,11 +54,11 @@ class InboundEmail {
     /**
      * Update an inbound email record.
      *
-     * @param int   $id
-     * @param array $data
+     * @param  int  $id
      * @return bool
      */
-    public static function update($id, array $data) {
+    public static function update($id, array $data)
+    {
         global $wpdb;
         $table = static::table();
 
@@ -68,10 +70,11 @@ class InboundEmail {
     /**
      * Delete an inbound email record.
      *
-     * @param int $id
+     * @param  int  $id
      * @return bool
      */
-    public static function delete($id) {
+    public static function delete($id)
+    {
         global $wpdb;
         $table = static::table();
 
@@ -81,24 +84,24 @@ class InboundEmail {
     /**
      * Get all inbound emails with optional filters.
      *
-     * @param array $filters
      * @return array
      */
-    public static function all(array $filters = []) {
+    public static function all(array $filters = [])
+    {
         global $wpdb;
-        $table  = static::table();
-        $where  = ['1=1'];
+        $table = static::table();
+        $where = ['1=1'];
         $values = [];
 
-        if ( ! empty($filters['status'])) {
-            $where[]  = 'status = %s';
+        if (! empty($filters['status'])) {
+            $where[] = 'status = %s';
             $values[] = $filters['status'];
         }
 
         $where_clause = implode(' AND ', $where);
-        $sql          = "SELECT * FROM {$table} WHERE {$where_clause} ORDER BY created_at DESC";
+        $sql = "SELECT * FROM {$table} WHERE {$where_clause} ORDER BY created_at DESC";
 
-        if ( ! empty($values)) {
+        if (! empty($values)) {
             $sql = $wpdb->prepare($sql, $values);
         }
 
@@ -108,20 +111,21 @@ class InboundEmail {
     /**
      * Mark an inbound email as processed.
      *
-     * @param int      $id
-     * @param int|null $ticket_id Associated ticket ID.
-     * @param int|null $reply_id  Associated reply ID.
+     * @param  int  $id
+     * @param  int|null  $ticket_id  Associated ticket ID.
+     * @param  int|null  $reply_id  Associated reply ID.
      * @return bool
      */
-    public static function mark_processed($id, $ticket_id = null, $reply_id = null) {
+    public static function mark_processed($id, $ticket_id = null, $reply_id = null)
+    {
         global $wpdb;
         $table = static::table();
-        $now   = current_time('mysql');
+        $now = current_time('mysql');
 
         $data = [
-            'status'       => 'processed',
+            'status' => 'processed',
             'processed_at' => $now,
-            'updated_at'   => $now,
+            'updated_at' => $now,
         ];
 
         if ($ticket_id !== null) {
@@ -138,22 +142,23 @@ class InboundEmail {
     /**
      * Mark an inbound email as failed.
      *
-     * @param int    $id
-     * @param string $error_message
+     * @param  int  $id
+     * @param  string  $error_message
      * @return bool
      */
-    public static function mark_failed($id, $error_message) {
+    public static function mark_failed($id, $error_message)
+    {
         global $wpdb;
         $table = static::table();
-        $now   = current_time('mysql');
+        $now = current_time('mysql');
 
         return $wpdb->update(
             $table,
             [
-                'status'        => 'failed',
+                'status' => 'failed',
                 'error_message' => $error_message,
-                'processed_at'  => $now,
-                'updated_at'    => $now,
+                'processed_at' => $now,
+                'updated_at' => $now,
             ],
             ['id' => $id]
         ) !== false;
@@ -162,19 +167,20 @@ class InboundEmail {
     /**
      * Check if a message ID already exists as processed (duplicate detection).
      *
-     * @param string   $message_id The email message ID.
-     * @param int|null $exclude_id Record ID to exclude from the check.
+     * @param  string  $message_id  The email message ID.
+     * @param  int|null  $exclude_id  Record ID to exclude from the check.
      * @return bool
      */
-    public static function is_duplicate($message_id, $exclude_id = null) {
+    public static function is_duplicate($message_id, $exclude_id = null)
+    {
         global $wpdb;
         $table = static::table();
 
-        $sql    = "SELECT COUNT(*) FROM {$table} WHERE message_id = %s AND status = 'processed'";
+        $sql = "SELECT COUNT(*) FROM {$table} WHERE message_id = %s AND status = 'processed'";
         $values = [$message_id];
 
         if ($exclude_id !== null) {
-            $sql      .= ' AND id != %d';
+            $sql .= ' AND id != %d';
             $values[] = (int) $exclude_id;
         }
 

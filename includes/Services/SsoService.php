@@ -4,8 +4,8 @@ namespace Escalated\Services;
 
 use Escalated\Models\Setting;
 
-class SsoService {
-
+class SsoService
+{
     protected $configKeys = [
         'sso_provider' => 'none',
         'sso_entity_id' => '',
@@ -21,18 +21,21 @@ class SsoService {
     /**
      * Get the current SSO configuration.
      */
-    public function getConfig() {
+    public function getConfig()
+    {
         $config = [];
         foreach ($this->configKeys as $key => $default) {
             $config[$key] = Setting::get($key, $default);
         }
+
         return $config;
     }
 
     /**
      * Save SSO configuration.
      */
-    public function saveConfig($data) {
+    public function saveConfig($data)
+    {
         $allowed = array_keys($this->configKeys);
         foreach ($data as $key => $value) {
             if (in_array($key, $allowed, true)) {
@@ -44,25 +47,29 @@ class SsoService {
     /**
      * Check if SSO is enabled.
      */
-    public function isEnabled() {
+    public function isEnabled()
+    {
         return $this->getProvider() !== 'none';
     }
 
     /**
      * Get the active SSO provider type.
      */
-    public function getProvider() {
+    public function getProvider()
+    {
         return Setting::get('sso_provider', 'none');
     }
 
     /**
      * Validate a base64-encoded SAML response and extract user attributes.
      *
-     * @param  string $samlResponse
-     * @return array  Array with 'email', 'name', 'role', 'attributes'
+     * @param  string  $samlResponse
+     * @return array Array with 'email', 'name', 'role', 'attributes'
+     *
      * @throws \RuntimeException
      */
-    public function validateSamlAssertion($samlResponse) {
+    public function validateSamlAssertion($samlResponse)
+    {
         $config = $this->getConfig();
 
         $xml = base64_decode($samlResponse, true);
@@ -70,11 +77,11 @@ class SsoService {
             throw new \RuntimeException('Invalid SAML response: base64 decode failed.');
         }
 
-        $doc = new \DOMDocument();
+        $doc = new \DOMDocument;
         $prevErrors = libxml_use_internal_errors(true);
         $loaded = $doc->loadXML($xml);
         libxml_use_internal_errors($prevErrors);
-        if (!$loaded) {
+        if (! $loaded) {
             throw new \RuntimeException('Invalid SAML response: malformed XML.');
         }
 
@@ -129,14 +136,14 @@ class SsoService {
         }
 
         $email = $attributes[$attrEmail] ?? null;
-        if (!$email) {
+        if (! $email) {
             $nameIdNodes = $xpath->query('//saml:Subject/saml:NameID');
             if ($nameIdNodes->length > 0) {
                 $email = trim($nameIdNodes->item(0)->textContent);
             }
         }
 
-        if (!$email) {
+        if (! $email) {
             throw new \RuntimeException('SAML assertion missing email attribute.');
         }
 
@@ -151,11 +158,13 @@ class SsoService {
     /**
      * Validate a JWT token and extract user attributes.
      *
-     * @param  string $token
-     * @return array  Array with 'email', 'name', 'role', 'claims'
+     * @param  string  $token
+     * @return array Array with 'email', 'name', 'role', 'claims'
+     *
      * @throws \RuntimeException
      */
-    public function validateJwtToken($token) {
+    public function validateJwtToken($token)
+    {
         $config = $this->getConfig();
 
         $parts = explode('.', $token);
@@ -166,12 +175,12 @@ class SsoService {
         [$headerB64, $payloadB64, $signatureB64] = $parts;
 
         $header = json_decode($this->base64UrlDecode($headerB64), true);
-        if (!$header || !isset($header['alg'])) {
+        if (! $header || ! isset($header['alg'])) {
             throw new \RuntimeException('Invalid JWT: malformed header.');
         }
 
         $payload = json_decode($this->base64UrlDecode($payloadB64), true);
-        if (!$payload) {
+        if (! $payload) {
             throw new \RuntimeException('Invalid JWT: malformed payload.');
         }
 
@@ -183,9 +192,9 @@ class SsoService {
         }
 
         $signature = $this->base64UrlDecode($signatureB64);
-        $signingInput = $headerB64 . '.' . $payloadB64;
+        $signingInput = $headerB64.'.'.$payloadB64;
 
-        if (!$this->verifyJwtSignature($signingInput, $signature, $secret, $algorithm)) {
+        if (! $this->verifyJwtSignature($signingInput, $signature, $secret, $algorithm)) {
             throw new \RuntimeException('Invalid JWT: signature verification failed.');
         }
 
@@ -205,7 +214,7 @@ class SsoService {
         $attrRole = $config['sso_attr_role'];
 
         $email = $payload[$attrEmail] ?? $payload['email'] ?? $payload['sub'] ?? null;
-        if (!$email) {
+        if (! $email) {
             throw new \RuntimeException('JWT missing email claim.');
         }
 
@@ -220,7 +229,8 @@ class SsoService {
     /**
      * Verify JWT signature.
      */
-    private function verifyJwtSignature($input, $signature, $secret, $algorithm) {
+    private function verifyJwtSignature($input, $signature, $secret, $algorithm)
+    {
         $algoMap = [
             'HS256' => 'sha256',
             'HS384' => 'sha384',
@@ -229,6 +239,7 @@ class SsoService {
 
         if (isset($algoMap[$algorithm])) {
             $expected = hash_hmac($algoMap[$algorithm], $input, $secret, true);
+
             return hash_equals($expected, $signature);
         }
 
@@ -238,11 +249,13 @@ class SsoService {
     /**
      * Base64url decode.
      */
-    private function base64UrlDecode($input) {
+    private function base64UrlDecode($input)
+    {
         $remainder = strlen($input) % 4;
         if ($remainder) {
             $input .= str_repeat('=', 4 - $remainder);
         }
+
         return base64_decode(strtr($input, '-_', '+/'), true) ?: '';
     }
 }

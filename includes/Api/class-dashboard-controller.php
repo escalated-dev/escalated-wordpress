@@ -1,20 +1,18 @@
 <?php
+
 /**
  * Dashboard Controller - aggregate statistics for the dashboard.
- *
- * @package Escalated\Api
  */
 
 namespace Escalated\Api;
 
 use Escalated\Models\Ticket;
-use Escalated\Helpers\Enums;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_REST_Server;
 
-class Dashboard_Controller extends Base_Controller {
-
+class Dashboard_Controller extends Base_Controller
+{
     /**
      * Route base.
      *
@@ -24,19 +22,18 @@ class Dashboard_Controller extends Base_Controller {
 
     /**
      * Register routes.
-     *
-     * @return void
      */
-    public function register_routes(): void {
+    public function register_routes(): void
+    {
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base,
+            '/'.$this->rest_base,
             [
                 [
-                    'methods'             => WP_REST_Server::READABLE,
-                    'callback'            => [ $this, 'get_stats' ],
-                    'permission_callback' => [ $this, 'token_permissions_check' ],
-                    'args'                => [],
+                    'methods' => WP_REST_Server::READABLE,
+                    'callback' => [$this, 'get_stats'],
+                    'permission_callback' => [$this, 'token_permissions_check'],
+                    'args' => [],
                 ],
             ]
         );
@@ -45,19 +42,20 @@ class Dashboard_Controller extends Base_Controller {
     /**
      * Return dashboard statistics.
      *
-     * @param WP_REST_Request $request The incoming request.
+     * @param  WP_REST_Request  $request  The incoming request.
      * @return WP_REST_Response|\WP_Error
      */
-    public function get_stats( WP_REST_Request $request ) {
+    public function get_stats(WP_REST_Request $request)
+    {
         global $wpdb;
 
-        $user_id = $this->check_token_permission( $request, 'dashboard:read' );
+        $user_id = $this->check_token_permission($request, 'dashboard:read');
 
-        if ( null === $user_id ) {
-            return $this->error( 'escalated_unauthorized', __( 'Unauthorized.', 'escalated' ), 401 );
+        if ($user_id === null) {
+            return $this->error('escalated_unauthorized', __('Unauthorized.', 'escalated'), 401);
         }
 
-        $table     = \Escalated\Escalated::table( 'tickets' );
+        $table = \Escalated\Escalated::table('tickets');
         $open_scope = Ticket::scope_open();
 
         // Count of all open tickets (open, pending, on_hold, waiting statuses).
@@ -66,7 +64,7 @@ class Dashboard_Controller extends Base_Controller {
         );
 
         // Count of tickets assigned to the authenticated user.
-        $my_assigned = Ticket::count_for_agent( $user_id );
+        $my_assigned = Ticket::count_for_agent($user_id);
 
         // Count of unassigned open tickets.
         $unassigned = (int) $wpdb->get_var(
@@ -82,8 +80,8 @@ class Dashboard_Controller extends Base_Controller {
         );
 
         // Count of tickets resolved today.
-        $today_start    = current_time( 'Y-m-d' ) . ' 00:00:00';
-        $today_end      = current_time( 'Y-m-d' ) . ' 23:59:59';
+        $today_start = current_time('Y-m-d').' 00:00:00';
+        $today_end = current_time('Y-m-d').' 23:59:59';
         $resolved_today = (int) $wpdb->get_var(
             $wpdb->prepare(
                 "SELECT COUNT(*) FROM {$table}
@@ -111,14 +109,14 @@ class Dashboard_Controller extends Base_Controller {
         // Status breakdown.
         $status_counts = Ticket::count_by_status();
 
-        return $this->success( [
-            'open'             => $open,
-            'my_assigned'      => $my_assigned,
-            'unassigned'       => $unassigned,
-            'sla_breached'     => $sla_breached,
-            'resolved_today'   => $resolved_today,
-            'needs_attention'  => $needs_attention,
+        return $this->success([
+            'open' => $open,
+            'my_assigned' => $my_assigned,
+            'unassigned' => $unassigned,
+            'sla_breached' => $sla_breached,
+            'resolved_today' => $resolved_today,
+            'needs_attention' => $needs_attention,
             'status_breakdown' => $status_counts,
-        ] );
+        ]);
     }
 }

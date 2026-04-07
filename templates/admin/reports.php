@@ -2,86 +2,85 @@
 /**
  * Admin template: Reports
  *
- * @var array    $by_status                   Tickets grouped by status (status => count).
- * @var array    $by_priority                 Tickets grouped by priority (priority => count).
- * @var array    $by_department_rows          Tickets grouped by department (objects with department_name, count).
- * @var array    $by_agent_rows               Tickets grouped by agent (objects with assigned_to, count).
- * @var int      $total_tickets               Total ticket count.
- * @var int      $open_tickets                Open tickets count.
- * @var int      $resolved_tickets            Resolved tickets count.
- * @var int      $closed_tickets              Closed tickets count.
- * @var int      $sla_first_response_breached SLA first response breach count.
- * @var int      $sla_resolution_breached     SLA resolution breach count.
- * @var int      $tickets_with_sla            Tickets with SLA policy count.
- * @var float    $sla_compliance_rate         SLA compliance percentage.
+ * @var array $by_status                   Tickets grouped by status (status => count).
+ * @var array $by_priority                 Tickets grouped by priority (priority => count).
+ * @var array $by_department_rows          Tickets grouped by department (objects with department_name, count).
+ * @var array $by_agent_rows               Tickets grouped by agent (objects with assigned_to, count).
+ * @var int $total_tickets               Total ticket count.
+ * @var int $open_tickets                Open tickets count.
+ * @var int $resolved_tickets            Resolved tickets count.
+ * @var int $closed_tickets              Closed tickets count.
+ * @var int $sla_first_response_breached SLA first response breach count.
+ * @var int $sla_resolution_breached     SLA resolution breach count.
+ * @var int $tickets_with_sla            Tickets with SLA policy count.
+ * @var float $sla_compliance_rate         SLA compliance percentage.
  * @var float|null $avg_first_response        Average first response time in hours.
  * @var float|null $avg_resolution            Average resolution time in hours.
- * @var int      $recent_tickets              Tickets created in last 30 days.
- * @var array    $statuses                    Ticket statuses from Enums.
- * @var array    $priorities                  Ticket priorities from Enums.
+ * @var int $recent_tickets              Tickets created in last 30 days.
+ * @var array $statuses                    Ticket statuses from Enums.
+ * @var array $priorities                  Ticket priorities from Enums.
  */
-
-if ( ! defined( 'ABSPATH' ) ) {
+if (! defined('ABSPATH')) {
     exit;
 }
 ?>
 <div class="wrap">
-    <h1><?php esc_html_e( 'Reports', 'escalated' ); ?></h1>
+    <h1><?php esc_html_e('Reports', 'escalated'); ?></h1>
 
     <!-- Stats Cards -->
     <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 25px;">
         <div class="escalated-card" style="padding: 20px; min-width: 180px; flex: 1;">
-            <div class="escalated-text-primary" style="font-size: 32px; font-weight: 700;"><?php echo esc_html( number_format_i18n( $total_tickets ) ); ?></div>
-            <div class="escalated-text-secondary" style="font-size: 13px; margin-top: 4px;"><?php esc_html_e( 'Total Tickets', 'escalated' ); ?></div>
+            <div class="escalated-text-primary" style="font-size: 32px; font-weight: 700;"><?php echo esc_html(number_format_i18n($total_tickets)); ?></div>
+            <div class="escalated-text-secondary" style="font-size: 13px; margin-top: 4px;"><?php esc_html_e('Total Tickets', 'escalated'); ?></div>
         </div>
         <div class="escalated-card" style="border-left: 4px solid var(--esc-wp-blue); padding: 20px; min-width: 180px; flex: 1;">
-            <div style="font-size: 32px; font-weight: 700; color: var(--esc-wp-blue);"><?php echo esc_html( number_format_i18n( $open_tickets ) ); ?></div>
-            <div class="escalated-text-secondary" style="font-size: 13px; margin-top: 4px;"><?php esc_html_e( 'Open Tickets', 'escalated' ); ?></div>
+            <div style="font-size: 32px; font-weight: 700; color: var(--esc-wp-blue);"><?php echo esc_html(number_format_i18n($open_tickets)); ?></div>
+            <div class="escalated-text-secondary" style="font-size: 13px; margin-top: 4px;"><?php esc_html_e('Open Tickets', 'escalated'); ?></div>
         </div>
         <div class="escalated-card" style="border-left: 4px solid var(--esc-wp-green); padding: 20px; min-width: 180px; flex: 1;">
-            <div style="font-size: 32px; font-weight: 700; color: var(--esc-wp-green);"><?php echo esc_html( number_format_i18n( $resolved_tickets ) ); ?></div>
-            <div class="escalated-text-secondary" style="font-size: 13px; margin-top: 4px;"><?php esc_html_e( 'Resolved', 'escalated' ); ?></div>
+            <div style="font-size: 32px; font-weight: 700; color: var(--esc-wp-green);"><?php echo esc_html(number_format_i18n($resolved_tickets)); ?></div>
+            <div class="escalated-text-secondary" style="font-size: 13px; margin-top: 4px;"><?php esc_html_e('Resolved', 'escalated'); ?></div>
         </div>
         <div class="escalated-card" style="border-left: 4px solid var(--esc-wp-gray); padding: 20px; min-width: 180px; flex: 1;">
-            <div style="font-size: 32px; font-weight: 700; color: var(--esc-wp-gray);"><?php echo esc_html( number_format_i18n( $closed_tickets ) ); ?></div>
-            <div class="escalated-text-secondary" style="font-size: 13px; margin-top: 4px;"><?php esc_html_e( 'Closed', 'escalated' ); ?></div>
+            <div style="font-size: 32px; font-weight: 700; color: var(--esc-wp-gray);"><?php echo esc_html(number_format_i18n($closed_tickets)); ?></div>
+            <div class="escalated-text-secondary" style="font-size: 13px; margin-top: 4px;"><?php esc_html_e('Closed', 'escalated'); ?></div>
         </div>
         <div class="escalated-card" style="border-left: 4px solid var(--esc-wp-purple); padding: 20px; min-width: 180px; flex: 1;">
-            <div style="font-size: 32px; font-weight: 700; color: var(--esc-wp-purple);"><?php echo esc_html( number_format_i18n( $recent_tickets ) ); ?></div>
-            <div class="escalated-text-secondary" style="font-size: 13px; margin-top: 4px;"><?php esc_html_e( 'Last 30 Days', 'escalated' ); ?></div>
+            <div style="font-size: 32px; font-weight: 700; color: var(--esc-wp-purple);"><?php echo esc_html(number_format_i18n($recent_tickets)); ?></div>
+            <div class="escalated-text-secondary" style="font-size: 13px; margin-top: 4px;"><?php esc_html_e('Last 30 Days', 'escalated'); ?></div>
         </div>
     </div>
 
     <!-- SLA Stats Cards -->
     <?php
-    $sla_color_var = $sla_compliance_rate >= 90 ? '--esc-wp-green' : ( $sla_compliance_rate >= 70 ? '--esc-wp-amber' : '--esc-wp-red' );
-    ?>
+    $sla_color_var = $sla_compliance_rate >= 90 ? '--esc-wp-green' : ($sla_compliance_rate >= 70 ? '--esc-wp-amber' : '--esc-wp-red');
+?>
     <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 25px;">
-        <div class="escalated-card" style="border-left: 4px solid var(<?php echo esc_attr( $sla_color_var ); ?>); padding: 20px; min-width: 200px; flex: 1;">
-            <div style="font-size: 32px; font-weight: 700; color: var(<?php echo esc_attr( $sla_color_var ); ?>);">
-                <?php echo esc_html( $sla_compliance_rate ); ?>%
+        <div class="escalated-card" style="border-left: 4px solid var(<?php echo esc_attr($sla_color_var); ?>); padding: 20px; min-width: 200px; flex: 1;">
+            <div style="font-size: 32px; font-weight: 700; color: var(<?php echo esc_attr($sla_color_var); ?>);">
+                <?php echo esc_html($sla_compliance_rate); ?>%
             </div>
-            <div class="escalated-text-secondary" style="font-size: 13px; margin-top: 4px;"><?php esc_html_e( 'SLA Compliance Rate', 'escalated' ); ?></div>
+            <div class="escalated-text-secondary" style="font-size: 13px; margin-top: 4px;"><?php esc_html_e('SLA Compliance Rate', 'escalated'); ?></div>
         </div>
         <div class="escalated-card" style="padding: 20px; min-width: 200px; flex: 1;">
-            <div class="escalated-text-danger" style="font-size: 32px; font-weight: 700;"><?php echo esc_html( number_format_i18n( $sla_first_response_breached ) ); ?></div>
-            <div class="escalated-text-secondary" style="font-size: 13px; margin-top: 4px;"><?php esc_html_e( 'First Response Breaches', 'escalated' ); ?></div>
+            <div class="escalated-text-danger" style="font-size: 32px; font-weight: 700;"><?php echo esc_html(number_format_i18n($sla_first_response_breached)); ?></div>
+            <div class="escalated-text-secondary" style="font-size: 13px; margin-top: 4px;"><?php esc_html_e('First Response Breaches', 'escalated'); ?></div>
         </div>
         <div class="escalated-card" style="padding: 20px; min-width: 200px; flex: 1;">
-            <div class="escalated-text-danger" style="font-size: 32px; font-weight: 700;"><?php echo esc_html( number_format_i18n( $sla_resolution_breached ) ); ?></div>
-            <div class="escalated-text-secondary" style="font-size: 13px; margin-top: 4px;"><?php esc_html_e( 'Resolution Breaches', 'escalated' ); ?></div>
+            <div class="escalated-text-danger" style="font-size: 32px; font-weight: 700;"><?php echo esc_html(number_format_i18n($sla_resolution_breached)); ?></div>
+            <div class="escalated-text-secondary" style="font-size: 13px; margin-top: 4px;"><?php esc_html_e('Resolution Breaches', 'escalated'); ?></div>
         </div>
         <div class="escalated-card" style="padding: 20px; min-width: 200px; flex: 1;">
             <div class="escalated-text-primary" style="font-size: 32px; font-weight: 700;">
-                <?php echo $avg_first_response !== null ? esc_html( $avg_first_response . 'h' ) : '&mdash;'; ?>
+                <?php echo $avg_first_response !== null ? esc_html($avg_first_response.'h') : '&mdash;'; ?>
             </div>
-            <div class="escalated-text-secondary" style="font-size: 13px; margin-top: 4px;"><?php esc_html_e( 'Avg. First Response', 'escalated' ); ?></div>
+            <div class="escalated-text-secondary" style="font-size: 13px; margin-top: 4px;"><?php esc_html_e('Avg. First Response', 'escalated'); ?></div>
         </div>
         <div class="escalated-card" style="padding: 20px; min-width: 200px; flex: 1;">
             <div class="escalated-text-primary" style="font-size: 32px; font-weight: 700;">
-                <?php echo $avg_resolution !== null ? esc_html( $avg_resolution . 'h' ) : '&mdash;'; ?>
+                <?php echo $avg_resolution !== null ? esc_html($avg_resolution.'h') : '&mdash;'; ?>
             </div>
-            <div class="escalated-text-secondary" style="font-size: 13px; margin-top: 4px;"><?php esc_html_e( 'Avg. Resolution Time', 'escalated' ); ?></div>
+            <div class="escalated-text-secondary" style="font-size: 13px; margin-top: 4px;"><?php esc_html_e('Avg. Resolution Time', 'escalated'); ?></div>
         </div>
     </div>
 
@@ -90,34 +89,34 @@ if ( ! defined( 'ABSPATH' ) ) {
         <!-- Tickets by Status -->
         <div style="flex: 1; min-width: 300px;">
             <div class="escalated-card" style="padding: 15px;">
-                <h3 style="margin-top: 0; font-size: 14px;"><?php esc_html_e( 'Tickets by Status', 'escalated' ); ?></h3>
+                <h3 style="margin-top: 0; font-size: 14px;"><?php esc_html_e('Tickets by Status', 'escalated'); ?></h3>
                 <table class="wp-list-table widefat striped">
                     <thead>
                         <tr>
-                            <th><?php esc_html_e( 'Status', 'escalated' ); ?></th>
-                            <th style="width: 80px; text-align: right;"><?php esc_html_e( 'Count', 'escalated' ); ?></th>
-                            <th style="width: 120px;"><?php esc_html_e( 'Percentage', 'escalated' ); ?></th>
+                            <th><?php esc_html_e('Status', 'escalated'); ?></th>
+                            <th style="width: 80px; text-align: right;"><?php esc_html_e('Count', 'escalated'); ?></th>
+                            <th style="width: 120px;"><?php esc_html_e('Percentage', 'escalated'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ( $statuses as $key => $data ) :
-                            $count = $by_status[ $key ] ?? 0;
-                            $pct   = $total_tickets > 0 ? round( ( $count / $total_tickets ) * 100, 1 ) : 0;
-                        ?>
+                        <?php foreach ($statuses as $key => $data) {
+                            $count = $by_status[$key] ?? 0;
+                            $pct = $total_tickets > 0 ? round(($count / $total_tickets) * 100, 1) : 0;
+                            ?>
                             <tr>
                                 <td>
-                                    <span style="display: inline-block; width: 10px; height: 10px; background: <?php echo esc_attr( $data['color'] ); ?>; border-radius: 2px; margin-right: 5px; vertical-align: middle;"></span>
-                                    <?php echo esc_html( $data['label'] ); ?>
+                                    <span style="display: inline-block; width: 10px; height: 10px; background: <?php echo esc_attr($data['color']); ?>; border-radius: 2px; margin-right: 5px; vertical-align: middle;"></span>
+                                    <?php echo esc_html($data['label']); ?>
                                 </td>
-                                <td style="text-align: right; font-weight: 600;"><?php echo esc_html( number_format_i18n( $count ) ); ?></td>
+                                <td style="text-align: right; font-weight: 600;"><?php echo esc_html(number_format_i18n($count)); ?></td>
                                 <td>
                                     <div class="escalated-progress-track" style="height: 18px; position: relative;">
-                                        <div style="background: <?php echo esc_attr( $data['color'] ); ?>; height: 100%; border-radius: 3px; width: <?php echo esc_attr( $pct ); ?>%; min-width: <?php echo $pct > 0 ? '2px' : '0'; ?>;"></div>
-                                        <span class="escalated-text-secondary" style="position: absolute; right: 5px; top: 0; line-height: 18px; font-size: 11px;"><?php echo esc_html( $pct ); ?>%</span>
+                                        <div style="background: <?php echo esc_attr($data['color']); ?>; height: 100%; border-radius: 3px; width: <?php echo esc_attr($pct); ?>%; min-width: <?php echo $pct > 0 ? '2px' : '0'; ?>;"></div>
+                                        <span class="escalated-text-secondary" style="position: absolute; right: 5px; top: 0; line-height: 18px; font-size: 11px;"><?php echo esc_html($pct); ?>%</span>
                                     </div>
                                 </td>
                             </tr>
-                        <?php endforeach; ?>
+                        <?php } ?>
                     </tbody>
                 </table>
             </div>
@@ -126,34 +125,34 @@ if ( ! defined( 'ABSPATH' ) ) {
         <!-- Tickets by Priority -->
         <div style="flex: 1; min-width: 300px;">
             <div class="escalated-card" style="padding: 15px;">
-                <h3 style="margin-top: 0; font-size: 14px;"><?php esc_html_e( 'Tickets by Priority', 'escalated' ); ?></h3>
+                <h3 style="margin-top: 0; font-size: 14px;"><?php esc_html_e('Tickets by Priority', 'escalated'); ?></h3>
                 <table class="wp-list-table widefat striped">
                     <thead>
                         <tr>
-                            <th><?php esc_html_e( 'Priority', 'escalated' ); ?></th>
-                            <th style="width: 80px; text-align: right;"><?php esc_html_e( 'Count', 'escalated' ); ?></th>
-                            <th style="width: 120px;"><?php esc_html_e( 'Percentage', 'escalated' ); ?></th>
+                            <th><?php esc_html_e('Priority', 'escalated'); ?></th>
+                            <th style="width: 80px; text-align: right;"><?php esc_html_e('Count', 'escalated'); ?></th>
+                            <th style="width: 120px;"><?php esc_html_e('Percentage', 'escalated'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ( $priorities as $key => $data ) :
-                            $count = $by_priority[ $key ] ?? 0;
-                            $pct   = $total_tickets > 0 ? round( ( $count / $total_tickets ) * 100, 1 ) : 0;
-                        ?>
+                        <?php foreach ($priorities as $key => $data) {
+                            $count = $by_priority[$key] ?? 0;
+                            $pct = $total_tickets > 0 ? round(($count / $total_tickets) * 100, 1) : 0;
+                            ?>
                             <tr>
                                 <td>
-                                    <span style="display: inline-block; width: 10px; height: 10px; background: <?php echo esc_attr( $data['color'] ); ?>; border-radius: 2px; margin-right: 5px; vertical-align: middle;"></span>
-                                    <?php echo esc_html( $data['label'] ); ?>
+                                    <span style="display: inline-block; width: 10px; height: 10px; background: <?php echo esc_attr($data['color']); ?>; border-radius: 2px; margin-right: 5px; vertical-align: middle;"></span>
+                                    <?php echo esc_html($data['label']); ?>
                                 </td>
-                                <td style="text-align: right; font-weight: 600;"><?php echo esc_html( number_format_i18n( $count ) ); ?></td>
+                                <td style="text-align: right; font-weight: 600;"><?php echo esc_html(number_format_i18n($count)); ?></td>
                                 <td>
                                     <div class="escalated-progress-track" style="height: 18px; position: relative;">
-                                        <div style="background: <?php echo esc_attr( $data['color'] ); ?>; height: 100%; border-radius: 3px; width: <?php echo esc_attr( $pct ); ?>%; min-width: <?php echo $pct > 0 ? '2px' : '0'; ?>;"></div>
-                                        <span class="escalated-text-secondary" style="position: absolute; right: 5px; top: 0; line-height: 18px; font-size: 11px;"><?php echo esc_html( $pct ); ?>%</span>
+                                        <div style="background: <?php echo esc_attr($data['color']); ?>; height: 100%; border-radius: 3px; width: <?php echo esc_attr($pct); ?>%; min-width: <?php echo $pct > 0 ? '2px' : '0'; ?>;"></div>
+                                        <span class="escalated-text-secondary" style="position: absolute; right: 5px; top: 0; line-height: 18px; font-size: 11px;"><?php echo esc_html($pct); ?>%</span>
                                     </div>
                                 </td>
                             </tr>
-                        <?php endforeach; ?>
+                        <?php } ?>
                     </tbody>
                 </table>
             </div>
@@ -166,27 +165,27 @@ if ( ! defined( 'ABSPATH' ) ) {
         <!-- Tickets by Department -->
         <div style="flex: 1; min-width: 300px;">
             <div class="escalated-card" style="padding: 15px;">
-                <h3 style="margin-top: 0; font-size: 14px;"><?php esc_html_e( 'Tickets by Department', 'escalated' ); ?></h3>
+                <h3 style="margin-top: 0; font-size: 14px;"><?php esc_html_e('Tickets by Department', 'escalated'); ?></h3>
                 <table class="wp-list-table widefat striped">
                     <thead>
                         <tr>
-                            <th><?php esc_html_e( 'Department', 'escalated' ); ?></th>
-                            <th style="width: 80px; text-align: right;"><?php esc_html_e( 'Count', 'escalated' ); ?></th>
+                            <th><?php esc_html_e('Department', 'escalated'); ?></th>
+                            <th style="width: 80px; text-align: right;"><?php esc_html_e('Count', 'escalated'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if ( empty( $by_department_rows ) ) : ?>
+                        <?php if (empty($by_department_rows)) { ?>
                             <tr>
-                                <td colspan="2"><?php esc_html_e( 'No data available.', 'escalated' ); ?></td>
+                                <td colspan="2"><?php esc_html_e('No data available.', 'escalated'); ?></td>
                             </tr>
-                        <?php else : ?>
-                            <?php foreach ( $by_department_rows as $row ) : ?>
+                        <?php } else { ?>
+                            <?php foreach ($by_department_rows as $row) { ?>
                                 <tr>
-                                    <td><?php echo esc_html( $row->department_name ?: __( 'Unassigned', 'escalated' ) ); ?></td>
-                                    <td style="text-align: right; font-weight: 600;"><?php echo esc_html( number_format_i18n( $row->count ) ); ?></td>
+                                    <td><?php echo esc_html($row->department_name ?: __('Unassigned', 'escalated')); ?></td>
+                                    <td style="text-align: right; font-weight: 600;"><?php echo esc_html(number_format_i18n($row->count)); ?></td>
                                 </tr>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
+                            <?php } ?>
+                        <?php } ?>
                     </tbody>
                 </table>
             </div>
@@ -195,33 +194,33 @@ if ( ! defined( 'ABSPATH' ) ) {
         <!-- Tickets by Agent -->
         <div style="flex: 1; min-width: 300px;">
             <div class="escalated-card" style="padding: 15px;">
-                <h3 style="margin-top: 0; font-size: 14px;"><?php esc_html_e( 'Top Agents by Ticket Count', 'escalated' ); ?></h3>
+                <h3 style="margin-top: 0; font-size: 14px;"><?php esc_html_e('Top Agents by Ticket Count', 'escalated'); ?></h3>
                 <table class="wp-list-table widefat striped">
                     <thead>
                         <tr>
-                            <th><?php esc_html_e( 'Agent', 'escalated' ); ?></th>
-                            <th style="width: 80px; text-align: right;"><?php esc_html_e( 'Tickets', 'escalated' ); ?></th>
+                            <th><?php esc_html_e('Agent', 'escalated'); ?></th>
+                            <th style="width: 80px; text-align: right;"><?php esc_html_e('Tickets', 'escalated'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if ( empty( $by_agent_rows ) ) : ?>
+                        <?php if (empty($by_agent_rows)) { ?>
                             <tr>
-                                <td colspan="2"><?php esc_html_e( 'No data available.', 'escalated' ); ?></td>
+                                <td colspan="2"><?php esc_html_e('No data available.', 'escalated'); ?></td>
                             </tr>
-                        <?php else : ?>
-                            <?php foreach ( $by_agent_rows as $row ) :
-                                $agent = get_userdata( (int) $row->assigned_to );
-                                $agent_name = $agent ? $agent->display_name : __( 'Unknown', 'escalated' );
-                            ?>
+                        <?php } else { ?>
+                            <?php foreach ($by_agent_rows as $row) {
+                                $agent = get_userdata((int) $row->assigned_to);
+                                $agent_name = $agent ? $agent->display_name : __('Unknown', 'escalated');
+                                ?>
                                 <tr>
                                     <td>
-                                        <?php echo get_avatar( (int) $row->assigned_to, 24, '', '', [ 'style' => 'vertical-align: middle; margin-right: 5px; border-radius: 50%;' ] ); ?>
-                                        <?php echo esc_html( $agent_name ); ?>
+                                        <?php echo get_avatar((int) $row->assigned_to, 24, '', '', ['style' => 'vertical-align: middle; margin-right: 5px; border-radius: 50%;']); ?>
+                                        <?php echo esc_html($agent_name); ?>
                                     </td>
-                                    <td style="text-align: right; font-weight: 600;"><?php echo esc_html( number_format_i18n( $row->count ) ); ?></td>
+                                    <td style="text-align: right; font-weight: 600;"><?php echo esc_html(number_format_i18n($row->count)); ?></td>
                                 </tr>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
+                            <?php } ?>
+                        <?php } ?>
                     </tbody>
                 </table>
             </div>

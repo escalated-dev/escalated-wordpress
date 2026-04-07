@@ -4,24 +4,26 @@ namespace Escalated\Models;
 
 use Escalated\Escalated;
 
-class Automation {
-
+class Automation
+{
     /**
      * Get the table name.
      *
      * @return string
      */
-    public static function table() {
+    public static function table()
+    {
         return Escalated::table('automations');
     }
 
     /**
      * Find an automation by ID.
      *
-     * @param int $id
+     * @param  int  $id
      * @return object|null
      */
-    public static function find($id) {
+    public static function find($id)
+    {
         global $wpdb;
         $table = static::table();
 
@@ -33,18 +35,18 @@ class Automation {
     /**
      * Create a new automation.
      *
-     * @param array $data
      * @return int|false Inserted ID or false on failure.
      */
-    public static function create(array $data) {
+    public static function create(array $data)
+    {
         global $wpdb;
         $table = static::table();
-        $now   = current_time('mysql');
+        $now = current_time('mysql');
 
-        if ( isset($data['conditions']) && is_array($data['conditions'])) {
+        if (isset($data['conditions']) && is_array($data['conditions'])) {
             $data['conditions'] = wp_json_encode($data['conditions']);
         }
-        if ( isset($data['actions']) && is_array($data['actions'])) {
+        if (isset($data['actions']) && is_array($data['actions'])) {
             $data['actions'] = wp_json_encode($data['actions']);
         }
 
@@ -59,18 +61,18 @@ class Automation {
     /**
      * Update an automation.
      *
-     * @param int   $id
-     * @param array $data
+     * @param  int  $id
      * @return bool
      */
-    public static function update($id, array $data) {
+    public static function update($id, array $data)
+    {
         global $wpdb;
         $table = static::table();
 
-        if ( isset($data['conditions']) && is_array($data['conditions'])) {
+        if (isset($data['conditions']) && is_array($data['conditions'])) {
             $data['conditions'] = wp_json_encode($data['conditions']);
         }
-        if ( isset($data['actions']) && is_array($data['actions'])) {
+        if (isset($data['actions']) && is_array($data['actions'])) {
             $data['actions'] = wp_json_encode($data['actions']);
         }
 
@@ -82,10 +84,11 @@ class Automation {
     /**
      * Delete an automation.
      *
-     * @param int $id
+     * @param  int  $id
      * @return bool
      */
-    public static function delete($id) {
+    public static function delete($id)
+    {
         global $wpdb;
         $table = static::table();
 
@@ -95,24 +98,24 @@ class Automation {
     /**
      * Get all automations with optional filters.
      *
-     * @param array $filters
      * @return array
      */
-    public static function all(array $filters = []) {
+    public static function all(array $filters = [])
+    {
         global $wpdb;
-        $table  = static::table();
-        $where  = ['1=1'];
+        $table = static::table();
+        $where = ['1=1'];
         $values = [];
 
-        if ( isset($filters['active'])) {
-            $where[]  = 'active = %d';
+        if (isset($filters['active'])) {
+            $where[] = 'active = %d';
             $values[] = (int) $filters['active'];
         }
 
         $where_clause = implode(' AND ', $where);
-        $sql          = "SELECT * FROM {$table} WHERE {$where_clause} ORDER BY position ASC";
+        $sql = "SELECT * FROM {$table} WHERE {$where_clause} ORDER BY position ASC";
 
-        if ( ! empty($values)) {
+        if (! empty($values)) {
             $sql = $wpdb->prepare($sql, $values);
         }
 
@@ -124,7 +127,8 @@ class Automation {
      *
      * @return array
      */
-    public static function active() {
+    public static function active()
+    {
         global $wpdb;
         $table = static::table();
 
@@ -136,10 +140,11 @@ class Automation {
     /**
      * Update the last_run_at timestamp.
      *
-     * @param int $id
+     * @param  int  $id
      * @return bool
      */
-    public static function touch_last_run($id) {
+    public static function touch_last_run($id)
+    {
         global $wpdb;
         $table = static::table();
 

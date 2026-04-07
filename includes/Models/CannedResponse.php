@@ -4,24 +4,26 @@ namespace Escalated\Models;
 
 use Escalated\Escalated;
 
-class CannedResponse {
-
+class CannedResponse
+{
     /**
      * Get the table name.
      *
      * @return string
      */
-    public static function table() {
+    public static function table()
+    {
         return Escalated::table('canned_responses');
     }
 
     /**
      * Find a canned response by ID.
      *
-     * @param int $id
+     * @param  int  $id
      * @return object|null
      */
-    public static function find($id) {
+    public static function find($id)
+    {
         global $wpdb;
         $table = static::table();
 
@@ -33,13 +35,13 @@ class CannedResponse {
     /**
      * Create a new canned response.
      *
-     * @param array $data
      * @return int|false Inserted ID or false on failure.
      */
-    public static function create(array $data) {
+    public static function create(array $data)
+    {
         global $wpdb;
         $table = static::table();
-        $now   = current_time('mysql');
+        $now = current_time('mysql');
 
         $data['created_at'] = $now;
         $data['updated_at'] = $now;
@@ -52,11 +54,11 @@ class CannedResponse {
     /**
      * Update a canned response.
      *
-     * @param int   $id
-     * @param array $data
+     * @param  int  $id
      * @return bool
      */
-    public static function update($id, array $data) {
+    public static function update($id, array $data)
+    {
         global $wpdb;
         $table = static::table();
 
@@ -68,10 +70,11 @@ class CannedResponse {
     /**
      * Delete a canned response.
      *
-     * @param int $id
+     * @param  int  $id
      * @return bool
      */
-    public static function delete($id) {
+    public static function delete($id)
+    {
         global $wpdb;
         $table = static::table();
 
@@ -81,26 +84,26 @@ class CannedResponse {
     /**
      * Get all canned responses with optional filters.
      *
-     * @param array $filters
      * @return array
      */
-    public static function all(array $filters = []) {
+    public static function all(array $filters = [])
+    {
         global $wpdb;
-        $table  = static::table();
-        $where  = ['1=1'];
+        $table = static::table();
+        $where = ['1=1'];
         $values = [];
 
-        if ( ! empty($filters['search'])) {
-            $like     = '%' . $wpdb->esc_like($filters['search']) . '%';
-            $where[]  = '(title LIKE %s OR content LIKE %s)';
+        if (! empty($filters['search'])) {
+            $like = '%'.$wpdb->esc_like($filters['search']).'%';
+            $where[] = '(title LIKE %s OR content LIKE %s)';
             $values[] = $like;
             $values[] = $like;
         }
 
         $where_clause = implode(' AND ', $where);
-        $sql          = "SELECT * FROM {$table} WHERE {$where_clause} ORDER BY title ASC";
+        $sql = "SELECT * FROM {$table} WHERE {$where_clause} ORDER BY title ASC";
 
-        if ( ! empty($values)) {
+        if (! empty($values)) {
             $sql = $wpdb->prepare($sql, $values);
         }
 
@@ -112,10 +115,11 @@ class CannedResponse {
      *
      * Returns responses that are shared or created by the given user.
      *
-     * @param int $user_id
+     * @param  int  $user_id
      * @return array
      */
-    public static function for_agent($user_id) {
+    public static function for_agent($user_id)
+    {
         global $wpdb;
         $table = static::table();
 

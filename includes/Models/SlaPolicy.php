@@ -4,24 +4,26 @@ namespace Escalated\Models;
 
 use Escalated\Escalated;
 
-class SlaPolicy {
-
+class SlaPolicy
+{
     /**
      * Get the table name.
      *
      * @return string
      */
-    public static function table() {
+    public static function table()
+    {
         return Escalated::table('sla_policies');
     }
 
     /**
      * Find an SLA policy by ID.
      *
-     * @param int $id
+     * @param  int  $id
      * @return object|null
      */
-    public static function find($id) {
+    public static function find($id)
+    {
         global $wpdb;
         $table = static::table();
 
@@ -33,19 +35,19 @@ class SlaPolicy {
     /**
      * Create a new SLA policy.
      *
-     * @param array $data
      * @return int|false Inserted ID or false on failure.
      */
-    public static function create(array $data) {
+    public static function create(array $data)
+    {
         global $wpdb;
         $table = static::table();
-        $now   = current_time('mysql');
+        $now = current_time('mysql');
 
         // Encode JSON fields if passed as arrays.
-        if ( isset($data['first_response_hours']) && is_array($data['first_response_hours'])) {
+        if (isset($data['first_response_hours']) && is_array($data['first_response_hours'])) {
             $data['first_response_hours'] = wp_json_encode($data['first_response_hours']);
         }
-        if ( isset($data['resolution_hours']) && is_array($data['resolution_hours'])) {
+        if (isset($data['resolution_hours']) && is_array($data['resolution_hours'])) {
             $data['resolution_hours'] = wp_json_encode($data['resolution_hours']);
         }
 
@@ -60,19 +62,19 @@ class SlaPolicy {
     /**
      * Update an SLA policy.
      *
-     * @param int   $id
-     * @param array $data
+     * @param  int  $id
      * @return bool
      */
-    public static function update($id, array $data) {
+    public static function update($id, array $data)
+    {
         global $wpdb;
         $table = static::table();
 
         // Encode JSON fields if passed as arrays.
-        if ( isset($data['first_response_hours']) && is_array($data['first_response_hours'])) {
+        if (isset($data['first_response_hours']) && is_array($data['first_response_hours'])) {
             $data['first_response_hours'] = wp_json_encode($data['first_response_hours']);
         }
-        if ( isset($data['resolution_hours']) && is_array($data['resolution_hours'])) {
+        if (isset($data['resolution_hours']) && is_array($data['resolution_hours'])) {
             $data['resolution_hours'] = wp_json_encode($data['resolution_hours']);
         }
 
@@ -84,10 +86,11 @@ class SlaPolicy {
     /**
      * Delete an SLA policy.
      *
-     * @param int $id
+     * @param  int  $id
      * @return bool
      */
-    public static function delete($id) {
+    public static function delete($id)
+    {
         global $wpdb;
         $table = static::table();
 
@@ -97,24 +100,24 @@ class SlaPolicy {
     /**
      * Get all SLA policies with optional filters.
      *
-     * @param array $filters
      * @return array
      */
-    public static function all(array $filters = []) {
+    public static function all(array $filters = [])
+    {
         global $wpdb;
-        $table  = static::table();
-        $where  = ['1=1'];
+        $table = static::table();
+        $where = ['1=1'];
         $values = [];
 
-        if ( isset($filters['is_active'])) {
-            $where[]  = 'is_active = %d';
+        if (isset($filters['is_active'])) {
+            $where[] = 'is_active = %d';
             $values[] = (int) $filters['is_active'];
         }
 
         $where_clause = implode(' AND ', $where);
-        $sql          = "SELECT * FROM {$table} WHERE {$where_clause} ORDER BY name ASC";
+        $sql = "SELECT * FROM {$table} WHERE {$where_clause} ORDER BY name ASC";
 
-        if ( ! empty($values)) {
+        if (! empty($values)) {
             $sql = $wpdb->prepare($sql, $values);
         }
 
@@ -126,7 +129,8 @@ class SlaPolicy {
      *
      * @return array
      */
-    public static function active() {
+    public static function active()
+    {
         global $wpdb;
         $table = static::table();
 
@@ -140,7 +144,8 @@ class SlaPolicy {
      *
      * @return object|null
      */
-    public static function get_default() {
+    public static function get_default()
+    {
         global $wpdb;
         $table = static::table();
 
@@ -152,14 +157,15 @@ class SlaPolicy {
     /**
      * Get the first response hours for a given priority from a policy.
      *
-     * @param object $policy  The SLA policy record.
-     * @param string $priority The priority key (e.g. low, medium, high, urgent, critical).
+     * @param  object  $policy  The SLA policy record.
+     * @param  string  $priority  The priority key (e.g. low, medium, high, urgent, critical).
      * @return int|null Hours or null if not found.
      */
-    public static function get_first_response_hours($policy, $priority) {
+    public static function get_first_response_hours($policy, $priority)
+    {
         $hours = json_decode($policy->first_response_hours, true);
 
-        if ( ! is_array($hours) || ! isset($hours[$priority])) {
+        if (! is_array($hours) || ! isset($hours[$priority])) {
             return null;
         }
 
@@ -169,14 +175,15 @@ class SlaPolicy {
     /**
      * Get the resolution hours for a given priority from a policy.
      *
-     * @param object $policy  The SLA policy record.
-     * @param string $priority The priority key (e.g. low, medium, high, urgent, critical).
+     * @param  object  $policy  The SLA policy record.
+     * @param  string  $priority  The priority key (e.g. low, medium, high, urgent, critical).
      * @return int|null Hours or null if not found.
      */
-    public static function get_resolution_hours($policy, $priority) {
+    public static function get_resolution_hours($policy, $priority)
+    {
         $hours = json_decode($policy->resolution_hours, true);
 
-        if ( ! is_array($hours) || ! isset($hours[$priority])) {
+        if (! is_array($hours) || ! isset($hours[$priority])) {
             return null;
         }
 

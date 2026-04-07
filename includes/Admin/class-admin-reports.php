@@ -1,21 +1,22 @@
 <?php
+
 namespace Escalated\Admin;
 
-use Escalated\Models\Ticket;
-use Escalated\Models\Department;
 use Escalated\Helpers\Enums;
-use Escalated\Escalated;
+use Escalated\Models\Department;
+use Escalated\Models\Ticket;
 
-class Admin_Reports {
-
+class Admin_Reports
+{
     /**
      * Render the reports admin page.
      */
-    public function render(): void {
+    public function render(): void
+    {
         global $wpdb;
 
         $ticket_table = Ticket::table();
-        $dept_table   = Department::table();
+        $dept_table = Department::table();
 
         // Tickets by status.
         $by_status = Ticket::count_by_status();
@@ -25,9 +26,9 @@ class Admin_Reports {
             "SELECT priority, COUNT(*) AS count FROM {$ticket_table} WHERE deleted_at IS NULL GROUP BY priority"
         );
         $by_priority = [];
-        if ( $by_priority_rows ) {
-            foreach ( $by_priority_rows as $row ) {
-                $by_priority[ $row->priority ] = (int) $row->count;
+        if ($by_priority_rows) {
+            foreach ($by_priority_rows as $row) {
+                $by_priority[$row->priority] = (int) $row->count;
             }
         }
 
@@ -82,9 +83,9 @@ class Admin_Reports {
         );
 
         $sla_compliance_rate = $tickets_with_sla > 0
-            ? round( ( ( $tickets_with_sla - $sla_first_response_breached - $sla_resolution_breached ) / $tickets_with_sla ) * 100, 1 )
+            ? round((($tickets_with_sla - $sla_first_response_breached - $sla_resolution_breached) / $tickets_with_sla) * 100, 1)
             : 100;
-        $sla_compliance_rate = max( 0, $sla_compliance_rate );
+        $sla_compliance_rate = max(0, $sla_compliance_rate);
 
         // Average first response time (in hours) for resolved/closed tickets.
         $avg_first_response = $wpdb->get_var(
@@ -92,7 +93,7 @@ class Admin_Reports {
              FROM {$ticket_table}
              WHERE deleted_at IS NULL AND first_response_at IS NOT NULL"
         );
-        $avg_first_response = $avg_first_response !== null ? round( (float) $avg_first_response, 1 ) : null;
+        $avg_first_response = $avg_first_response !== null ? round((float) $avg_first_response, 1) : null;
 
         // Average resolution time (in hours).
         $avg_resolution = $wpdb->get_var(
@@ -100,19 +101,19 @@ class Admin_Reports {
              FROM {$ticket_table}
              WHERE deleted_at IS NULL AND resolved_at IS NOT NULL"
         );
-        $avg_resolution = $avg_resolution !== null ? round( (float) $avg_resolution, 1 ) : null;
+        $avg_resolution = $avg_resolution !== null ? round((float) $avg_resolution, 1) : null;
 
         // Tickets created in last 30 days.
         $recent_tickets = (int) $wpdb->get_var(
             $wpdb->prepare(
                 "SELECT COUNT(*) FROM {$ticket_table} WHERE deleted_at IS NULL AND created_at >= %s",
-                gmdate( 'Y-m-d H:i:s', strtotime( '-30 days' ) )
+                gmdate('Y-m-d H:i:s', strtotime('-30 days'))
             )
         );
 
-        $statuses   = Enums::ticket_statuses();
+        $statuses = Enums::ticket_statuses();
         $priorities = Enums::ticket_priorities();
 
-        include ESCALATED_PLUGIN_DIR . 'templates/admin/reports.php';
+        include ESCALATED_PLUGIN_DIR.'templates/admin/reports.php';
     }
 }

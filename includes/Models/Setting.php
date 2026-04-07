@@ -4,25 +4,27 @@ namespace Escalated\Models;
 
 use Escalated\Escalated;
 
-class Setting {
-
+class Setting
+{
     /**
      * Get the table name.
      *
      * @return string
      */
-    public static function table() {
+    public static function table()
+    {
         return Escalated::table('settings');
     }
 
     /**
      * Get a setting value by key.
      *
-     * @param string $key
-     * @param mixed  $default Default value if key does not exist.
+     * @param  string  $key
+     * @param  mixed  $default  Default value if key does not exist.
      * @return mixed
      */
-    public static function get($key, $default = null) {
+    public static function get($key, $default = null)
+    {
         global $wpdb;
         $table = static::table();
 
@@ -36,14 +38,15 @@ class Setting {
     /**
      * Set a setting value (insert or update).
      *
-     * @param string $key
-     * @param mixed  $value
+     * @param  string  $key
+     * @param  mixed  $value
      * @return bool
      */
-    public static function set($key, $value) {
+    public static function set($key, $value)
+    {
         global $wpdb;
         $table = static::table();
-        $now = current_time( 'mysql' );
+        $now = current_time('mysql');
 
         $sql = $wpdb->prepare(
             "INSERT INTO {$table} (option_key, option_value, created_at, updated_at) VALUES (%s, %s, %s, %s)
@@ -60,11 +63,12 @@ class Setting {
     /**
      * Get a setting value as a boolean.
      *
-     * @param string $key
-     * @param bool   $default
+     * @param  string  $key
+     * @param  bool  $default
      * @return bool
      */
-    public static function get_bool($key, $default = false) {
+    public static function get_bool($key, $default = false)
+    {
         $value = static::get($key);
 
         if ($value === null) {
@@ -77,11 +81,12 @@ class Setting {
     /**
      * Get a setting value as an integer.
      *
-     * @param string $key
-     * @param int    $default
+     * @param  string  $key
+     * @param  int  $default
      * @return int
      */
-    public static function get_int($key, $default = 0) {
+    public static function get_int($key, $default = 0)
+    {
         $value = static::get($key);
 
         if ($value === null) {
@@ -94,10 +99,11 @@ class Setting {
     /**
      * Delete a setting by key.
      *
-     * @param string $key
+     * @param  string  $key
      * @return bool
      */
-    public static function delete($key) {
+    public static function delete($key)
+    {
         global $wpdb;
         $table = static::table();
 
@@ -109,7 +115,8 @@ class Setting {
      *
      * @return array
      */
-    public static function all() {
+    public static function all()
+    {
         global $wpdb;
         $table = static::table();
 

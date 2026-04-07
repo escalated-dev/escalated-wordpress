@@ -4,24 +4,26 @@ namespace Escalated\Models;
 
 use Escalated\Escalated;
 
-class EscalationRule {
-
+class EscalationRule
+{
     /**
      * Get the table name.
      *
      * @return string
      */
-    public static function table() {
+    public static function table()
+    {
         return Escalated::table('escalation_rules');
     }
 
     /**
      * Find an escalation rule by ID.
      *
-     * @param int $id
+     * @param  int  $id
      * @return object|null
      */
-    public static function find($id) {
+    public static function find($id)
+    {
         global $wpdb;
         $table = static::table();
 
@@ -33,19 +35,19 @@ class EscalationRule {
     /**
      * Create a new escalation rule.
      *
-     * @param array $data
      * @return int|false Inserted ID or false on failure.
      */
-    public static function create(array $data) {
+    public static function create(array $data)
+    {
         global $wpdb;
         $table = static::table();
-        $now   = current_time('mysql');
+        $now = current_time('mysql');
 
         // Encode JSON fields if passed as arrays.
-        if ( isset($data['conditions']) && is_array($data['conditions'])) {
+        if (isset($data['conditions']) && is_array($data['conditions'])) {
             $data['conditions'] = wp_json_encode($data['conditions']);
         }
-        if ( isset($data['actions']) && is_array($data['actions'])) {
+        if (isset($data['actions']) && is_array($data['actions'])) {
             $data['actions'] = wp_json_encode($data['actions']);
         }
 
@@ -60,19 +62,19 @@ class EscalationRule {
     /**
      * Update an escalation rule.
      *
-     * @param int   $id
-     * @param array $data
+     * @param  int  $id
      * @return bool
      */
-    public static function update($id, array $data) {
+    public static function update($id, array $data)
+    {
         global $wpdb;
         $table = static::table();
 
         // Encode JSON fields if passed as arrays.
-        if ( isset($data['conditions']) && is_array($data['conditions'])) {
+        if (isset($data['conditions']) && is_array($data['conditions'])) {
             $data['conditions'] = wp_json_encode($data['conditions']);
         }
-        if ( isset($data['actions']) && is_array($data['actions'])) {
+        if (isset($data['actions']) && is_array($data['actions'])) {
             $data['actions'] = wp_json_encode($data['actions']);
         }
 
@@ -84,10 +86,11 @@ class EscalationRule {
     /**
      * Delete an escalation rule.
      *
-     * @param int $id
+     * @param  int  $id
      * @return bool
      */
-    public static function delete($id) {
+    public static function delete($id)
+    {
         global $wpdb;
         $table = static::table();
 
@@ -97,24 +100,24 @@ class EscalationRule {
     /**
      * Get all escalation rules with optional filters.
      *
-     * @param array $filters
      * @return array
      */
-    public static function all(array $filters = []) {
+    public static function all(array $filters = [])
+    {
         global $wpdb;
-        $table  = static::table();
-        $where  = ['1=1'];
+        $table = static::table();
+        $where = ['1=1'];
         $values = [];
 
-        if ( isset($filters['is_active'])) {
-            $where[]  = 'is_active = %d';
+        if (isset($filters['is_active'])) {
+            $where[] = 'is_active = %d';
             $values[] = (int) $filters['is_active'];
         }
 
         $where_clause = implode(' AND ', $where);
-        $sql          = "SELECT * FROM {$table} WHERE {$where_clause} ORDER BY sort_order ASC";
+        $sql = "SELECT * FROM {$table} WHERE {$where_clause} ORDER BY sort_order ASC";
 
-        if ( ! empty($values)) {
+        if (! empty($values)) {
             $sql = $wpdb->prepare($sql, $values);
         }
 
@@ -126,7 +129,8 @@ class EscalationRule {
      *
      * @return array
      */
-    public static function active() {
+    public static function active()
+    {
         global $wpdb;
         $table = static::table();
 

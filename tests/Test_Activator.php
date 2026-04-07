@@ -1,21 +1,21 @@
 <?php
+
 /**
  * Tests for the Activator class.
  *
  * Verifies that plugin activation creates all database tables, custom roles,
  * default settings, and cron events.
- *
- * @package Escalated
  */
 
 use Escalated\Activator;
 
-class Test_Activator extends WP_UnitTestCase {
-
+class Test_Activator extends WP_UnitTestCase
+{
     /**
      * Run activation before each test.
      */
-    public function set_up(): void {
+    public function set_up(): void
+    {
         parent::set_up();
         Activator::activate();
     }
@@ -23,7 +23,8 @@ class Test_Activator extends WP_UnitTestCase {
     /**
      * All 21 database tables should exist after activation.
      */
-    public function test_tables_created(): void {
+    public function test_tables_created(): void
+    {
         global $wpdb;
 
         $tables = [
@@ -50,21 +51,22 @@ class Test_Activator extends WP_UnitTestCase {
             'escalated_role_users',
         ];
 
-        $existing_tables = $wpdb->get_col( 'SHOW TABLES' );
+        $existing_tables = $wpdb->get_col('SHOW TABLES');
 
-        foreach ( $tables as $table ) {
-            $full_table = $wpdb->prefix . $table;
-            $this->assertContains( $full_table, $existing_tables, "Table {$full_table} should exist." );
+        foreach ($tables as $table) {
+            $full_table = $wpdb->prefix.$table;
+            $this->assertContains($full_table, $existing_tables, "Table {$full_table} should exist.");
         }
     }
 
     /**
      * Custom roles escalated_admin, escalated_agent, and escalated_light_agent should exist.
      */
-    public function test_roles_created(): void {
-        $this->assertNotNull( get_role( 'escalated_admin' ), 'Role escalated_admin should exist.' );
-        $this->assertNotNull( get_role( 'escalated_agent' ), 'Role escalated_agent should exist.' );
-        $this->assertNotNull( get_role( 'escalated_light_agent' ), 'Role escalated_light_agent should exist.' );
+    public function test_roles_created(): void
+    {
+        $this->assertNotNull(get_role('escalated_admin'), 'Role escalated_admin should exist.');
+        $this->assertNotNull(get_role('escalated_agent'), 'Role escalated_agent should exist.');
+        $this->assertNotNull(get_role('escalated_light_agent'), 'Role escalated_light_agent should exist.');
     }
 
     /**
@@ -75,7 +77,8 @@ class Test_Activator extends WP_UnitTestCase {
      *
      * @return string[]
      */
-    private function get_all_caps(): array {
+    private function get_all_caps(): array
+    {
         return [
             // Tickets
             'escalated_ticket_view',
@@ -154,22 +157,24 @@ class Test_Activator extends WP_UnitTestCase {
     /**
      * The escalated_admin role should have all 52 escalated capabilities.
      */
-    public function test_admin_role_has_all_caps(): void {
-        $role = get_role( 'escalated_admin' );
+    public function test_admin_role_has_all_caps(): void
+    {
+        $role = get_role('escalated_admin');
 
         $all_caps = $this->get_all_caps();
-        $this->assertCount( 52, $all_caps, 'There should be exactly 52 granular capabilities.' );
+        $this->assertCount(52, $all_caps, 'There should be exactly 52 granular capabilities.');
 
-        foreach ( $all_caps as $cap ) {
-            $this->assertTrue( $role->has_cap( $cap ), "escalated_admin should have capability: {$cap}" );
+        foreach ($all_caps as $cap) {
+            $this->assertTrue($role->has_cap($cap), "escalated_admin should have capability: {$cap}");
         }
     }
 
     /**
      * The escalated_agent role should have agent-level capabilities only.
      */
-    public function test_agent_role_has_agent_caps(): void {
-        $role = get_role( 'escalated_agent' );
+    public function test_agent_role_has_agent_caps(): void
+    {
+        $role = get_role('escalated_agent');
 
         $agent_caps = [
             'escalated_ticket_view',
@@ -193,8 +198,8 @@ class Test_Activator extends WP_UnitTestCase {
             'escalated_audit_view',
         ];
 
-        foreach ( $agent_caps as $cap ) {
-            $this->assertTrue( $role->has_cap( $cap ), "escalated_agent should have capability: {$cap}" );
+        foreach ($agent_caps as $cap) {
+            $this->assertTrue($role->has_cap($cap), "escalated_agent should have capability: {$cap}");
         }
 
         // Agent should NOT have admin-only caps.
@@ -220,16 +225,17 @@ class Test_Activator extends WP_UnitTestCase {
             'escalated_macro_manage',
         ];
 
-        foreach ( $admin_only_caps as $cap ) {
-            $this->assertFalse( $role->has_cap( $cap ), "escalated_agent should NOT have capability: {$cap}" );
+        foreach ($admin_only_caps as $cap) {
+            $this->assertFalse($role->has_cap($cap), "escalated_agent should NOT have capability: {$cap}");
         }
     }
 
     /**
      * The escalated_light_agent role should have limited capabilities.
      */
-    public function test_light_agent_role_has_limited_caps(): void {
-        $role = get_role( 'escalated_light_agent' );
+    public function test_light_agent_role_has_limited_caps(): void
+    {
+        $role = get_role('escalated_light_agent');
 
         $light_caps = [
             'escalated_ticket_view',
@@ -240,8 +246,8 @@ class Test_Activator extends WP_UnitTestCase {
             'escalated_tag_view',
         ];
 
-        foreach ( $light_caps as $cap ) {
-            $this->assertTrue( $role->has_cap( $cap ), "escalated_light_agent should have capability: {$cap}" );
+        foreach ($light_caps as $cap) {
+            $this->assertTrue($role->has_cap($cap), "escalated_light_agent should have capability: {$cap}");
         }
 
         // Light agent should NOT have these caps.
@@ -261,48 +267,52 @@ class Test_Activator extends WP_UnitTestCase {
             'escalated_api_token_manage',
         ];
 
-        foreach ( $excluded_caps as $cap ) {
-            $this->assertFalse( $role->has_cap( $cap ), "escalated_light_agent should NOT have capability: {$cap}" );
+        foreach ($excluded_caps as $cap) {
+            $this->assertFalse($role->has_cap($cap), "escalated_light_agent should NOT have capability: {$cap}");
         }
     }
 
     /**
      * The WP administrator role should receive all 52 escalated capabilities.
      */
-    public function test_administrator_has_escalated_caps(): void {
-        $role = get_role( 'administrator' );
+    public function test_administrator_has_escalated_caps(): void
+    {
+        $role = get_role('administrator');
 
-        foreach ( $this->get_all_caps() as $cap ) {
-            $this->assertTrue( $role->has_cap( $cap ), "administrator should have capability: {$cap}" );
+        foreach ($this->get_all_caps() as $cap) {
+            $this->assertTrue($role->has_cap($cap), "administrator should have capability: {$cap}");
         }
     }
 
     /**
      * Default settings should be inserted on activation.
      */
-    public function test_default_settings_inserted(): void {
-        $this->assertEquals( 'ESC', \Escalated\Models\Setting::get( 'ticket_reference_prefix' ) );
-        $this->assertEquals( 'medium', \Escalated\Models\Setting::get( 'default_priority' ) );
-        $this->assertEquals( '1', \Escalated\Models\Setting::get( 'guest_tickets_enabled' ) );
-        $this->assertEquals( '7', \Escalated\Models\Setting::get( 'auto_close_days' ) );
-        $this->assertEquals( '30', \Escalated\Models\Setting::get( 'sla_warning_minutes' ) );
-        $this->assertEquals( '10240', \Escalated\Models\Setting::get( 'max_attachment_size_kb' ) );
+    public function test_default_settings_inserted(): void
+    {
+        $this->assertEquals('ESC', \Escalated\Models\Setting::get('ticket_reference_prefix'));
+        $this->assertEquals('medium', \Escalated\Models\Setting::get('default_priority'));
+        $this->assertEquals('1', \Escalated\Models\Setting::get('guest_tickets_enabled'));
+        $this->assertEquals('7', \Escalated\Models\Setting::get('auto_close_days'));
+        $this->assertEquals('30', \Escalated\Models\Setting::get('sla_warning_minutes'));
+        $this->assertEquals('10240', \Escalated\Models\Setting::get('max_attachment_size_kb'));
     }
 
     /**
      * Cron events should be scheduled on activation.
      */
-    public function test_cron_events_scheduled(): void {
-        $this->assertNotFalse( wp_next_scheduled( 'escalated_check_sla' ), 'SLA check cron should be scheduled.' );
-        $this->assertNotFalse( wp_next_scheduled( 'escalated_auto_close' ), 'Auto close cron should be scheduled.' );
-        $this->assertNotFalse( wp_next_scheduled( 'escalated_evaluate_escalations' ), 'Escalation check cron should be scheduled.' );
-        $this->assertNotFalse( wp_next_scheduled( 'escalated_purge_activities' ), 'Activity purge cron should be scheduled.' );
+    public function test_cron_events_scheduled(): void
+    {
+        $this->assertNotFalse(wp_next_scheduled('escalated_check_sla'), 'SLA check cron should be scheduled.');
+        $this->assertNotFalse(wp_next_scheduled('escalated_auto_close'), 'Auto close cron should be scheduled.');
+        $this->assertNotFalse(wp_next_scheduled('escalated_evaluate_escalations'), 'Escalation check cron should be scheduled.');
+        $this->assertNotFalse(wp_next_scheduled('escalated_purge_activities'), 'Activity purge cron should be scheduled.');
     }
 
     /**
      * The plugin version option should be set on activation.
      */
-    public function test_version_option_set(): void {
-        $this->assertEquals( ESCALATED_VERSION, get_option( 'escalated_version' ) );
+    public function test_version_option_set(): void
+    {
+        $this->assertEquals(ESCALATED_VERSION, get_option('escalated_version'));
     }
 }
