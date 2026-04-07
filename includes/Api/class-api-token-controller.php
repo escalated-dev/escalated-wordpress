@@ -1,19 +1,17 @@
 <?php
+
 /**
  * API Token Controller - admin-only CRUD for API tokens.
- *
- * @package Escalated\Api
  */
 
 namespace Escalated\Api;
 
-use Escalated\Models\ApiToken;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_REST_Server;
 
-class Api_Token_Controller extends Base_Controller {
-
+class Api_Token_Controller extends Base_Controller
+{
     /**
      * Route base.
      *
@@ -23,20 +21,19 @@ class Api_Token_Controller extends Base_Controller {
 
     /**
      * Register routes.
-     *
-     * @return void
      */
-    public function register_routes(): void {
+    public function register_routes(): void
+    {
         // List all tokens (masked).
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base,
+            '/'.$this->rest_base,
             [
                 [
-                    'methods'             => WP_REST_Server::READABLE,
-                    'callback'            => [ $this, 'get_items' ],
-                    'permission_callback' => [ $this, 'admin_permissions_check' ],
-                    'args'                => [],
+                    'methods' => WP_REST_Server::READABLE,
+                    'callback' => [$this, 'get_items'],
+                    'permission_callback' => [$this, 'admin_permissions_check'],
+                    'args' => [],
                 ],
             ]
         );
@@ -44,30 +41,30 @@ class Api_Token_Controller extends Base_Controller {
         // Create a new token.
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base,
+            '/'.$this->rest_base,
             [
                 [
-                    'methods'             => WP_REST_Server::CREATABLE,
-                    'callback'            => [ $this, 'create_item' ],
-                    'permission_callback' => [ $this, 'admin_permissions_check' ],
-                    'args'                => [
-                        'name'       => [
-                            'required'          => true,
-                            'type'              => 'string',
+                    'methods' => WP_REST_Server::CREATABLE,
+                    'callback' => [$this, 'create_item'],
+                    'permission_callback' => [$this, 'admin_permissions_check'],
+                    'args' => [
+                        'name' => [
+                            'required' => true,
+                            'type' => 'string',
                             'sanitize_callback' => 'sanitize_text_field',
                         ],
-                        'user_id'    => [
-                            'required'          => true,
-                            'type'              => 'integer',
+                        'user_id' => [
+                            'required' => true,
+                            'type' => 'integer',
                             'sanitize_callback' => 'absint',
                         ],
-                        'abilities'  => [
-                            'type'    => 'array',
-                            'items'   => [ 'type' => 'string' ],
-                            'default' => [ '*' ],
+                        'abilities' => [
+                            'type' => 'array',
+                            'items' => ['type' => 'string'],
+                            'default' => ['*'],
                         ],
                         'expires_at' => [
-                            'type'              => 'string',
+                            'type' => 'string',
                             'sanitize_callback' => 'sanitize_text_field',
                         ],
                     ],
@@ -78,16 +75,16 @@ class Api_Token_Controller extends Base_Controller {
         // Revoke (delete) a token.
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base . '/(?P<id>\d+)',
+            '/'.$this->rest_base.'/(?P<id>\d+)',
             [
                 [
-                    'methods'             => WP_REST_Server::DELETABLE,
-                    'callback'            => [ $this, 'delete_item' ],
-                    'permission_callback' => [ $this, 'admin_permissions_check' ],
-                    'args'                => [
+                    'methods' => WP_REST_Server::DELETABLE,
+                    'callback' => [$this, 'delete_item'],
+                    'permission_callback' => [$this, 'admin_permissions_check'],
+                    'args' => [
                         'id' => [
-                            'required'          => true,
-                            'type'              => 'integer',
+                            'required' => true,
+                            'type' => 'integer',
                             'sanitize_callback' => 'absint',
                         ],
                     ],
@@ -102,22 +99,23 @@ class Api_Token_Controller extends Base_Controller {
      * Validates the Bearer token and checks that the associated user
      * has the escalated_manage_api_tokens capability.
      *
-     * @param WP_REST_Request $request The incoming request.
+     * @param  WP_REST_Request  $request  The incoming request.
      * @return bool|\WP_Error True if authorized, WP_Error otherwise.
      */
-    public function admin_permissions_check( WP_REST_Request $request ) {
-        $user_id = $this->check_token_permission( $request );
+    public function admin_permissions_check(WP_REST_Request $request)
+    {
+        $user_id = $this->check_token_permission($request);
 
-        if ( null === $user_id ) {
-            return $this->error( 'escalated_unauthorized', __( 'Invalid or expired API token.', 'escalated' ), 401 );
+        if ($user_id === null) {
+            return $this->error('escalated_unauthorized', __('Invalid or expired API token.', 'escalated'), 401);
         }
 
-        $user = get_userdata( $user_id );
+        $user = get_userdata($user_id);
 
-        if ( ! $user || ! $user->has_cap( 'escalated_manage_api_tokens' ) ) {
+        if (! $user || ! $user->has_cap('escalated_manage_api_tokens')) {
             return $this->error(
                 'escalated_forbidden',
-                __( 'You do not have permission to manage API tokens.', 'escalated' ),
+                __('You do not have permission to manage API tokens.', 'escalated'),
                 403
             );
         }
@@ -128,52 +126,53 @@ class Api_Token_Controller extends Base_Controller {
     /**
      * List all API tokens with masked token values.
      *
-     * @param WP_REST_Request $request The incoming request.
+     * @param  WP_REST_Request  $request  The incoming request.
      * @return WP_REST_Response|\WP_Error
      */
-    public function get_items( $request ) {
+    public function get_items($request)
+    {
         global $wpdb;
 
-        $table  = \Escalated\Escalated::table( 'api_tokens' );
-        $tokens = $wpdb->get_results( "SELECT * FROM {$table} ORDER BY created_at DESC" ) ?: [];
+        $table = \Escalated\Escalated::table('api_tokens');
+        $tokens = $wpdb->get_results("SELECT * FROM {$table} ORDER BY created_at DESC") ?: [];
 
         $result = [];
-        foreach ( $tokens as $token ) {
+        foreach ($tokens as $token) {
             // Mask the token: show first 8 characters, mask the rest.
-            $masked = substr( $token->token, 0, 8 ) . str_repeat( '*', max( 0, strlen( $token->token ) - 8 ) );
+            $masked = substr($token->token, 0, 8).str_repeat('*', max(0, strlen($token->token) - 8));
 
             // Parse abilities.
             $abilities = $token->abilities;
-            if ( is_string( $abilities ) ) {
-                $decoded   = json_decode( $abilities, true );
-                $abilities = is_array( $decoded ) ? $decoded : [ '*' ];
+            if (is_string($abilities)) {
+                $decoded = json_decode($abilities, true);
+                $abilities = is_array($decoded) ? $decoded : ['*'];
             }
 
             // Resolve user info.
-            $user      = get_userdata( (int) $token->user_id );
+            $user = get_userdata((int) $token->user_id);
             $user_info = $user ? [
-                'id'           => $user->ID,
+                'id' => $user->ID,
                 'display_name' => $user->display_name,
-                'email'        => $user->user_email,
+                'email' => $user->user_email,
             ] : null;
 
             $result[] = [
-                'id'           => (int) $token->id,
-                'name'         => $token->name,
+                'id' => (int) $token->id,
+                'name' => $token->name,
                 'token_masked' => $masked,
-                'user_id'      => (int) $token->user_id,
-                'user'         => $user_info,
-                'abilities'    => $abilities,
+                'user_id' => (int) $token->user_id,
+                'user' => $user_info,
+                'abilities' => $abilities,
                 'last_used_at' => $token->last_used_at,
                 'last_used_ip' => $token->last_used_ip,
-                'expires_at'   => $token->expires_at,
-                'created_at'   => $token->created_at,
+                'expires_at' => $token->expires_at,
+                'created_at' => $token->created_at,
             ];
         }
 
-        return $this->success( [
+        return $this->success([
             'tokens' => $result,
-        ] );
+        ]);
     }
 
     /**
@@ -182,108 +181,110 @@ class Api_Token_Controller extends Base_Controller {
      * Returns the plain-text token value exactly once. It is
      * never shown again.
      *
-     * @param WP_REST_Request $request The incoming request.
+     * @param  WP_REST_Request  $request  The incoming request.
      * @return WP_REST_Response|\WP_Error
      */
-    public function create_item( $request ) {
+    public function create_item($request)
+    {
         global $wpdb;
 
-        $name    = sanitize_text_field( $request->get_param( 'name' ) );
-        $user_id = absint( $request->get_param( 'user_id' ) );
+        $name = sanitize_text_field($request->get_param('name'));
+        $user_id = absint($request->get_param('user_id'));
 
-        if ( empty( $name ) ) {
-            return $this->error( 'escalated_missing_name', __( 'Token name is required.', 'escalated' ), 422 );
+        if (empty($name)) {
+            return $this->error('escalated_missing_name', __('Token name is required.', 'escalated'), 422);
         }
 
         // Validate user exists.
-        $user = get_userdata( $user_id );
-        if ( ! $user ) {
-            return $this->error( 'escalated_invalid_user', __( 'User not found.', 'escalated' ), 404 );
+        $user = get_userdata($user_id);
+        if (! $user) {
+            return $this->error('escalated_invalid_user', __('User not found.', 'escalated'), 404);
         }
 
         // Parse abilities.
-        $abilities = $request->get_param( 'abilities' ) ?: [ '*' ];
-        if ( ! is_array( $abilities ) ) {
-            $abilities = [ '*' ];
+        $abilities = $request->get_param('abilities') ?: ['*'];
+        if (! is_array($abilities)) {
+            $abilities = ['*'];
         }
-        $abilities = array_map( 'sanitize_text_field', $abilities );
+        $abilities = array_map('sanitize_text_field', $abilities);
 
         // Parse optional expiry.
         $expires_at = null;
-        if ( $request->has_param( 'expires_at' ) ) {
-            $expires_input = sanitize_text_field( $request->get_param( 'expires_at' ) );
-            if ( ! empty( $expires_input ) ) {
-                $timestamp = strtotime( $expires_input );
-                if ( false === $timestamp || $timestamp <= time() ) {
-                    return $this->error( 'escalated_invalid_expiry', __( 'Expiry date must be in the future.', 'escalated' ), 422 );
+        if ($request->has_param('expires_at')) {
+            $expires_input = sanitize_text_field($request->get_param('expires_at'));
+            if (! empty($expires_input)) {
+                $timestamp = strtotime($expires_input);
+                if ($timestamp === false || $timestamp <= time()) {
+                    return $this->error('escalated_invalid_expiry', __('Expiry date must be in the future.', 'escalated'), 422);
                 }
-                $expires_at = gmdate( 'Y-m-d H:i:s', $timestamp );
+                $expires_at = gmdate('Y-m-d H:i:s', $timestamp);
             }
         }
 
         // Generate a cryptographically secure random token.
-        $plain_token = wp_generate_password( 64, false, false );
+        $plain_token = wp_generate_password(64, false, false);
 
-        $table = \Escalated\Escalated::table( 'api_tokens' );
+        $table = \Escalated\Escalated::table('api_tokens');
 
-        $inserted = $wpdb->insert( $table, [
-            'user_id'    => $user_id,
-            'name'       => $name,
-            'token'      => $plain_token,
-            'abilities'  => wp_json_encode( $abilities ),
+        $inserted = $wpdb->insert($table, [
+            'user_id' => $user_id,
+            'name' => $name,
+            'token' => $plain_token,
+            'abilities' => wp_json_encode($abilities),
             'expires_at' => $expires_at,
-            'created_at' => current_time( 'mysql' ),
-        ] );
+            'created_at' => current_time('mysql'),
+        ]);
 
-        if ( false === $inserted ) {
-            return $this->error( 'escalated_create_failed', __( 'Failed to create API token.', 'escalated' ), 500 );
+        if ($inserted === false) {
+            return $this->error('escalated_create_failed', __('Failed to create API token.', 'escalated'), 500);
         }
 
         $token_id = $wpdb->insert_id;
 
-        return $this->success( [
-            'message'     => __( 'API token created successfully. Store this token securely - it will not be shown again.', 'escalated' ),
-            'token'       => [
-                'id'          => $token_id,
-                'name'        => $name,
+        return $this->success([
+            'message' => __('API token created successfully. Store this token securely - it will not be shown again.', 'escalated'),
+            'token' => [
+                'id' => $token_id,
+                'name' => $name,
                 'plain_token' => $plain_token,
-                'user_id'     => $user_id,
-                'abilities'   => $abilities,
-                'expires_at'  => $expires_at,
-                'created_at'  => current_time( 'mysql' ),
+                'user_id' => $user_id,
+                'abilities' => $abilities,
+                'expires_at' => $expires_at,
+                'created_at' => current_time('mysql'),
             ],
-        ], 201 );
+        ], 201);
     }
 
     /**
      * Revoke (delete) an API token.
      *
-     * @param WP_REST_Request $request The incoming request.
+     * @param  WP_REST_Request  $request  The incoming request.
      * @return WP_REST_Response|\WP_Error
      */
-    public function delete_item( $request ) {
+    public function delete_item($request)
+    {
         global $wpdb;
 
-        $token_id = absint( $request->get_param( 'id' ) );
-        $table    = \Escalated\Escalated::table( 'api_tokens' );
+        $token_id = absint($request->get_param('id'));
+        $table = \Escalated\Escalated::table('api_tokens');
 
         // Verify the token exists.
         $token = $wpdb->get_row(
-            $wpdb->prepare( "SELECT * FROM {$table} WHERE id = %d", $token_id )
+            $wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $token_id)
         );
 
-        if ( ! $token ) {
-            return $this->error( 'escalated_not_found', __( 'API token not found.', 'escalated' ), 404 );
+        if (! $token) {
+            return $this->error('escalated_not_found', __('API token not found.', 'escalated'), 404);
         }
 
-        $deleted = $wpdb->delete( $table, [ 'id' => $token_id ] );
+        $deleted = $wpdb->delete($table, ['id' => $token_id]);
 
-        if ( false === $deleted ) {
-            return $this->error( 'escalated_delete_failed', __( 'Failed to revoke API token.', 'escalated' ), 500 );
+        if ($deleted === false) {
+            return $this->error('escalated_delete_failed', __('Failed to revoke API token.', 'escalated'), 500);
         }
 
-        return $this->success( [
-            'message' => __( 'API token revoked successfully.', 'escalated' ),
-        ] );
+        return $this->success([
+            'message' => __('API token revoked successfully.', 'escalated'),
+        ]);
     }
 }

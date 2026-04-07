@@ -4,29 +4,30 @@ namespace Escalated\Models;
 
 use Escalated\Escalated;
 
-class TicketActivity {
-
+class TicketActivity
+{
     /**
      * Get the table name.
      *
      * @return string
      */
-    public static function table() {
+    public static function table()
+    {
         return Escalated::table('ticket_activities');
     }
 
     /**
      * Create a new ticket activity log entry.
      *
-     * @param array $data
      * @return int|false Inserted ID or false on failure.
      */
-    public static function create(array $data) {
+    public static function create(array $data)
+    {
         global $wpdb;
         $table = static::table();
 
         // Encode properties if passed as an array.
-        if ( isset($data['properties']) && is_array($data['properties'])) {
+        if (isset($data['properties']) && is_array($data['properties'])) {
             $data['properties'] = wp_json_encode($data['properties']);
         }
 
@@ -40,11 +41,12 @@ class TicketActivity {
     /**
      * Get activity log entries for a ticket.
      *
-     * @param int $ticket_id
-     * @param int $limit Maximum number of entries to return.
+     * @param  int  $ticket_id
+     * @param  int  $limit  Maximum number of entries to return.
      * @return array
      */
-    public static function for_ticket($ticket_id, $limit = 50) {
+    public static function for_ticket($ticket_id, $limit = 50)
+    {
         global $wpdb;
         $table = static::table();
 

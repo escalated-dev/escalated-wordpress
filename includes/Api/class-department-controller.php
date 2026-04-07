@@ -1,8 +1,7 @@
 <?php
+
 /**
  * Department Controller - list active departments.
- *
- * @package Escalated\Api
  */
 
 namespace Escalated\Api;
@@ -12,8 +11,8 @@ use WP_REST_Request;
 use WP_REST_Response;
 use WP_REST_Server;
 
-class Department_Controller extends Base_Controller {
-
+class Department_Controller extends Base_Controller
+{
     /**
      * Route base.
      *
@@ -23,19 +22,18 @@ class Department_Controller extends Base_Controller {
 
     /**
      * Register routes.
-     *
-     * @return void
      */
-    public function register_routes(): void {
+    public function register_routes(): void
+    {
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base,
+            '/'.$this->rest_base,
             [
                 [
-                    'methods'             => WP_REST_Server::READABLE,
-                    'callback'            => [ $this, 'get_items' ],
-                    'permission_callback' => [ $this, 'token_permissions_check' ],
-                    'args'                => [],
+                    'methods' => WP_REST_Server::READABLE,
+                    'callback' => [$this, 'get_items'],
+                    'permission_callback' => [$this, 'token_permissions_check'],
+                    'args' => [],
                 ],
             ]
         );
@@ -44,36 +42,37 @@ class Department_Controller extends Base_Controller {
     /**
      * List all active departments.
      *
-     * @param WP_REST_Request $request The incoming request.
+     * @param  WP_REST_Request  $request  The incoming request.
      * @return WP_REST_Response|\WP_Error
      */
-    public function get_items( $request ) {
-        $user_id = $this->check_token_permission( $request, 'departments:read' );
+    public function get_items($request)
+    {
+        $user_id = $this->check_token_permission($request, 'departments:read');
 
-        if ( null === $user_id ) {
-            return $this->error( 'escalated_unauthorized', __( 'Unauthorized.', 'escalated' ), 401 );
+        if ($user_id === null) {
+            return $this->error('escalated_unauthorized', __('Unauthorized.', 'escalated'), 401);
         }
 
         $departments = Department::active();
 
         // Enrich with agent count for each department.
         $result = [];
-        foreach ( $departments as $dept ) {
-            $agents   = Department::agents( $dept->id );
+        foreach ($departments as $dept) {
+            $agents = Department::agents($dept->id);
             $result[] = [
-                'id'          => (int) $dept->id,
-                'name'        => $dept->name,
-                'slug'        => $dept->slug,
+                'id' => (int) $dept->id,
+                'name' => $dept->name,
+                'slug' => $dept->slug,
                 'description' => $dept->description,
-                'is_active'   => (bool) $dept->is_active,
-                'agent_count' => count( $agents ),
-                'created_at'  => $dept->created_at,
-                'updated_at'  => $dept->updated_at,
+                'is_active' => (bool) $dept->is_active,
+                'agent_count' => count($agents),
+                'created_at' => $dept->created_at,
+                'updated_at' => $dept->updated_at,
             ];
         }
 
-        return $this->success( [
+        return $this->success([
             'departments' => $result,
-        ] );
+        ]);
     }
 }

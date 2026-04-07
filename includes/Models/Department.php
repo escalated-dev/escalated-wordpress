@@ -4,14 +4,15 @@ namespace Escalated\Models;
 
 use Escalated\Escalated;
 
-class Department {
-
+class Department
+{
     /**
      * Get the table name.
      *
      * @return string
      */
-    public static function table() {
+    public static function table()
+    {
         return Escalated::table('departments');
     }
 
@@ -20,17 +21,19 @@ class Department {
      *
      * @return string
      */
-    public static function pivot_table() {
+    public static function pivot_table()
+    {
         return Escalated::table('department_agent');
     }
 
     /**
      * Find a department by ID.
      *
-     * @param int $id
+     * @param  int  $id
      * @return object|null
      */
-    public static function find($id) {
+    public static function find($id)
+    {
         global $wpdb;
         $table = static::table();
 
@@ -42,10 +45,11 @@ class Department {
     /**
      * Find a department by slug.
      *
-     * @param string $slug
+     * @param  string  $slug
      * @return object|null
      */
-    public static function find_by_slug($slug) {
+    public static function find_by_slug($slug)
+    {
         global $wpdb;
         $table = static::table();
 
@@ -57,13 +61,13 @@ class Department {
     /**
      * Create a new department.
      *
-     * @param array $data
      * @return int|false Inserted ID or false on failure.
      */
-    public static function create(array $data) {
+    public static function create(array $data)
+    {
         global $wpdb;
         $table = static::table();
-        $now   = current_time('mysql');
+        $now = current_time('mysql');
 
         $data['created_at'] = $now;
         $data['updated_at'] = $now;
@@ -76,11 +80,11 @@ class Department {
     /**
      * Update a department.
      *
-     * @param int   $id
-     * @param array $data
+     * @param  int  $id
      * @return bool
      */
-    public static function update($id, array $data) {
+    public static function update($id, array $data)
+    {
         global $wpdb;
         $table = static::table();
 
@@ -92,10 +96,11 @@ class Department {
     /**
      * Delete a department.
      *
-     * @param int $id
+     * @param  int  $id
      * @return bool
      */
-    public static function delete($id) {
+    public static function delete($id)
+    {
         global $wpdb;
         $table = static::table();
 
@@ -105,24 +110,24 @@ class Department {
     /**
      * Get all departments with optional filters.
      *
-     * @param array $filters
      * @return array
      */
-    public static function all(array $filters = []) {
+    public static function all(array $filters = [])
+    {
         global $wpdb;
-        $table  = static::table();
-        $where  = ['1=1'];
+        $table = static::table();
+        $where = ['1=1'];
         $values = [];
 
-        if ( isset($filters['is_active'])) {
-            $where[]  = 'is_active = %d';
+        if (isset($filters['is_active'])) {
+            $where[] = 'is_active = %d';
             $values[] = (int) $filters['is_active'];
         }
 
         $where_clause = implode(' AND ', $where);
-        $sql          = "SELECT * FROM {$table} WHERE {$where_clause} ORDER BY name ASC";
+        $sql = "SELECT * FROM {$table} WHERE {$where_clause} ORDER BY name ASC";
 
-        if ( ! empty($values)) {
+        if (! empty($values)) {
             $sql = $wpdb->prepare($sql, $values);
         }
 
@@ -134,7 +139,8 @@ class Department {
      *
      * @return array
      */
-    public static function active() {
+    public static function active()
+    {
         global $wpdb;
         $table = static::table();
 
@@ -146,10 +152,11 @@ class Department {
     /**
      * Get all agent user IDs for a department.
      *
-     * @param int $department_id
+     * @param  int  $department_id
      * @return array Array of user IDs.
      */
-    public static function agents($department_id) {
+    public static function agents($department_id)
+    {
         global $wpdb;
         $pivot = static::pivot_table();
 
@@ -163,17 +170,18 @@ class Department {
     /**
      * Add an agent to a department.
      *
-     * @param int $department_id
-     * @param int $user_id
+     * @param  int  $department_id
+     * @param  int  $user_id
      * @return bool
      */
-    public static function add_agent($department_id, $user_id) {
+    public static function add_agent($department_id, $user_id)
+    {
         global $wpdb;
         $pivot = static::pivot_table();
 
         $result = $wpdb->insert($pivot, [
             'department_id' => $department_id,
-            'user_id'       => $user_id,
+            'user_id' => $user_id,
         ]);
 
         return $result !== false;
@@ -182,17 +190,18 @@ class Department {
     /**
      * Remove an agent from a department.
      *
-     * @param int $department_id
-     * @param int $user_id
+     * @param  int  $department_id
+     * @param  int  $user_id
      * @return bool
      */
-    public static function remove_agent($department_id, $user_id) {
+    public static function remove_agent($department_id, $user_id)
+    {
         global $wpdb;
         $pivot = static::pivot_table();
 
         return $wpdb->delete($pivot, [
             'department_id' => $department_id,
-            'user_id'       => $user_id,
+            'user_id' => $user_id,
         ]) !== false;
     }
 }

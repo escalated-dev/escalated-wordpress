@@ -4,24 +4,26 @@ namespace Escalated\Models;
 
 use Escalated\Escalated;
 
-class Ticket {
-
+class Ticket
+{
     /**
      * Get the table name.
      *
      * @return string
      */
-    public static function table() {
+    public static function table()
+    {
         return Escalated::table('tickets');
     }
 
     /**
      * Find a ticket by ID.
      *
-     * @param int $id
+     * @param  int  $id
      * @return object|null
      */
-    public static function find($id) {
+    public static function find($id)
+    {
         global $wpdb;
         $table = static::table();
 
@@ -33,10 +35,11 @@ class Ticket {
     /**
      * Find a ticket by reference string.
      *
-     * @param string $ref
+     * @param  string  $ref
      * @return object|null
      */
-    public static function find_by_reference($ref) {
+    public static function find_by_reference($ref)
+    {
         global $wpdb;
         $table = static::table();
 
@@ -48,10 +51,11 @@ class Ticket {
     /**
      * Find a ticket by guest token.
      *
-     * @param string $token
+     * @param  string  $token
      * @return object|null
      */
-    public static function find_by_guest_token($token) {
+    public static function find_by_guest_token($token)
+    {
         global $wpdb;
         $table = static::table();
 
@@ -63,13 +67,13 @@ class Ticket {
     /**
      * Create a new ticket.
      *
-     * @param array $data
      * @return int|false Inserted ID or false on failure.
      */
-    public static function create(array $data) {
+    public static function create(array $data)
+    {
         global $wpdb;
         $table = static::table();
-        $now   = current_time('mysql');
+        $now = current_time('mysql');
 
         $data['created_at'] = $now;
         $data['updated_at'] = $now;
@@ -82,11 +86,11 @@ class Ticket {
     /**
      * Update a ticket.
      *
-     * @param int   $id
-     * @param array $data
+     * @param  int  $id
      * @return bool
      */
-    public static function update($id, array $data) {
+    public static function update($id, array $data)
+    {
         global $wpdb;
         $table = static::table();
 
@@ -98,10 +102,11 @@ class Ticket {
     /**
      * Soft delete a ticket.
      *
-     * @param int $id
+     * @param  int  $id
      * @return bool
      */
-    public static function delete($id) {
+    public static function delete($id)
+    {
         global $wpdb;
         $table = static::table();
 
@@ -115,10 +120,11 @@ class Ticket {
     /**
      * Hard delete a ticket (permanent removal).
      *
-     * @param int $id
+     * @param  int  $id
      * @return bool
      */
-    public static function hard_delete($id) {
+    public static function hard_delete($id)
+    {
         global $wpdb;
         $table = static::table();
 
@@ -128,135 +134,138 @@ class Ticket {
     /**
      * Get all tickets with complex filtering and pagination.
      *
-     * @param array $filters {
-     *     Optional. Filter arguments.
+     * @param  array  $filters  {
+     *                          Optional. Filter arguments.
      *
-     *     @type string   $status        Filter by status.
-     *     @type string   $priority      Filter by priority.
-     *     @type int      $assigned_to   Filter by assigned agent.
-     *     @type bool     $unassigned    Filter for unassigned tickets.
-     *     @type int      $department_id Filter by department.
-     *     @type string   $search        Search subject, reference, description.
-     *     @type bool     $sla_breached  Filter by SLA breach.
-     *     @type array    $tag_ids       Filter by tag IDs.
-     *     @type int      $requester_id  Filter by requester.
-     *     @type string   $sort_by       Column to sort by. Default 'created_at'.
-     *     @type string   $sort_dir      Sort direction. Default 'DESC'.
-     *     @type int      $per_page      Results per page. Default 20.
-     *     @type int      $page          Current page. Default 1.
-     * }
+     * @type string $status        Filter by status.
+     * @type string $priority      Filter by priority.
+     * @type int $assigned_to   Filter by assigned agent.
+     * @type bool $unassigned    Filter for unassigned tickets.
+     * @type int $department_id Filter by department.
+     * @type string $search        Search subject, reference, description.
+     * @type bool $sla_breached  Filter by SLA breach.
+     * @type array $tag_ids       Filter by tag IDs.
+     * @type int $requester_id  Filter by requester.
+     * @type string $sort_by       Column to sort by. Default 'created_at'.
+     * @type string $sort_dir      Sort direction. Default 'DESC'.
+     * @type int $per_page      Results per page. Default 20.
+     * @type int $page          Current page. Default 1.
+     *           }
+     *
      * @return array {
-     *     @type array $items        Array of ticket objects.
-     *     @type int   $total        Total matching tickets.
-     *     @type int   $per_page     Results per page.
-     *     @type int   $current_page Current page number.
-     * }
+     *
+     * @type array $items        Array of ticket objects.
+     * @type int $total        Total matching tickets.
+     * @type int $per_page     Results per page.
+     * @type int $current_page Current page number.
+     *           }
      */
-    public static function all(array $filters = []) {
+    public static function all(array $filters = [])
+    {
         global $wpdb;
-        $table    = static::table();
-        $where    = ['t.deleted_at IS NULL'];
-        $values   = [];
-        $join     = '';
+        $table = static::table();
+        $where = ['t.deleted_at IS NULL'];
+        $values = [];
+        $join = '';
         $group_by = '';
 
         // Status filter.
-        if ( ! empty($filters['status'])) {
-            $where[]  = 't.status = %s';
+        if (! empty($filters['status'])) {
+            $where[] = 't.status = %s';
             $values[] = $filters['status'];
         }
 
         // Priority filter.
-        if ( ! empty($filters['priority'])) {
-            $where[]  = 't.priority = %s';
+        if (! empty($filters['priority'])) {
+            $where[] = 't.priority = %s';
             $values[] = $filters['priority'];
         }
 
         // Ticket type filter.
-        if ( ! empty($filters['ticket_type'])) {
-            $where[]  = 't.ticket_type = %s';
+        if (! empty($filters['ticket_type'])) {
+            $where[] = 't.ticket_type = %s';
             $values[] = $filters['ticket_type'];
         }
 
         // Assigned to filter.
-        if ( ! empty($filters['assigned_to'])) {
-            $where[]  = 't.assigned_to = %d';
+        if (! empty($filters['assigned_to'])) {
+            $where[] = 't.assigned_to = %d';
             $values[] = (int) $filters['assigned_to'];
         }
 
         // Unassigned filter.
-        if ( ! empty($filters['unassigned'])) {
+        if (! empty($filters['unassigned'])) {
             $where[] = 't.assigned_to IS NULL';
         }
 
         // Department filter.
-        if ( ! empty($filters['department_id'])) {
-            $where[]  = 't.department_id = %d';
+        if (! empty($filters['department_id'])) {
+            $where[] = 't.department_id = %d';
             $values[] = (int) $filters['department_id'];
         }
 
         // Search filter.
-        if ( ! empty($filters['search'])) {
-            $like     = '%' . $wpdb->esc_like($filters['search']) . '%';
-            $where[]  = '(t.subject LIKE %s OR t.reference LIKE %s OR t.description LIKE %s)';
+        if (! empty($filters['search'])) {
+            $like = '%'.$wpdb->esc_like($filters['search']).'%';
+            $where[] = '(t.subject LIKE %s OR t.reference LIKE %s OR t.description LIKE %s)';
             $values[] = $like;
             $values[] = $like;
             $values[] = $like;
         }
 
         // SLA breached filter.
-        if ( isset($filters['sla_breached']) && $filters['sla_breached']) {
+        if (isset($filters['sla_breached']) && $filters['sla_breached']) {
             $where[] = '(t.sla_first_response_breached = 1 OR t.sla_resolution_breached = 1)';
         }
 
         // Requester filter.
-        if ( ! empty($filters['requester_id'])) {
-            $where[]  = 't.requester_id = %d';
+        if (! empty($filters['requester_id'])) {
+            $where[] = 't.requester_id = %d';
             $values[] = (int) $filters['requester_id'];
         }
 
         // Tag filter (join with pivot table).
-        if ( ! empty($filters['tag_ids']) && is_array($filters['tag_ids'])) {
-            $tag_table    = Escalated::table('ticket_tag');
+        if (! empty($filters['tag_ids']) && is_array($filters['tag_ids'])) {
+            $tag_table = Escalated::table('ticket_tag');
             $placeholders = implode(',', array_fill(0, count($filters['tag_ids']), '%d'));
-            $join         = " INNER JOIN {$tag_table} AS tt ON tt.ticket_id = t.id";
-            $where[]      = "tt.tag_id IN ({$placeholders})";
-            $values       = array_merge($values, array_map('intval', $filters['tag_ids']));
-            $group_by     = ' GROUP BY t.id';
+            $join = " INNER JOIN {$tag_table} AS tt ON tt.ticket_id = t.id";
+            $where[] = "tt.tag_id IN ({$placeholders})";
+            $values = array_merge($values, array_map('intval', $filters['tag_ids']));
+            $group_by = ' GROUP BY t.id';
         }
 
         // Sorting.
         $allowed_sort = ['created_at', 'updated_at', 'priority', 'status', 'subject', 'id'];
-        $sort_by      = isset($filters['sort_by']) && in_array($filters['sort_by'], $allowed_sort, true)
+        $sort_by = isset($filters['sort_by']) && in_array($filters['sort_by'], $allowed_sort, true)
             ? $filters['sort_by']
             : 'created_at';
-        $sort_dir     = isset($filters['sort_dir']) && strtoupper($filters['sort_dir']) === 'ASC'
+        $sort_dir = isset($filters['sort_dir']) && strtoupper($filters['sort_dir']) === 'ASC'
             ? 'ASC'
             : 'DESC';
 
         // Pagination.
         $per_page = isset($filters['per_page']) ? absint($filters['per_page']) : 20;
-        $page     = isset($filters['page']) ? max(1, absint($filters['page'])) : 1;
-        $offset   = ($page - 1) * $per_page;
+        $page = isset($filters['page']) ? max(1, absint($filters['page'])) : 1;
+        $offset = ($page - 1) * $per_page;
 
         $where_clause = implode(' AND ', $where);
 
         // Count total.
         $count_sql = "SELECT COUNT(DISTINCT t.id) FROM {$table} AS t{$join} WHERE {$where_clause}";
-        if ( ! empty($values)) {
+        if (! empty($values)) {
             $count_sql = $wpdb->prepare($count_sql, $values);
         }
         $total = (int) $wpdb->get_var($count_sql);
 
         // Fetch items.
         $sql = "SELECT t.* FROM {$table} AS t{$join} WHERE {$where_clause}{$group_by} ORDER BY t.{$sort_by} {$sort_dir} LIMIT %d OFFSET %d";
-        $query_values   = array_merge($values, [$per_page, $offset]);
-        $items          = $wpdb->get_results($wpdb->prepare($sql, $query_values));
+        $query_values = array_merge($values, [$per_page, $offset]);
+        $items = $wpdb->get_results($wpdb->prepare($sql, $query_values));
 
         return [
-            'items'        => $items ?: [],
-            'total'        => $total,
-            'per_page'     => $per_page,
+            'items' => $items ?: [],
+            'total' => $total,
+            'per_page' => $per_page,
             'current_page' => $page,
         ];
     }
@@ -268,24 +277,26 @@ class Ticket {
      *
      * @return string
      */
-    public static function generate_reference() {
+    public static function generate_reference()
+    {
         global $wpdb;
-        $table  = static::table();
+        $table = static::table();
         $prefix = Setting::get('ticket_reference_prefix', 'ESC');
 
         $max_id = (int) $wpdb->get_var("SELECT MAX(id) FROM {$table}");
-        $next   = $max_id + 1;
+        $next = $max_id + 1;
 
-        return $prefix . '-' . str_pad($next, 5, '0', STR_PAD_LEFT);
+        return $prefix.'-'.str_pad($next, 5, '0', STR_PAD_LEFT);
     }
 
     /**
      * Check if a status represents an open ticket.
      *
-     * @param string $status
+     * @param  string  $status
      * @return bool
      */
-    public static function is_open($status) {
+    public static function is_open($status)
+    {
         return ! in_array($status, ['resolved', 'closed'], true);
     }
 
@@ -294,7 +305,8 @@ class Ticket {
      *
      * @return string
      */
-    public static function scope_open() {
+    public static function scope_open()
+    {
         return "status NOT IN ('resolved', 'closed')";
     }
 
@@ -303,7 +315,8 @@ class Ticket {
      *
      * @return array Associative array of status => count.
      */
-    public static function count_by_status() {
+    public static function count_by_status()
+    {
         global $wpdb;
         $table = static::table();
 
@@ -324,10 +337,11 @@ class Ticket {
     /**
      * Count open tickets assigned to a specific agent.
      *
-     * @param int $user_id
+     * @param  int  $user_id
      * @return int
      */
-    public static function count_for_agent($user_id) {
+    public static function count_for_agent($user_id)
+    {
         global $wpdb;
         $table = static::table();
         $scope = static::scope_open();

@@ -1,6 +1,6 @@
 <?php
 
-if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
+if (! defined('WP_UNINSTALL_PLUGIN')) {
     exit;
 }
 
@@ -26,15 +26,15 @@ $tables = [
     'escalated_departments',
 ];
 
-foreach ( $tables as $table ) {
-    $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}{$table}" );
+foreach ($tables as $table) {
+    $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}{$table}");
 }
 
-remove_role( 'escalated_admin' );
-remove_role( 'escalated_agent' );
+remove_role('escalated_admin');
+remove_role('escalated_agent');
 
-$admin_role = get_role( 'administrator' );
-if ( $admin_role ) {
+$admin_role = get_role('administrator');
+if ($admin_role) {
     $caps = [
         'escalated_manage_settings',
         'escalated_manage_departments',
@@ -51,7 +51,7 @@ if ( $admin_role ) {
         'escalated_use_macros',
         'escalated_use_canned_responses',
     ];
-    foreach ( $caps as $cap ) {
-        $admin_role->remove_cap( $cap );
+    foreach ($caps as $cap) {
+        $admin_role->remove_cap($cap);
     }
 }

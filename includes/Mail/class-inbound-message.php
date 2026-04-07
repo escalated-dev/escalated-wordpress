@@ -1,7 +1,9 @@
 <?php
+
 namespace Escalated\Mail;
 
-class Inbound_Message {
+class Inbound_Message
+{
     public function __construct(
         public string $fromEmail,
         public ?string $fromName,
@@ -16,24 +18,28 @@ class Inbound_Message {
         public array $attachments = [],
     ) {}
 
-    public function get_body(): string {
-        if ( ! empty( $this->bodyText ) ) {
+    public function get_body(): string
+    {
+        if (! empty($this->bodyText)) {
             return $this->bodyText;
         }
-        if ( ! empty( $this->bodyHtml ) ) {
-            return wp_strip_all_tags( $this->bodyHtml );
+        if (! empty($this->bodyHtml)) {
+            return wp_strip_all_tags($this->bodyHtml);
         }
+
         return '';
     }
 
-    public function get_raw_headers_string(): ?string {
-        if ( empty( $this->headers ) ) {
+    public function get_raw_headers_string(): ?string
+    {
+        if (empty($this->headers)) {
             return null;
         }
         $lines = [];
-        foreach ( $this->headers as $key => $value ) {
+        foreach ($this->headers as $key => $value) {
             $lines[] = "{$key}: {$value}";
         }
-        return implode( "\r\n", $lines );
+
+        return implode("\r\n", $lines);
     }
 }

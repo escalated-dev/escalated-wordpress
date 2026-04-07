@@ -4,24 +4,26 @@ namespace Escalated\Models;
 
 use Escalated\Escalated;
 
-class ApiToken {
-
+class ApiToken
+{
     /**
      * Get the table name.
      *
      * @return string
      */
-    public static function table() {
+    public static function table()
+    {
         return Escalated::table('api_tokens');
     }
 
     /**
      * Find an API token record by ID.
      *
-     * @param int $id
+     * @param  int  $id
      * @return object|null
      */
-    public static function find($id) {
+    public static function find($id)
+    {
         global $wpdb;
         $table = static::table();
 
@@ -33,16 +35,16 @@ class ApiToken {
     /**
      * Create a new API token record.
      *
-     * @param array $data
      * @return int|false Inserted ID or false on failure.
      */
-    public static function create(array $data) {
+    public static function create(array $data)
+    {
         global $wpdb;
         $table = static::table();
-        $now   = current_time('mysql');
+        $now = current_time('mysql');
 
         // Encode abilities if passed as an array.
-        if ( isset($data['abilities']) && is_array($data['abilities'])) {
+        if (isset($data['abilities']) && is_array($data['abilities'])) {
             $data['abilities'] = wp_json_encode($data['abilities']);
         }
 
@@ -57,16 +59,16 @@ class ApiToken {
     /**
      * Update an API token record.
      *
-     * @param int   $id
-     * @param array $data
+     * @param  int  $id
      * @return bool
      */
-    public static function update($id, array $data) {
+    public static function update($id, array $data)
+    {
         global $wpdb;
         $table = static::table();
 
         // Encode abilities if passed as an array.
-        if ( isset($data['abilities']) && is_array($data['abilities'])) {
+        if (isset($data['abilities']) && is_array($data['abilities'])) {
             $data['abilities'] = wp_json_encode($data['abilities']);
         }
 
@@ -78,10 +80,11 @@ class ApiToken {
     /**
      * Delete an API token record.
      *
-     * @param int $id
+     * @param  int  $id
      * @return bool
      */
-    public static function delete($id) {
+    public static function delete($id)
+    {
         global $wpdb;
         $table = static::table();
 
@@ -91,24 +94,24 @@ class ApiToken {
     /**
      * Get all API tokens with optional filters.
      *
-     * @param array $filters
      * @return array
      */
-    public static function all(array $filters = []) {
+    public static function all(array $filters = [])
+    {
         global $wpdb;
-        $table  = static::table();
-        $where  = ['1=1'];
+        $table = static::table();
+        $where = ['1=1'];
         $values = [];
 
-        if ( ! empty($filters['user_id'])) {
-            $where[]  = 'user_id = %d';
+        if (! empty($filters['user_id'])) {
+            $where[] = 'user_id = %d';
             $values[] = (int) $filters['user_id'];
         }
 
         $where_clause = implode(' AND ', $where);
-        $sql          = "SELECT * FROM {$table} WHERE {$where_clause} ORDER BY created_at DESC";
+        $sql = "SELECT * FROM {$table} WHERE {$where_clause} ORDER BY created_at DESC";
 
-        if ( ! empty($values)) {
+        if (! empty($values)) {
             $sql = $wpdb->prepare($sql, $values);
         }
 
@@ -118,15 +121,17 @@ class ApiToken {
     /**
      * Generate and store a new API token for a user.
      *
-     * @param int    $user_id
-     * @param string $name      Human-readable token name.
-     * @param array  $abilities Allowed abilities. Default ['*'] for all.
+     * @param  int  $user_id
+     * @param  string  $name  Human-readable token name.
+     * @param  array  $abilities  Allowed abilities. Default ['*'] for all.
      * @return array|false {
-     *     @type string $token  The plain-text token (only available at creation time).
-     *     @type object $record The stored database record.
-     * } or false on failure.
+     *
+     * @type string $token  The plain-text token (only available at creation time).
+     * @type object $record The stored database record.
+     *              } or false on failure.
      */
-    public static function create_token($user_id, $name, $abilities = ['*']) {
+    public static function create_token($user_id, $name, $abilities = ['*'])
+    {
         // Generate a random 64-character token.
         $plain_token = bin2hex(random_bytes(32));
 
@@ -134,10 +139,10 @@ class ApiToken {
         $token_hash = hash('sha256', $plain_token);
 
         $id = static::create([
-            'user_id'    => (int) $user_id,
-            'name'       => $name,
+            'user_id' => (int) $user_id,
+            'name' => $name,
             'token' => $token_hash,
-            'abilities'  => $abilities,
+            'abilities' => $abilities,
         ]);
 
         if ($id === false) {
@@ -147,7 +152,7 @@ class ApiToken {
         $record = static::find($id);
 
         return [
-            'token'  => $plain_token,
+            'token' => $plain_token,
             'record' => $record,
         ];
     }
@@ -157,12 +162,13 @@ class ApiToken {
      *
      * Hashes the token with SHA-256 and looks up the hash.
      *
-     * @param string $plain_token
+     * @param  string  $plain_token
      * @return object|null
      */
-    public static function find_by_token($plain_token) {
+    public static function find_by_token($plain_token)
+    {
         global $wpdb;
-        $table      = static::table();
+        $table = static::table();
         $token_hash = hash('sha256', $plain_token);
 
         return $wpdb->get_row(
@@ -173,14 +179,15 @@ class ApiToken {
     /**
      * Check if a token record has a specific ability.
      *
-     * @param object $record  The API token record.
-     * @param string $ability The ability to check for.
+     * @param  object  $record  The API token record.
+     * @param  string  $ability  The ability to check for.
      * @return bool
      */
-    public static function has_ability($record, $ability) {
+    public static function has_ability($record, $ability)
+    {
         $abilities = json_decode($record->abilities, true);
 
-        if ( ! is_array($abilities)) {
+        if (! is_array($abilities)) {
             return false;
         }
 
@@ -195,11 +202,12 @@ class ApiToken {
     /**
      * Update the last used timestamp and IP for a token.
      *
-     * @param int    $id
-     * @param string $ip Client IP address.
+     * @param  int  $id
+     * @param  string  $ip  Client IP address.
      * @return bool
      */
-    public static function update_last_used($id, $ip) {
+    public static function update_last_used($id, $ip)
+    {
         global $wpdb;
         $table = static::table();
 
@@ -208,7 +216,7 @@ class ApiToken {
             [
                 'last_used_at' => current_time('mysql'),
                 'last_used_ip' => $ip,
-                'updated_at'   => current_time('mysql'),
+                'updated_at' => current_time('mysql'),
             ],
             ['id' => $id]
         ) !== false;
@@ -217,10 +225,11 @@ class ApiToken {
     /**
      * Get all tokens for a specific user.
      *
-     * @param int $user_id
+     * @param  int  $user_id
      * @return array
      */
-    public static function for_user($user_id) {
+    public static function for_user($user_id)
+    {
         global $wpdb;
         $table = static::table();
 
@@ -237,10 +246,11 @@ class ApiToken {
      *
      * @return int|false Number of deleted rows or false on error.
      */
-    public static function delete_expired() {
+    public static function delete_expired()
+    {
         global $wpdb;
         $table = static::table();
-        $now   = current_time('mysql');
+        $now = current_time('mysql');
 
         return $wpdb->query(
             $wpdb->prepare(
