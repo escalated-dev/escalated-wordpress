@@ -167,17 +167,16 @@ class TicketSnoozeService
         global $wpdb;
         $table = Escalated::table('ticket_meta');
 
-        // Check if table exists first.
-        $table_exists = $wpdb->get_var(
-            $wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($table))
-        );
-        if (! $table_exists) {
-            return [];
-        }
-
+        // Suppress errors for the query in case table doesn't exist yet.
+        $suppress = $wpdb->suppress_errors();
         $rows = $wpdb->get_results(
             "SELECT ticket_id FROM {$table} WHERE meta_key = 'snoozed_until'"
         );
+        $wpdb->suppress_errors($suppress);
+
+        if ($wpdb->last_error) {
+            return [];
+        }
 
         return array_map(fn ($row) => (int) $row->ticket_id, $rows ?: []);
     }
