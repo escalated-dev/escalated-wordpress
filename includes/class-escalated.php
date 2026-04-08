@@ -36,6 +36,7 @@ class Escalated
         (new Cron\Automation_Check)->register();
         (new Cron\Auto_Close)->register();
         (new Cron\Activity_Purge)->register();
+        (new Services\BroadcastService)->register();
         (new Cron\Snooze_Check)->register();
 
         Cli\AutomationCommand::register();
