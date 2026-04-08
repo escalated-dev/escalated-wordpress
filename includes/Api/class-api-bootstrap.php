@@ -37,6 +37,8 @@ class Api_Bootstrap
             new Saved_View_Controller,
             new Ticket_Snooze_Controller,
             new Ticket_Split_Controller,
+            new Chat_Controller,
+            new Widget_Chat_Controller,
         ];
 
         foreach ($controllers as $controller) {

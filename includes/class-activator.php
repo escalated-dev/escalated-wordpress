@@ -353,6 +353,43 @@ class Activator
             KEY active (active)
         ) $charset_collate;";
         dbDelta($sql);
+
+        // escalated_chat_sessions
+        $sql = "CREATE TABLE {$prefix}chat_sessions (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            ticket_id BIGINT UNSIGNED NOT NULL,
+            visitor_name VARCHAR(255) NOT NULL DEFAULT 'Visitor',
+            visitor_email VARCHAR(255) NULL,
+            agent_id BIGINT UNSIGNED NULL,
+            department_id BIGINT UNSIGNED NULL,
+            status VARCHAR(30) NOT NULL DEFAULT 'waiting',
+            accepted_at DATETIME NULL,
+            ended_at DATETIME NULL,
+            last_activity_at DATETIME NOT NULL,
+            created_at DATETIME NOT NULL,
+            updated_at DATETIME NOT NULL,
+            PRIMARY KEY  (id),
+            KEY ticket_id (ticket_id),
+            KEY status (status),
+            KEY agent_id (agent_id)
+        ) $charset_collate;";
+        dbDelta($sql);
+
+        // escalated_chat_routing_rules
+        $sql = "CREATE TABLE {$prefix}chat_routing_rules (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            name VARCHAR(255) NOT NULL,
+            department_id BIGINT UNSIGNED NULL,
+            agent_id BIGINT UNSIGNED NULL,
+            conditions TEXT NULL,
+            priority INT NOT NULL DEFAULT 0,
+            is_active TINYINT(1) NOT NULL DEFAULT 1,
+            created_at DATETIME NOT NULL,
+            updated_at DATETIME NOT NULL,
+            PRIMARY KEY  (id),
+            KEY priority (priority)
+        ) $charset_collate;";
+        dbDelta($sql);
     }
 
     /**
@@ -743,6 +780,10 @@ class Activator
 
         if (! wp_next_scheduled('escalated_check_snoozed_tickets')) {
             wp_schedule_event(time(), 'escalated_every_minute', 'escalated_check_snoozed_tickets');
+        }
+
+        if (! wp_next_scheduled('escalated_chat_cleanup')) {
+            wp_schedule_event(time(), 'escalated_every_minute', 'escalated_chat_cleanup');
         }
     }
 
