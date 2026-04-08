@@ -32,6 +32,7 @@ class Api_Bootstrap
             new Automation_Controller,
             new Dashboard_Controller,
             new Api_Token_Controller,
+            new Widget_Controller,
         ];
 
         foreach ($controllers as $controller) {
