@@ -740,6 +740,10 @@ class Activator
         if (! wp_next_scheduled('escalated_run_automations')) {
             wp_schedule_event(time(), 'escalated_every_five_minutes', 'escalated_run_automations');
         }
+
+        if (! wp_next_scheduled('escalated_check_snoozed_tickets')) {
+            wp_schedule_event(time(), 'escalated_every_minute', 'escalated_check_snoozed_tickets');
+        }
     }
 
     /**
