@@ -30,6 +30,7 @@ class Escalated
         (new Frontend\Ajax_Handler)->register();
         (new Api\Api_Bootstrap)->register();
         (new Mail\Inbound_Controller)->register();
+        (new Mail\Email_Threading)->register();
         (new Cron\Sla_Check)->register();
         (new Cron\Escalation_Check)->register();
         (new Cron\Automation_Check)->register();
