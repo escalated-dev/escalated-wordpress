@@ -169,7 +169,7 @@ class TicketSnoozeService
 
         // Check if table exists first.
         $table_exists = $wpdb->get_var(
-            $wpdb->prepare('SHOW TABLES LIKE %s', $table)
+            $wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($table))
         );
         if (! $table_exists) {
             return [];
