@@ -33,6 +33,9 @@ class Api_Bootstrap
             new Dashboard_Controller,
             new Api_Token_Controller,
             new Widget_Controller,
+            new Saved_View_Controller,
+            new Ticket_Snooze_Controller,
+            new Ticket_Split_Controller,
         ];
 
         foreach ($controllers as $controller) {
