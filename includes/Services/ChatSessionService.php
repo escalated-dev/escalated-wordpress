@@ -11,10 +11,13 @@ class ChatSessionService
 
     private TicketService $ticket_service;
 
+    private AssignmentService $assignment_service;
+
     public function __construct()
     {
         $this->routing = new ChatRoutingService;
         $this->ticket_service = new TicketService;
+        $this->assignment_service = new AssignmentService;
     }
 
     /**
@@ -78,7 +81,7 @@ class ChatSessionService
         ]);
 
         // Assign the ticket to the agent
-        $this->ticket_service->assign($session->ticket_id, $agent_id);
+        $this->assignment_service->assign($session->ticket_id, $agent_id);
 
         $session = ChatSession::find($session_id);
 
@@ -102,10 +105,7 @@ class ChatSessionService
             throw new \InvalidArgumentException('Chat session has ended.');
         }
 
-        $reply = $this->ticket_service->add_reply($session->ticket_id, $author_id, [
-            'body' => wp_kses_post($body),
-            'is_internal_note' => false,
-        ]);
+        $reply = $this->ticket_service->reply($session->ticket_id, $author_id ?? 0, wp_kses_post($body));
 
         ChatSession::update($session_id, [
             'last_activity_at' => current_time('mysql'),
