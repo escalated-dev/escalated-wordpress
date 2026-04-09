@@ -23,51 +23,51 @@
 [![WordPress](https://img.shields.io/badge/wordpress-%3E%3D6.0-21759B)](https://wordpress.org/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-A full-featured helpdesk and ticketing system for WordPress with multi-role support, SLA tracking, escalation rules, inbound email processing, macros, and a REST API. No external services required.
+WordPress向けのフル機能ヘルプデスク・チケットシステム。マルチロール対応、SLAトラッキング、エスカレーションルール、受信メール処理、マクロ、REST APIを備えています。外部サービス不要。
 
-> **[escalated.dev](https://escalated.dev)** — Learn more, view demos, and compare Cloud vs Self-Hosted options.
+> **[escalated.dev](https://escalated.dev)** — 詳細、デモの閲覧、Cloud vs セルフホストオプションの比較はこちら。
 
 ## Screenshots
 
-| Ticket List | Ticket Detail |
+| チケット一覧 | チケット詳細 |
 |:-----------:|:-------------:|
-| ![Ticket List](screenshots/results/ticket-list.png) | ![Ticket Detail](screenshots/results/ticket-detail.png) |
+| ![チケット一覧](screenshots/results/ticket-list.png) | ![チケット詳細](screenshots/results/ticket-detail.png) |
 
-| Departments | SLA Policies |
+| 部門 | SLAポリシー |
 |:-----------:|:------------:|
-| ![Departments](screenshots/results/departments.png) | ![SLA Policies](screenshots/results/sla-policies.png) |
+| ![部門](screenshots/results/departments.png) | ![SLAポリシー](screenshots/results/sla-policies.png) |
 
-| Reports | Settings |
+| レポート | 設定 |
 |:-------:|:--------:|
-| ![Reports](screenshots/results/reports.png) | ![Settings](screenshots/results/settings.png) |
+| ![レポート](screenshots/results/reports.png) | ![設定](screenshots/results/settings.png) |
 
-| Automations | Macros |
+| 自動化 | マクロ |
 |:-----------:|:------:|
-| ![Automations](screenshots/results/automations.png) | ![Macros](screenshots/results/macros.png) |
+| ![自動化](screenshots/results/automations.png) | ![マクロ](screenshots/results/macros.png) |
 
-> Screenshots are auto-generated via Playwright on every release. See `.github/workflows/screenshots.yml`.
+> スクリーンショットはリリースごとにPlaywrightで自動生成されます。`.github/workflows/screenshots.yml` を参照してください。
 
 ## Download
 
 [![Download Latest Release](https://img.shields.io/badge/Download-Latest%20Release-2ea44f?style=for-the-badge&logo=github)](https://github.com/escalated-dev/escalated-wordpress/releases/latest)
 
-- Latest plugin package: [escalated.zip](https://github.com/escalated-dev/escalated-wordpress/releases/latest/download/escalated.zip)
-- All releases: [Releases](https://github.com/escalated-dev/escalated-wordpress/releases)
+- 最新プラグインパッケージ: [escalated.zip](https://github.com/escalated-dev/escalated-wordpress/releases/latest/download/escalated.zip)
+- 全リリース: [Releases](https://github.com/escalated-dev/escalated-wordpress/releases)
 
 ## 機能
 
-- Ticket management with threaded conversations, internal notes, and activity timeline.
-- Custom support roles: `escalated_admin` and `escalated_agent`.
-- Department-based routing and assignment workflows.
-- SLA policies with first-response and resolution targets.
-- Automated escalation rules and scheduled SLA checks.
-- Customer-facing frontend ticket pages via shortcodes.
-- Guest ticket submission and secure guest ticket access.
-- Inbound email ingestion via Mailgun, Postmark, and Amazon SES webhooks.
-- Canned responses, macros, and tag management.
-- Bearer token REST API with per-token abilities and rate limiting.
-- Attachment support with configurable upload limits.
-- Satisfaction ratings and reporting views.
+- スレッド形式の会話、内部メモ、アクティビティタイムラインを備えたチケット管理。
+- カスタムサポートロール: `escalated_admin` と `escalated_agent`。
+- 部門ベースのルーティングと割り当てワークフロー。
+- 初回応答と解決目標を持つSLAポリシー。
+- 自動エスカレーションルールとスケジュールされたSLAチェック。
+- ショートコードによる顧客向けフロントエンドチケットページ。
+- ゲストチケット送信と安全なゲストチケットアクセス。
+- Mailgun、Postmark、Amazon SESのWebhookによる受信メール取り込み。
+- 定型応答、マクロ、タグ管理。
+- トークンごとの権限とレート制限を備えたBearerトークンREST API。
+- 設定可能なアップロード制限付きの添付ファイルサポート。
+- 満足度評価とレポートビュー。
 
 ## 要件
 
@@ -76,33 +76,33 @@ A full-featured helpdesk and ticketing system for WordPress with multi-role supp
 
 ## インストール
 
-1. Place this plugin in your WordPress plugins directory:
+1. このプラグインをWordPressのプラグインディレクトリに配置します:
    - `wp-content/plugins/escalated`
-2. Activate **Escalated** from the WordPress Plugins screen.
-3. Go to **Escalated** in wp-admin and configure:
-   - Departments
-   - SLA Policies
-   - Escalation Rules
-   - Settings
+2. WordPressのプラグイン画面から **Escalated** を有効化します。
+3. wp-adminで **Escalated** に移動し、以下を設定します:
+   - 部門
+   - SLAポリシー
+   - エスカレーションルール
+   - 設定
 
-## Frontend Shortcodes
+## フロントエンドショートコード
 
-Use these shortcodes on WordPress pages:
+WordPressページでこれらのショートコードを使用します:
 
-- `[escalated_tickets]` - Logged-in requester ticket list.
-- `[escalated_create_ticket]` - Logged-in requester new ticket form.
-- `[escalated_view_ticket]` - Ticket detail view:
-  - Logged-in users: expects `?ticket=ESC-123`
-  - Guests: expects `?guest_token=<token>`
-- `[escalated_guest_create]` - Guest ticket creation form (if enabled in settings).
+- `[escalated_tickets]` - ログイン済みリクエスターのチケット一覧。
+- `[escalated_create_ticket]` - ログイン済みリクエスターの新規チケットフォーム。
+- `[escalated_view_ticket]` - チケット詳細ビュー:
+  - ログインユーザー: `?ticket=ESC-123` を期待
+  - ゲスト: `?guest_token=<token>` を期待
+- `[escalated_guest_create]` - ゲストチケット作成フォーム（設定で有効な場合）。
 
 ## REST API
 
 - Namespace: `/wp-json/escalated/v1`
-- Auth: `Authorization: Bearer <api-token>`
-- Default rate limit: `60` requests/minute per token (configurable via `api_rate_limit` setting)
+- 認証: `Authorization: Bearer <api-token>`
+- デフォルトレート制限: トークンあたり `60` リクエスト/分（`api_rate_limit` 設定で変更可能）
 
-Main route groups:
+主要ルートグループ:
 
 - `/auth/validate`
 - `/tickets`
@@ -114,52 +114,52 @@ Main route groups:
 - `/dashboard`
 - `/admin/api-tokens`
 
-## Inbound Email Webhooks
+## 受信メールWebhook
 
-Inbound route pattern:
+受信ルートパターン:
 
 - `POST /wp-json/escalated/v1/inbound/{adapter}`
 
-Supported adapters:
+対応アダプター:
 
 - `mailgun`
 - `postmark`
 - `ses`
 
-## Scheduled Tasks (WP-Cron)
+## スケジュールタスク (WP-Cron)
 
-On activation, Escalated schedules:
+有効化時に、Escalatedは以下をスケジュールします:
 
-- `escalated_check_sla` (every minute)
-- `escalated_evaluate_escalations` (every 5 minutes)
-- `escalated_auto_close` (daily)
-- `escalated_purge_activities` (weekly)
+- `escalated_check_sla`（毎分）
+- `escalated_evaluate_escalations`（5分ごと）
+- `escalated_auto_close`（毎日）
+- `escalated_purge_activities`（毎週）
 
-## Development
+## 開発
 
-Install dependencies:
+依存関係のインストール:
 
 ```bash
 composer install
 ```
 
-Run tests (WordPress test suite required):
+テストの実行（WordPressテストスイートが必要）:
 
 ```bash
 vendor/bin/phpunit -c phpunit.xml.dist
 ```
 
-If needed, set `WP_TESTS_DIR` to your local WordPress tests library path before running PHPUnit.
+必要に応じて、PHPUnitを実行する前に `WP_TESTS_DIR` をローカルのWordPressテストライブラリパスに設定してください。
 
 ## 他のフレームワーク向け
 
-- **[Escalated for Laravel](https://github.com/escalated-dev/escalated-laravel)** — Laravel Composer package
-- **[Escalated for Rails](https://github.com/escalated-dev/escalated-rails)** — Ruby on Rails engine
-- **[Escalated for Django](https://github.com/escalated-dev/escalated-django)** — Django reusable app
-- **[Escalated for AdonisJS](https://github.com/escalated-dev/escalated-adonis)** — AdonisJS v6 package
-- **[Escalated for Filament](https://github.com/escalated-dev/escalated-filament)** — Filament v3 admin panel plugin
-- **[Escalated for WordPress](https://github.com/escalated-dev/escalated-wordpress)** — WordPress plugin (you are here)
-- **[Shared Frontend](https://github.com/escalated-dev/escalated)** — Vue 3 + Inertia.js UI components
+- **[Escalated for Laravel](https://github.com/escalated-dev/escalated-laravel)** — Laravel Composerパッケージ
+- **[Escalated for Rails](https://github.com/escalated-dev/escalated-rails)** — Ruby on Rails Engine
+- **[Escalated for Django](https://github.com/escalated-dev/escalated-django)** — Django再利用可能アプリ
+- **[Escalated for AdonisJS](https://github.com/escalated-dev/escalated-adonis)** — AdonisJS v6パッケージ
+- **[Escalated for Filament](https://github.com/escalated-dev/escalated-filament)** — Filament v3管理パネルプラグイン
+- **[Escalated for WordPress](https://github.com/escalated-dev/escalated-wordpress)** — WordPressプラグイン（現在のページ）
+- **[Shared Frontend](https://github.com/escalated-dev/escalated)** — Vue 3 + Inertia.js UIコンポーネント
 
 ## ライセンス
 
