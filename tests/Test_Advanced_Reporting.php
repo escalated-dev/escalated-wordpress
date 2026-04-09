@@ -1,6 +1,6 @@
 <?php
 
-use Jeremykenedy\Escalated\Services\AdvancedReportingService;
+use Escalated\Services\AdvancedReportingService;
 use PHPUnit\Framework\TestCase;
 
 class Test_Advanced_Reporting extends TestCase
