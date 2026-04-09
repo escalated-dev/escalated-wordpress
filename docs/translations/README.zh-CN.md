@@ -23,51 +23,51 @@
 [![WordPress](https://img.shields.io/badge/wordpress-%3E%3D6.0-21759B)](https://wordpress.org/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-A full-featured helpdesk and ticketing system for WordPress with multi-role support, SLA tracking, escalation rules, inbound email processing, macros, and a REST API. No external services required.
+WordPress 全功能帮助台和工单系统，支持多角色、SLA 跟踪、升级规则、入站邮件处理、宏和 REST API。无需外部服务。
 
-> **[escalated.dev](https://escalated.dev)** — Learn more, view demos, and compare Cloud vs Self-Hosted options.
+> **[escalated.dev](https://escalated.dev)** — 了解更多、查看演示并比较 Cloud 与自托管选项。
 
 ## Screenshots
 
-| Ticket List | Ticket Detail |
+| 工单列表 | 工单详情 |
 |:-----------:|:-------------:|
-| ![Ticket List](screenshots/results/ticket-list.png) | ![Ticket Detail](screenshots/results/ticket-detail.png) |
+| ![工单列表](screenshots/results/ticket-list.png) | ![工单详情](screenshots/results/ticket-detail.png) |
 
-| Departments | SLA Policies |
+| 部门 | SLA 策略 |
 |:-----------:|:------------:|
-| ![Departments](screenshots/results/departments.png) | ![SLA Policies](screenshots/results/sla-policies.png) |
+| ![部门](screenshots/results/departments.png) | ![SLA 策略](screenshots/results/sla-policies.png) |
 
-| Reports | Settings |
+| 报告 | 设置 |
 |:-------:|:--------:|
-| ![Reports](screenshots/results/reports.png) | ![Settings](screenshots/results/settings.png) |
+| ![报告](screenshots/results/reports.png) | ![设置](screenshots/results/settings.png) |
 
-| Automations | Macros |
+| 自动化 | 宏 |
 |:-----------:|:------:|
-| ![Automations](screenshots/results/automations.png) | ![Macros](screenshots/results/macros.png) |
+| ![自动化](screenshots/results/automations.png) | ![宏](screenshots/results/macros.png) |
 
-> Screenshots are auto-generated via Playwright on every release. See `.github/workflows/screenshots.yml`.
+> 截图在每次发布时通过 Playwright 自动生成。参见 `.github/workflows/screenshots.yml`。
 
 ## Download
 
 [![Download Latest Release](https://img.shields.io/badge/Download-Latest%20Release-2ea44f?style=for-the-badge&logo=github)](https://github.com/escalated-dev/escalated-wordpress/releases/latest)
 
-- Latest plugin package: [escalated.zip](https://github.com/escalated-dev/escalated-wordpress/releases/latest/download/escalated.zip)
-- All releases: [Releases](https://github.com/escalated-dev/escalated-wordpress/releases)
+- 最新插件包：[escalated.zip](https://github.com/escalated-dev/escalated-wordpress/releases/latest/download/escalated.zip)
+- 所有版本：[Releases](https://github.com/escalated-dev/escalated-wordpress/releases)
 
 ## 功能特性
 
-- Ticket management with threaded conversations, internal notes, and activity timeline.
-- Custom support roles: `escalated_admin` and `escalated_agent`.
-- Department-based routing and assignment workflows.
-- SLA policies with first-response and resolution targets.
-- Automated escalation rules and scheduled SLA checks.
-- Customer-facing frontend ticket pages via shortcodes.
-- Guest ticket submission and secure guest ticket access.
-- Inbound email ingestion via Mailgun, Postmark, and Amazon SES webhooks.
-- Canned responses, macros, and tag management.
-- Bearer token REST API with per-token abilities and rate limiting.
-- Attachment support with configurable upload limits.
-- Satisfaction ratings and reporting views.
+- 支持线程对话、内部备注和活动时间线的工单管理。
+- 自定义支持角色：`escalated_admin` 和 `escalated_agent`。
+- 基于部门的路由和分配工作流。
+- 具有首次响应和解决目标的 SLA 策略。
+- 自动化升级规则和定时 SLA 检查。
+- 通过短代码提供面向客户的前端工单页面。
+- 访客工单提交和安全的访客工单访问。
+- 通过 Mailgun、Postmark 和 Amazon SES webhook 接收入站邮件。
+- 预设回复、宏和标签管理。
+- 具有按令牌权限和速率限制的 Bearer 令牌 REST API。
+- 支持附件，可配置上传限制。
+- 满意度评分和报告视图。
 
 ## 系统要求
 
@@ -76,33 +76,33 @@ A full-featured helpdesk and ticketing system for WordPress with multi-role supp
 
 ## 安装
 
-1. Place this plugin in your WordPress plugins directory:
+1. 将此插件放置在 WordPress 插件目录中：
    - `wp-content/plugins/escalated`
-2. Activate **Escalated** from the WordPress Plugins screen.
-3. Go to **Escalated** in wp-admin and configure:
-   - Departments
-   - SLA Policies
-   - Escalation Rules
-   - Settings
+2. 从 WordPress 插件界面激活 **Escalated**。
+3. 在 wp-admin 中进入 **Escalated** 并配置：
+   - 部门
+   - SLA 策略
+   - 升级规则
+   - 设置
 
-## Frontend Shortcodes
+## 前端短代码
 
-Use these shortcodes on WordPress pages:
+在 WordPress 页面中使用这些短代码：
 
-- `[escalated_tickets]` - Logged-in requester ticket list.
-- `[escalated_create_ticket]` - Logged-in requester new ticket form.
-- `[escalated_view_ticket]` - Ticket detail view:
-  - Logged-in users: expects `?ticket=ESC-123`
-  - Guests: expects `?guest_token=<token>`
-- `[escalated_guest_create]` - Guest ticket creation form (if enabled in settings).
+- `[escalated_tickets]` - 已登录请求者的工单列表。
+- `[escalated_create_ticket]` - 已登录请求者的新工单表单。
+- `[escalated_view_ticket]` - 工单详情视图：
+  - 已登录用户：需要 `?ticket=ESC-123`
+  - 访客：需要 `?guest_token=<token>`
+- `[escalated_guest_create]` - 访客工单创建表单（如果在设置中启用）。
 
 ## REST API
 
-- Namespace: `/wp-json/escalated/v1`
-- Auth: `Authorization: Bearer <api-token>`
-- Default rate limit: `60` requests/minute per token (configurable via `api_rate_limit` setting)
+- 命名空间：`/wp-json/escalated/v1`
+- 认证：`Authorization: Bearer <api-token>`
+- 默认速率限制：每个令牌 `60` 次请求/分钟（可通过 `api_rate_limit` 设置配置）
 
-Main route groups:
+主要路由组：
 
 - `/auth/validate`
 - `/tickets`
@@ -114,52 +114,52 @@ Main route groups:
 - `/dashboard`
 - `/admin/api-tokens`
 
-## Inbound Email Webhooks
+## 入站邮件 Webhook
 
-Inbound route pattern:
+入站路由模式：
 
 - `POST /wp-json/escalated/v1/inbound/{adapter}`
 
-Supported adapters:
+支持的适配器：
 
 - `mailgun`
 - `postmark`
 - `ses`
 
-## Scheduled Tasks (WP-Cron)
+## 定时任务 (WP-Cron)
 
-On activation, Escalated schedules:
+激活时，Escalated 会安排以下任务：
 
-- `escalated_check_sla` (every minute)
-- `escalated_evaluate_escalations` (every 5 minutes)
-- `escalated_auto_close` (daily)
-- `escalated_purge_activities` (weekly)
+- `escalated_check_sla`（每分钟）
+- `escalated_evaluate_escalations`（每 5 分钟）
+- `escalated_auto_close`（每天）
+- `escalated_purge_activities`（每周）
 
-## Development
+## 开发
 
-Install dependencies:
+安装依赖：
 
 ```bash
 composer install
 ```
 
-Run tests (WordPress test suite required):
+运行测试（需要 WordPress 测试套件）：
 
 ```bash
 vendor/bin/phpunit -c phpunit.xml.dist
 ```
 
-If needed, set `WP_TESTS_DIR` to your local WordPress tests library path before running PHPUnit.
+如果需要，在运行 PHPUnit 之前将 `WP_TESTS_DIR` 设置为本地 WordPress 测试库路径。
 
 ## 其他框架版本
 
-- **[Escalated for Laravel](https://github.com/escalated-dev/escalated-laravel)** — Laravel Composer package
-- **[Escalated for Rails](https://github.com/escalated-dev/escalated-rails)** — Ruby on Rails engine
-- **[Escalated for Django](https://github.com/escalated-dev/escalated-django)** — Django reusable app
-- **[Escalated for AdonisJS](https://github.com/escalated-dev/escalated-adonis)** — AdonisJS v6 package
-- **[Escalated for Filament](https://github.com/escalated-dev/escalated-filament)** — Filament v3 admin panel plugin
-- **[Escalated for WordPress](https://github.com/escalated-dev/escalated-wordpress)** — WordPress plugin (you are here)
-- **[Shared Frontend](https://github.com/escalated-dev/escalated)** — Vue 3 + Inertia.js UI components
+- **[Escalated for Laravel](https://github.com/escalated-dev/escalated-laravel)** — Laravel Composer 包
+- **[Escalated for Rails](https://github.com/escalated-dev/escalated-rails)** — Ruby on Rails Engine
+- **[Escalated for Django](https://github.com/escalated-dev/escalated-django)** — Django 可复用应用
+- **[Escalated for AdonisJS](https://github.com/escalated-dev/escalated-adonis)** — AdonisJS v6 包
+- **[Escalated for Filament](https://github.com/escalated-dev/escalated-filament)** — Filament v3 管理面板插件
+- **[Escalated for WordPress](https://github.com/escalated-dev/escalated-wordpress)** — WordPress 插件（当前页面）
+- **[Shared Frontend](https://github.com/escalated-dev/escalated)** — Vue 3 + Inertia.js UI 组件
 
 ## 许可证
 

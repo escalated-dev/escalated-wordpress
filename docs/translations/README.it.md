@@ -23,51 +23,51 @@
 [![WordPress](https://img.shields.io/badge/wordpress-%3E%3D6.0-21759B)](https://wordpress.org/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-A full-featured helpdesk and ticketing system for WordPress with multi-role support, SLA tracking, escalation rules, inbound email processing, macros, and a REST API. No external services required.
+Un sistema completo di helpdesk e ticketing per WordPress con supporto multi-ruolo, tracciamento SLA, regole di escalation, elaborazione email in entrata, macro e una REST API. Nessun servizio esterno richiesto.
 
-> **[escalated.dev](https://escalated.dev)** — Learn more, view demos, and compare Cloud vs Self-Hosted options.
+> **[escalated.dev](https://escalated.dev)** — Scopri di più, guarda le demo e confronta le opzioni Cloud vs Self-Hosted.
 
 ## Screenshots
 
-| Ticket List | Ticket Detail |
+| Lista ticket | Dettaglio ticket |
 |:-----------:|:-------------:|
-| ![Ticket List](screenshots/results/ticket-list.png) | ![Ticket Detail](screenshots/results/ticket-detail.png) |
+| ![Lista ticket](screenshots/results/ticket-list.png) | ![Dettaglio ticket](screenshots/results/ticket-detail.png) |
 
-| Departments | SLA Policies |
+| Dipartimenti | Politiche SLA |
 |:-----------:|:------------:|
-| ![Departments](screenshots/results/departments.png) | ![SLA Policies](screenshots/results/sla-policies.png) |
+| ![Dipartimenti](screenshots/results/departments.png) | ![Politiche SLA](screenshots/results/sla-policies.png) |
 
-| Reports | Settings |
+| Report | Impostazioni |
 |:-------:|:--------:|
-| ![Reports](screenshots/results/reports.png) | ![Settings](screenshots/results/settings.png) |
+| ![Report](screenshots/results/reports.png) | ![Impostazioni](screenshots/results/settings.png) |
 
-| Automations | Macros |
+| Automazioni | Macro |
 |:-----------:|:------:|
-| ![Automations](screenshots/results/automations.png) | ![Macros](screenshots/results/macros.png) |
+| ![Automazioni](screenshots/results/automations.png) | ![Macro](screenshots/results/macros.png) |
 
-> Screenshots are auto-generated via Playwright on every release. See `.github/workflows/screenshots.yml`.
+> Gli screenshot vengono generati automaticamente tramite Playwright ad ogni release. Vedi `.github/workflows/screenshots.yml`.
 
 ## Download
 
 [![Download Latest Release](https://img.shields.io/badge/Download-Latest%20Release-2ea44f?style=for-the-badge&logo=github)](https://github.com/escalated-dev/escalated-wordpress/releases/latest)
 
-- Latest plugin package: [escalated.zip](https://github.com/escalated-dev/escalated-wordpress/releases/latest/download/escalated.zip)
-- All releases: [Releases](https://github.com/escalated-dev/escalated-wordpress/releases)
+- Ultimo pacchetto del plugin: [escalated.zip](https://github.com/escalated-dev/escalated-wordpress/releases/latest/download/escalated.zip)
+- Tutte le release: [Releases](https://github.com/escalated-dev/escalated-wordpress/releases)
 
 ## Funzionalità
 
-- Ticket management with threaded conversations, internal notes, and activity timeline.
-- Custom support roles: `escalated_admin` and `escalated_agent`.
-- Department-based routing and assignment workflows.
-- SLA policies with first-response and resolution targets.
-- Automated escalation rules and scheduled SLA checks.
-- Customer-facing frontend ticket pages via shortcodes.
-- Guest ticket submission and secure guest ticket access.
-- Inbound email ingestion via Mailgun, Postmark, and Amazon SES webhooks.
-- Canned responses, macros, and tag management.
-- Bearer token REST API with per-token abilities and rate limiting.
-- Attachment support with configurable upload limits.
-- Satisfaction ratings and reporting views.
+- Gestione ticket con conversazioni in thread, note interne e timeline delle attività.
+- Ruoli di supporto personalizzati: `escalated_admin` e `escalated_agent`.
+- Instradamento basato sui dipartimenti e workflow di assegnazione.
+- Politiche SLA con obiettivi di prima risposta e risoluzione.
+- Regole di escalation automatizzate e controlli SLA programmati.
+- Pagine ticket frontend per i clienti tramite shortcode.
+- Invio ticket ospite e accesso sicuro ai ticket ospite.
+- Acquisizione email in entrata tramite webhook Mailgun, Postmark e Amazon SES.
+- Risposte predefinite, macro e gestione tag.
+- REST API con token Bearer, permessi per token e limitazione della frequenza.
+- Supporto allegati con limiti di upload configurabili.
+- Valutazioni di soddisfazione e viste report.
 
 ## Requisiti
 
@@ -76,33 +76,33 @@ A full-featured helpdesk and ticketing system for WordPress with multi-role supp
 
 ## Installazione
 
-1. Place this plugin in your WordPress plugins directory:
+1. Posiziona questo plugin nella directory dei plugin di WordPress:
    - `wp-content/plugins/escalated`
-2. Activate **Escalated** from the WordPress Plugins screen.
-3. Go to **Escalated** in wp-admin and configure:
-   - Departments
-   - SLA Policies
-   - Escalation Rules
-   - Settings
+2. Attiva **Escalated** dalla schermata Plugin di WordPress.
+3. Vai su **Escalated** in wp-admin e configura:
+   - Dipartimenti
+   - Politiche SLA
+   - Regole di escalation
+   - Impostazioni
 
 ## Frontend Shortcodes
 
-Use these shortcodes on WordPress pages:
+Usa questi shortcode nelle pagine WordPress:
 
-- `[escalated_tickets]` - Logged-in requester ticket list.
-- `[escalated_create_ticket]` - Logged-in requester new ticket form.
-- `[escalated_view_ticket]` - Ticket detail view:
-  - Logged-in users: expects `?ticket=ESC-123`
-  - Guests: expects `?guest_token=<token>`
-- `[escalated_guest_create]` - Guest ticket creation form (if enabled in settings).
+- `[escalated_tickets]` - Lista ticket del richiedente autenticato.
+- `[escalated_create_ticket]` - Modulo nuovo ticket per richiedenti autenticati.
+- `[escalated_view_ticket]` - Vista dettagliata del ticket:
+  - Utenti autenticati: si aspetta `?ticket=ESC-123`
+  - Ospiti: si aspetta `?guest_token=<token>`
+- `[escalated_guest_create]` - Modulo di creazione ticket ospite (se abilitato nelle impostazioni).
 
 ## REST API
 
 - Namespace: `/wp-json/escalated/v1`
 - Auth: `Authorization: Bearer <api-token>`
-- Default rate limit: `60` requests/minute per token (configurable via `api_rate_limit` setting)
+- Limite di frequenza predefinito: `60` richieste/minuto per token (configurabile tramite l'impostazione `api_rate_limit`)
 
-Main route groups:
+Gruppi di route principali:
 
 - `/auth/validate`
 - `/tickets`
@@ -114,52 +114,52 @@ Main route groups:
 - `/dashboard`
 - `/admin/api-tokens`
 
-## Inbound Email Webhooks
+## Webhook email in entrata
 
-Inbound route pattern:
+Pattern route in entrata:
 
 - `POST /wp-json/escalated/v1/inbound/{adapter}`
 
-Supported adapters:
+Adapter supportati:
 
 - `mailgun`
 - `postmark`
 - `ses`
 
-## Scheduled Tasks (WP-Cron)
+## Attività programmate (WP-Cron)
 
-On activation, Escalated schedules:
+All'attivazione, Escalated programma:
 
-- `escalated_check_sla` (every minute)
-- `escalated_evaluate_escalations` (every 5 minutes)
-- `escalated_auto_close` (daily)
-- `escalated_purge_activities` (weekly)
+- `escalated_check_sla` (ogni minuto)
+- `escalated_evaluate_escalations` (ogni 5 minuti)
+- `escalated_auto_close` (giornaliero)
+- `escalated_purge_activities` (settimanale)
 
-## Development
+## Sviluppo
 
-Install dependencies:
+Installare le dipendenze:
 
 ```bash
 composer install
 ```
 
-Run tests (WordPress test suite required):
+Eseguire i test (suite di test WordPress richiesta):
 
 ```bash
 vendor/bin/phpunit -c phpunit.xml.dist
 ```
 
-If needed, set `WP_TESTS_DIR` to your local WordPress tests library path before running PHPUnit.
+Se necessario, imposta `WP_TESTS_DIR` con il percorso della libreria di test WordPress locale prima di eseguire PHPUnit.
 
 ## Disponibile Anche Per
 
-- **[Escalated for Laravel](https://github.com/escalated-dev/escalated-laravel)** — Laravel Composer package
-- **[Escalated for Rails](https://github.com/escalated-dev/escalated-rails)** — Ruby on Rails engine
-- **[Escalated for Django](https://github.com/escalated-dev/escalated-django)** — Django reusable app
-- **[Escalated for AdonisJS](https://github.com/escalated-dev/escalated-adonis)** — AdonisJS v6 package
-- **[Escalated for Filament](https://github.com/escalated-dev/escalated-filament)** — Filament v3 admin panel plugin
-- **[Escalated for WordPress](https://github.com/escalated-dev/escalated-wordpress)** — WordPress plugin (you are here)
-- **[Shared Frontend](https://github.com/escalated-dev/escalated)** — Vue 3 + Inertia.js UI components
+- **[Escalated for Laravel](https://github.com/escalated-dev/escalated-laravel)** — Pacchetto Composer per Laravel
+- **[Escalated for Rails](https://github.com/escalated-dev/escalated-rails)** — Engine Ruby on Rails
+- **[Escalated for Django](https://github.com/escalated-dev/escalated-django)** — App riutilizzabile Django
+- **[Escalated for AdonisJS](https://github.com/escalated-dev/escalated-adonis)** — Pacchetto AdonisJS v6
+- **[Escalated for Filament](https://github.com/escalated-dev/escalated-filament)** — Plugin pannello admin Filament v3
+- **[Escalated for WordPress](https://github.com/escalated-dev/escalated-wordpress)** — Plugin WordPress (sei qui)
+- **[Shared Frontend](https://github.com/escalated-dev/escalated)** — Componenti UI Vue 3 + Inertia.js
 
 ## Licenza
 
