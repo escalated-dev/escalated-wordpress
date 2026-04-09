@@ -1,18 +1,18 @@
 <p align="center">
-  <a href="docs/translations/README.ar.md">العربية</a> •
-  <a href="docs/translations/README.de.md">Deutsch</a> •
-  <b>English</b> •
-  <a href="docs/translations/README.es.md">Español</a> •
-  <a href="docs/translations/README.fr.md">Français</a> •
-  <a href="docs/translations/README.it.md">Italiano</a> •
-  <a href="docs/translations/README.ja.md">日本語</a> •
-  <a href="docs/translations/README.ko.md">한국어</a> •
-  <a href="docs/translations/README.nl.md">Nederlands</a> •
-  <a href="docs/translations/README.pl.md">Polski</a> •
-  <a href="docs/translations/README.pt-BR.md">Português (BR)</a> •
-  <a href="docs/translations/README.ru.md">Русский</a> •
-  <a href="docs/translations/README.tr.md">Türkçe</a> •
-  <a href="docs/translations/README.zh-CN.md">简体中文</a>
+  <b>العربية</b> •
+  <a href="README.de.md">Deutsch</a> •
+  <a href="../../README.md">English</a> •
+  <a href="README.es.md">Español</a> •
+  <a href="README.fr.md">Français</a> •
+  <a href="README.it.md">Italiano</a> •
+  <a href="README.ja.md">日本語</a> •
+  <a href="README.ko.md">한국어</a> •
+  <a href="README.nl.md">Nederlands</a> •
+  <a href="README.pl.md">Polski</a> •
+  <a href="README.pt-BR.md">Português (BR)</a> •
+  <a href="README.ru.md">Русский</a> •
+  <a href="README.tr.md">Türkçe</a> •
+  <a href="README.zh-CN.md">简体中文</a>
 </p>
 
 # Escalated for WordPress
@@ -54,7 +54,7 @@ A full-featured helpdesk and ticketing system for WordPress with multi-role supp
 - Latest plugin package: [escalated.zip](https://github.com/escalated-dev/escalated-wordpress/releases/latest/download/escalated.zip)
 - All releases: [Releases](https://github.com/escalated-dev/escalated-wordpress/releases)
 
-## Features
+## الميزات
 
 - Ticket management with threaded conversations, internal notes, and activity timeline.
 - Custom support roles: `escalated_admin` and `escalated_agent`.
@@ -69,12 +69,12 @@ A full-featured helpdesk and ticketing system for WordPress with multi-role supp
 - Attachment support with configurable upload limits.
 - Satisfaction ratings and reporting views.
 
-## Requirements
+## المتطلبات
 
 - WordPress `6.0+`
 - PHP `8.1+`
 
-## Installation
+## التثبيت
 
 1. Place this plugin in your WordPress plugins directory:
    - `wp-content/plugins/escalated`
@@ -151,7 +151,7 @@ vendor/bin/phpunit -c phpunit.xml.dist
 
 If needed, set `WP_TESTS_DIR` to your local WordPress tests library path before running PHPUnit.
 
-## Also Available For
+## متوفر أيضاً لـ
 
 - **[Escalated for Laravel](https://github.com/escalated-dev/escalated-laravel)** — Laravel Composer package
 - **[Escalated for Rails](https://github.com/escalated-dev/escalated-rails)** — Ruby on Rails engine
@@ -161,6 +161,6 @@ If needed, set `WP_TESTS_DIR` to your local WordPress tests library path before 
 - **[Escalated for WordPress](https://github.com/escalated-dev/escalated-wordpress)** — WordPress plugin (you are here)
 - **[Shared Frontend](https://github.com/escalated-dev/escalated)** — Vue 3 + Inertia.js UI components
 
-## License
+## الرخصة
 
 MIT
