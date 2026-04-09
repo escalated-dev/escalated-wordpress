@@ -9,7 +9,7 @@ class Test_Workflow_Engine extends TestCase
 
     protected function setUp(): void
     {
-        $this->engine = new WorkflowEngine();
+        $this->engine = new WorkflowEngine;
     }
 
     public function test_evaluate_and_conditions()

@@ -5,7 +5,9 @@ namespace Jeremykenedy\Escalated\Services;
 class WorkflowEngine
 {
     public const OPERATORS = ['equals', 'not_equals', 'contains', 'not_contains', 'starts_with', 'ends_with', 'greater_than', 'less_than', 'greater_or_equal', 'less_or_equal', 'is_empty', 'is_not_empty'];
+
     public const ACTION_TYPES = ['change_status', 'assign_agent', 'change_priority', 'add_tag', 'remove_tag', 'set_department', 'add_note', 'send_webhook', 'set_type', 'delay', 'add_follower', 'send_notification'];
+
     public const TRIGGER_EVENTS = ['ticket.created', 'ticket.updated', 'ticket.status_changed', 'ticket.assigned', 'ticket.priority_changed', 'ticket.tagged', 'ticket.department_changed', 'reply.created', 'reply.agent_reply', 'sla.warning', 'sla.breached', 'ticket.reopened'];
 
     public function evaluateConditions(array $conditions, array $ticket): bool
