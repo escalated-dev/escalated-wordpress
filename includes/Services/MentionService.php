@@ -1,6 +1,6 @@
 <?php
 
-namespace Jeremykenedy\Escalated\Services;
+namespace Escalated\Services;
 
 class MentionService
 {

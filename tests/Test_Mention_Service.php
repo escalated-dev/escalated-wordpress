@@ -1,6 +1,6 @@
 <?php
 
-use Jeremykenedy\Escalated\Services\MentionService;
+use Escalated\Services\MentionService;
 use PHPUnit\Framework\TestCase;
 
 class Test_Mention_Service extends TestCase
