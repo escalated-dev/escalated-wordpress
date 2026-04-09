@@ -1,6 +1,6 @@
 <?php
 
-use Jeremykenedy\Escalated\Services\WorkflowEngine;
+use Escalated\Services\WorkflowEngine;
 use PHPUnit\Framework\TestCase;
 
 class Test_Workflow_Engine extends TestCase
