@@ -10,6 +10,7 @@ class AdvancedReportingService
             return [];
         }
         sort($values);
+
         return [
             'p50' => self::percentileValue($values, 50),
             'p75' => self::percentileValue($values, 75),
@@ -30,6 +31,7 @@ class AdvancedReportingService
         if ($f === $c) {
             return round($sorted[$f], 2);
         }
+
         return round($sorted[$f] + ($k - $f) * ($sorted[$c] - $sorted[$f]), 2);
     }
 
@@ -49,6 +51,7 @@ class AdvancedReportingService
                 $buckets[] = ['range' => "{$start}-{$end}", 'count' => $count];
             }
         }
+
         return [
             'buckets' => $buckets,
             'stats' => [
@@ -79,6 +82,7 @@ class AdvancedReportingService
             $score += ($avgCsat / 5) * 20;
             $weights += 20;
         }
+
         return $weights > 0 ? round(($score / $weights) * 100, 1) : 0;
     }
 
@@ -86,9 +90,10 @@ class AdvancedReportingService
     {
         $days = min(max((int) $from->diff($to)->days + 1, 1), 90);
         $dates = [];
-        for ($i = 0; $i < $days; ++$i) {
+        for ($i = 0; $i < $days; $i++) {
             $dates[] = (clone $from)->modify("+{$i} days");
         }
+
         return $dates;
     }
 
@@ -100,6 +105,7 @@ class AdvancedReportingService
             $prev = (float) ($previous[$key] ?? 0);
             $changes[$key] = $prev == 0 ? ($cur > 0 ? 100.0 : 0.0) : round(($cur - $prev) / $prev * 100, 1);
         }
+
         return $changes;
     }
 }
