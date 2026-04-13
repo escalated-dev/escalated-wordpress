@@ -115,7 +115,7 @@ if ($requester_email) {
                         <ul style="margin: 5px 0 0; padding-left: 20px;">
                             <?php foreach ($attachments as $att) { ?>
                                 <li>
-                                    <a href="<?php echo esc_url(wp_upload_dir()['baseurl'].'/'.$att->path); ?>" target="_blank">
+                                    <a href="<?php echo esc_url(\Escalated\Services\AttachmentService::path_to_url($att->path) ?? '#'); ?>" target="_blank">
                                         <?php echo esc_html($att->original_filename); ?>
                                     </a>
                                     <span class="escalated-text-muted" style="font-size: 12px;">(<?php echo esc_html(size_format($att->size)); ?>)</span>
@@ -162,7 +162,7 @@ if ($requester_email) {
                                 <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--esc-wp-border-light);">
                                     <small><?php esc_html_e('Attachments:', 'escalated'); ?></small>
                                     <?php foreach ($reply_attachments as $att) { ?>
-                                        <a href="<?php echo esc_url(wp_upload_dir()['baseurl'].'/'.$att->path); ?>" target="_blank" style="margin-left: 5px; font-size: 12px;">
+                                        <a href="<?php echo esc_url(\Escalated\Services\AttachmentService::path_to_url($att->path) ?? '#'); ?>" target="_blank" style="margin-left: 5px; font-size: 12px;">
                                             <?php echo esc_html($att->original_filename); ?>
                                         </a>
                                     <?php } ?>

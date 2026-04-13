@@ -27,8 +27,8 @@ class AttachmentService
         $this->validate_file($file);
 
         // Ensure the upload handler is available.
-        if (! function_exists('wp_handle_upload')) {
-            require_once ABSPATH.'wp-admin/includes/file.php';
+        if (!function_exists('wp_handle_upload')) {
+            require_once ABSPATH . 'wp-admin/includes/file.php';
         }
 
         $upload_overrides = [
@@ -120,12 +120,12 @@ class AttachmentService
     public function delete(int $attachment_id): bool
     {
         $attachment = $this->find($attachment_id);
-        if (! $attachment) {
+        if (!$attachment) {
             return false;
         }
 
         // Delete the file from disk.
-        if (! empty($attachment->path) && file_exists($attachment->path)) {
+        if (!empty($attachment->path) && file_exists($attachment->path)) {
             wp_delete_file($attachment->path);
         }
 
@@ -149,7 +149,7 @@ class AttachmentService
     public function validate_file(array $file): void
     {
         // Check for upload errors.
-        if (! empty($file['error']) && $file['error'] !== UPLOAD_ERR_OK) {
+        if (!empty($file['error']) && $file['error'] !== UPLOAD_ERR_OK) {
             $error_messages = [
                 UPLOAD_ERR_INI_SIZE => 'File exceeds the server upload size limit.',
                 UPLOAD_ERR_FORM_SIZE => 'File exceeds the form upload size limit.',
@@ -234,5 +234,64 @@ class AttachmentService
         );
 
         return $results ?: [];
+    }
+
+    /**
+     * Convert an absolute file path to its public URL.
+     *
+     * The stored path is an absolute server path produced by wp_handle_upload().
+     * This method replaces the upload basedir prefix with the corresponding
+     * baseurl so the file can be referenced from the browser.
+     *
+     * @param  string  $absolute_path  Absolute path on disk.
+     * @return string|null  Public URL, or null if the path is outside the uploads directory.
+     */
+    public static function path_to_url(string $absolute_path): ?string
+    {
+        $uploads = wp_upload_dir();
+        $basedir = wp_normalize_path($uploads['basedir']);
+        $normalized = wp_normalize_path($absolute_path);
+
+        if (strpos($normalized, $basedir) !== 0) {
+            return null;
+        }
+
+        $relative = substr($normalized, strlen($basedir));
+
+        return $uploads['baseurl'] . $relative;
+    }
+
+    /**
+     * Format an attachment record for JSON serialization.
+     *
+     * Adds a `url` field so consumers can link directly to the file.
+     *
+     * @param  object  $attachment  A raw DB row from the attachments table.
+     * @return array  Serializable attachment array including `url`.
+     */
+    public static function format_attachment(object $attachment): array
+    {
+        return [
+            'id' => (int) $attachment->id,
+            'attachable_type' => $attachment->attachable_type,
+            'attachable_id' => (int) $attachment->attachable_id,
+            'filename' => $attachment->filename,
+            'original_filename' => $attachment->original_filename,
+            'mime_type' => $attachment->mime_type,
+            'size' => (int) $attachment->size,
+            'url' => self::path_to_url($attachment->path ?? ''),
+            'created_at' => $attachment->created_at,
+        ];
+    }
+
+    /**
+     * Format an array of attachment records for JSON serialization.
+     *
+     * @param  array  $attachments  Array of raw DB attachment objects.
+     * @return array  Array of serializable attachment arrays.
+     */
+    public static function format_many(array $attachments): array
+    {
+        return array_map([self::class, 'format_attachment'], $attachments);
     }
 }
