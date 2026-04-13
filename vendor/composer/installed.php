@@ -3,7 +3,7 @@
         'name' => 'escalated/escalated-wordpress',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'bf3a4ed7ee1611d8c40c0175c0334c86f7195497',
+        'reference' => 'b594d1ad5a3cc351fadaeae901524c9c84e48978',
         'type' => 'wordpress-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -22,7 +22,7 @@
         'escalated/escalated-wordpress' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'bf3a4ed7ee1611d8c40c0175c0334c86f7195497',
+            'reference' => 'b594d1ad5a3cc351fadaeae901524c9c84e48978',
             'type' => 'wordpress-plugin',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
