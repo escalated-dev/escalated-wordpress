@@ -4,6 +4,7 @@ namespace Escalated\Models;
 
 use Escalated\Escalated;
 use Escalated\Services\TicketSnoozeService;
+use Escalated\Services\TicketSplitService;
 
 class Ticket
 {
@@ -359,7 +360,9 @@ class Ticket
      * Add computed properties to a ticket object for API serialization.
      *
      * Adds: requester_name, requester_email, last_reply_at,
-     * last_reply_author, is_live_chat, is_snoozed.
+     * last_reply_author, is_live_chat, is_snoozed, chat_session_id,
+     * chat_started_at, chat_messages, chat_metadata,
+     * requester_ticket_count, related_tickets.
      *
      * @param  object  $ticket  A raw ticket row from the database.
      * @return object The same ticket object with computed fields appended.
@@ -411,6 +414,53 @@ class Ticket
         $snooze_service = new TicketSnoozeService;
         $snoozed_until = $snooze_service->get_snooze_until((int) $ticket->id);
         $ticket->is_snoozed = ! empty($snoozed_until) && strtotime($snoozed_until) > time();
+
+        // Chat session context.
+        $chat_session = ChatSession::find_by_ticket_id((int) $ticket->id);
+        $ticket->chat_session_id = $chat_session ? (int) $chat_session->id : null;
+        $ticket->chat_started_at = $chat_session ? $chat_session->created_at : null;
+        $ticket->chat_metadata = $chat_session && ! empty($chat_session->metadata)
+            ? json_decode($chat_session->metadata, true)
+            : null;
+
+        // Chat messages (replies on the linked ticket).
+        if ($chat_session) {
+            $chat_replies = Reply::for_ticket((int) $ticket->id, false);
+            $ticket->chat_messages = array_map(function ($reply) {
+                return [
+                    'id' => (int) $reply->id,
+                    'body' => $reply->body,
+                    'author_id' => $reply->author_id ? (int) $reply->author_id : null,
+                    'created_at' => $reply->created_at,
+                ];
+            }, $chat_replies);
+        } else {
+            $ticket->chat_messages = [];
+        }
+
+        // Requester ticket count.
+        $ticket->requester_ticket_count = 0;
+        if (! empty($ticket->requester_id)) {
+            $tickets_table = static::table();
+            $ticket->requester_ticket_count = (int) $wpdb->get_var(
+                $wpdb->prepare(
+                    "SELECT COUNT(*) FROM {$tickets_table} WHERE requester_id = %d AND deleted_at IS NULL",
+                    (int) $ticket->requester_id
+                )
+            );
+        }
+
+        // Related (linked) tickets.
+        $linked = TicketSplitService::get_linked_tickets((int) $ticket->id);
+        $ticket->related_tickets = array_map(function ($link) {
+            return [
+                'id' => (int) $link->id,
+                'reference' => $link->reference,
+                'subject' => $link->subject,
+                'status' => $link->status,
+                'link_type' => $link->link_type ?? 'related',
+            ];
+        }, $linked);
 
         return $ticket;
     }

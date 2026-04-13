@@ -91,6 +91,20 @@ class Admin_Tickets
 
         $replies = Reply::for_ticket($ticket_id);
         $activities = TicketActivity::for_ticket($ticket_id);
+
+        // Add human-readable timestamps to activities.
+        $activities = array_map(function ($activity) {
+            if (! empty($activity->created_at)) {
+                $activity->created_at_human = human_time_diff(
+                    strtotime($activity->created_at),
+                    current_time('timestamp')
+                ).' '.__('ago', 'escalated');
+            } else {
+                $activity->created_at_human = null;
+            }
+
+            return $activity;
+        }, $activities);
         $tags = Tag::for_ticket($ticket_id);
         $all_tags = Tag::all();
         $statuses = Enums::ticket_statuses();

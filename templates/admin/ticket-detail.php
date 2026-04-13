@@ -248,7 +248,7 @@ if ($requester_email) {
                             $props = $activity->properties ? json_decode($activity->properties, true) : [];
                             ?>
                             <li style="padding: 8px 0; border-bottom: 1px solid var(--esc-wp-border-light); font-size: 13px;" class="escalated-text-secondary">
-                                <span class="escalated-text-muted" style="font-size: 12px;"><?php echo esc_html($activity->created_at); ?></span>
+                                <span class="escalated-text-muted" style="font-size: 12px;" title="<?php echo esc_attr($activity->created_at); ?>"><?php echo esc_html($activity->created_at_human ?? $activity->created_at); ?></span>
                                 &mdash;
                                 <strong><?php echo esc_html($causer_name); ?></strong>:
                                 <?php echo esc_html($type_label); ?>

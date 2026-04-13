@@ -498,7 +498,21 @@ class Ticket_Controller extends Base_Controller
 
         $replies = Reply::for_ticket($ticket->id);
         $tags = Tag::for_ticket($ticket->id);
-        $activities = TicketActivity::for_ticket($ticket->id);
+        $raw_activities = TicketActivity::for_ticket($ticket->id);
+
+        // Add human-readable timestamps to activities.
+        $activities = array_map(function ($activity) {
+            if (! empty($activity->created_at)) {
+                $activity->created_at_human = human_time_diff(
+                    strtotime($activity->created_at),
+                    current_time('timestamp')
+                ).' '.__('ago', 'escalated');
+            } else {
+                $activity->created_at_human = null;
+            }
+
+            return $activity;
+        }, $raw_activities);
 
         // Load attachments for the ticket and each reply.
         $attachment_service = new AttachmentService;
