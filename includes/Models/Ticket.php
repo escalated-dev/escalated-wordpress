@@ -3,6 +3,7 @@
 namespace Escalated\Models;
 
 use Escalated\Escalated;
+use Escalated\Services\TicketSnoozeService;
 
 class Ticket
 {
@@ -352,5 +353,76 @@ class Ticket
                 $user_id
             )
         );
+    }
+
+    /**
+     * Add computed properties to a ticket object for API serialization.
+     *
+     * Adds: requester_name, requester_email, last_reply_at,
+     * last_reply_author, is_live_chat, is_snoozed.
+     *
+     * @param  object  $ticket  A raw ticket row from the database.
+     * @return object The same ticket object with computed fields appended.
+     */
+    public static function enrich(object $ticket): object
+    {
+        global $wpdb;
+
+        // requester_name / requester_email.
+        $requester_name = null;
+        $requester_email = null;
+
+        if (! empty($ticket->requester_id)) {
+            $user = get_userdata((int) $ticket->requester_id);
+            if ($user) {
+                $requester_name = $user->display_name;
+                $requester_email = $user->user_email;
+            }
+        }
+
+        $ticket->requester_name = $requester_name
+            ?? ($ticket->guest_name ?? null)
+            ?? ($ticket->guest_email ?? null);
+        $ticket->requester_email = $requester_email
+            ?? ($ticket->guest_email ?? null);
+
+        // last_reply_at / last_reply_author.
+        $reply_table = Escalated::table('replies');
+        $last_reply = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT created_at, author_id FROM {$reply_table} WHERE ticket_id = %d AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 1",
+                $ticket->id
+            )
+        );
+
+        $ticket->last_reply_at = $last_reply ? $last_reply->created_at : null;
+        $ticket->last_reply_author = null;
+
+        if ($last_reply && ! empty($last_reply->author_id)) {
+            $author = get_userdata((int) $last_reply->author_id);
+            $ticket->last_reply_author = $author ? $author->display_name : null;
+        }
+
+        // is_live_chat.
+        $ticket->is_live_chat = ($ticket->status ?? '') === 'live'
+            && ($ticket->channel ?? '') === 'chat';
+
+        // is_snoozed.
+        $snooze_service = new TicketSnoozeService;
+        $snoozed_until = $snooze_service->get_snooze_until((int) $ticket->id);
+        $ticket->is_snoozed = ! empty($snoozed_until) && strtotime($snoozed_until) > time();
+
+        return $ticket;
+    }
+
+    /**
+     * Add computed properties to an array of ticket objects.
+     *
+     * @param  array  $tickets  Array of ticket row objects.
+     * @return array The same array with each ticket enriched.
+     */
+    public static function enrich_many(array $tickets): array
+    {
+        return array_map([static::class, 'enrich'], $tickets);
     }
 }
