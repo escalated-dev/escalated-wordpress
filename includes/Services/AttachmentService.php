@@ -27,8 +27,8 @@ class AttachmentService
         $this->validate_file($file);
 
         // Ensure the upload handler is available.
-        if (! function_exists('wp_handle_upload')) {
-            require_once ABSPATH.'wp-admin/includes/file.php';
+        if (!function_exists('wp_handle_upload')) {
+            require_once ABSPATH . 'wp-admin/includes/file.php';
         }
 
         $upload_overrides = [
@@ -120,12 +120,12 @@ class AttachmentService
     public function delete(int $attachment_id): bool
     {
         $attachment = $this->find($attachment_id);
-        if (! $attachment) {
+        if (!$attachment) {
             return false;
         }
 
         // Delete the file from disk.
-        if (! empty($attachment->path) && file_exists($attachment->path)) {
+        if (!empty($attachment->path) && file_exists($attachment->path)) {
             wp_delete_file($attachment->path);
         }
 
@@ -149,7 +149,7 @@ class AttachmentService
     public function validate_file(array $file): void
     {
         // Check for upload errors.
-        if (! empty($file['error']) && $file['error'] !== UPLOAD_ERR_OK) {
+        if (!empty($file['error']) && $file['error'] !== UPLOAD_ERR_OK) {
             $error_messages = [
                 UPLOAD_ERR_INI_SIZE => 'File exceeds the server upload size limit.',
                 UPLOAD_ERR_FORM_SIZE => 'File exceeds the form upload size limit.',
