@@ -13,6 +13,7 @@ use Escalated\Models\Tag;
 use Escalated\Models\Ticket;
 use Escalated\Models\TicketActivity;
 use Escalated\Services\AssignmentService;
+use Escalated\Services\AttachmentService;
 use Escalated\Services\MacroService;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -499,7 +500,13 @@ class Ticket_Controller extends Base_Controller
         $tags = Tag::for_ticket($ticket->id);
         $activities = TicketActivity::for_ticket($ticket->id);
 
-        // Enrich replies with author info.
+        // Load attachments for the ticket and each reply.
+        $attachment_service = new AttachmentService;
+        $ticket_attachments = AttachmentService::format_many(
+            $attachment_service->get_for('ticket', $ticket->id)
+        );
+
+        // Enrich replies with author info and attachments.
         foreach ($replies as &$reply) {
             if (! empty($reply->author_id)) {
                 $author = get_userdata((int) $reply->author_id);
@@ -509,6 +516,9 @@ class Ticket_Controller extends Base_Controller
                     'email' => $author->user_email,
                 ] : null;
             }
+            $reply->attachments = AttachmentService::format_many(
+                $attachment_service->get_for('reply', $reply->id)
+            );
         }
         unset($reply);
 
@@ -541,6 +551,7 @@ class Ticket_Controller extends Base_Controller
             'replies' => $replies,
             'tags' => $tags,
             'activities' => $activities,
+            'attachments' => $ticket_attachments,
         ]);
     }
 
