@@ -6,6 +6,7 @@
 
 namespace Escalated\Api;
 
+use Escalated\Models\Ticket;
 use Escalated\Services\TicketSplitService;
 use WP_REST_Request;
 use WP_REST_Server;
@@ -66,7 +67,7 @@ class Ticket_Split_Controller extends Base_Controller
 
             return $this->success([
                 'message' => __('Ticket split successfully.', 'escalated'),
-                'ticket' => $new_ticket,
+                'ticket' => Ticket::enrich($new_ticket),
             ], 201);
         } catch (\InvalidArgumentException $e) {
             return $this->error('escalated_split_failed', $e->getMessage(), 404);

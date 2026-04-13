@@ -396,7 +396,7 @@ class Ticket_Controller extends Base_Controller
         $result = Ticket::all($filters);
 
         return $this->success([
-            'items' => $result['items'],
+            'items' => Ticket::enrich_many($result['items']),
             'total' => $result['total'],
             'per_page' => $result['per_page'],
             'current_page' => $result['current_page'],
@@ -471,7 +471,7 @@ class Ticket_Controller extends Base_Controller
 
         return $this->success([
             'message' => __('Ticket created successfully.', 'escalated'),
-            'ticket' => $ticket,
+            'ticket' => Ticket::enrich($ticket),
         ], 201);
     }
 
@@ -545,7 +545,7 @@ class Ticket_Controller extends Base_Controller
         }
 
         return $this->success([
-            'ticket' => $ticket,
+            'ticket' => Ticket::enrich($ticket),
             'requester' => $requester,
             'assigned' => $assigned,
             'replies' => $replies,
@@ -733,7 +733,7 @@ class Ticket_Controller extends Base_Controller
 
         return $this->success([
             'message' => __('Status updated successfully.', 'escalated'),
-            'ticket' => $updated_ticket,
+            'ticket' => Ticket::enrich($updated_ticket),
         ]);
     }
 
@@ -780,7 +780,7 @@ class Ticket_Controller extends Base_Controller
 
         return $this->success([
             'message' => __('Priority updated successfully.', 'escalated'),
-            'ticket' => $updated_ticket,
+            'ticket' => Ticket::enrich($updated_ticket),
         ]);
     }
 
@@ -824,7 +824,7 @@ class Ticket_Controller extends Base_Controller
 
         return $this->success([
             'message' => __('Ticket assigned successfully.', 'escalated'),
-            'ticket' => $updated_ticket,
+            'ticket' => Ticket::enrich($updated_ticket),
         ]);
     }
 
@@ -992,7 +992,7 @@ class Ticket_Controller extends Base_Controller
 
         return $this->success([
             'message' => __('Macro applied successfully.', 'escalated'),
-            'ticket' => $updated_ticket,
+            'ticket' => Ticket::enrich($updated_ticket),
         ]);
     }
 

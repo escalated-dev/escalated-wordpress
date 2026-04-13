@@ -6,6 +6,7 @@
 
 namespace Escalated\Api;
 
+use Escalated\Models\Ticket;
 use Escalated\Services\TicketSnoozeService;
 use WP_REST_Request;
 use WP_REST_Server;
@@ -99,7 +100,7 @@ class Ticket_Snooze_Controller extends Base_Controller
 
             return $this->success([
                 'message' => __('Ticket snoozed successfully.', 'escalated'),
-                'ticket' => $ticket,
+                'ticket' => Ticket::enrich($ticket),
             ]);
         } catch (\InvalidArgumentException $e) {
             return $this->error('escalated_snooze_failed', $e->getMessage());
@@ -127,7 +128,7 @@ class Ticket_Snooze_Controller extends Base_Controller
 
             return $this->success([
                 'message' => __('Ticket unsnoozed successfully.', 'escalated'),
-                'ticket' => $ticket,
+                'ticket' => Ticket::enrich($ticket),
             ]);
         } catch (\InvalidArgumentException $e) {
             return $this->error('escalated_unsnooze_failed', $e->getMessage());
