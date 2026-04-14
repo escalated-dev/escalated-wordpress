@@ -28,7 +28,7 @@ class AttachmentService
 
         // Ensure the upload handler is available.
         if (! function_exists('wp_handle_upload')) {
-            require_once ABSPATH . 'wp-admin/includes/file.php';
+            require_once ABSPATH.'wp-admin/includes/file.php';
         }
 
         $upload_overrides = [
@@ -244,7 +244,7 @@ class AttachmentService
      * baseurl so the file can be referenced from the browser.
      *
      * @param  string  $absolute_path  Absolute path on disk.
-     * @return string|null  Public URL, or null if the path is outside the uploads directory.
+     * @return string|null Public URL, or null if the path is outside the uploads directory.
      */
     public static function path_to_url(string $absolute_path): ?string
     {
@@ -258,7 +258,7 @@ class AttachmentService
 
         $relative = substr($normalized, strlen($basedir));
 
-        return $uploads['baseurl'] . $relative;
+        return $uploads['baseurl'].$relative;
     }
 
     /**
@@ -267,7 +267,7 @@ class AttachmentService
      * Adds a `url` field so consumers can link directly to the file.
      *
      * @param  object  $attachment  A raw DB row from the attachments table.
-     * @return array  Serializable attachment array including `url`.
+     * @return array Serializable attachment array including `url`.
      */
     public static function format_attachment(object $attachment): array
     {
@@ -288,7 +288,7 @@ class AttachmentService
      * Format an array of attachment records for JSON serialization.
      *
      * @param  array  $attachments  Array of raw DB attachment objects.
-     * @return array  Array of serializable attachment arrays.
+     * @return array Array of serializable attachment arrays.
      */
     public static function format_many(array $attachments): array
     {
