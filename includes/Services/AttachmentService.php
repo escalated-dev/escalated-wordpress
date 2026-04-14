@@ -120,7 +120,7 @@ class AttachmentService
     public function delete(int $attachment_id): bool
     {
         $attachment = $this->find($attachment_id);
-        if (!$attachment) {
+        if (! $attachment) {
             return false;
         }
 
