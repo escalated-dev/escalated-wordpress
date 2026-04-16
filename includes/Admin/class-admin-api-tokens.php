@@ -39,7 +39,7 @@ class Admin_Api_Tokens
             return;
         }
 
-        if (! current_user_can('escalated_manage_api_tokens')) {
+        if (! current_user_can('escalated_api_token_manage')) {
             wp_die(esc_html__('Permission denied.', 'escalated'));
         }
 

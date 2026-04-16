@@ -43,7 +43,7 @@ class Admin_Departments
             return;
         }
 
-        if (! current_user_can('escalated_manage_departments')) {
+        if (! current_user_can('escalated_department_edit')) {
             wp_die(esc_html__('Permission denied.', 'escalated'));
         }
 

@@ -37,7 +37,7 @@ class Admin_Tags
             return;
         }
 
-        if (! current_user_can('escalated_manage_tags')) {
+        if (! current_user_can('escalated_tag_manage')) {
             wp_die(esc_html__('Permission denied.', 'escalated'));
         }
 

@@ -174,7 +174,7 @@ if ($requester_email) {
             </div>
 
             <!-- Reply Form -->
-            <?php if (current_user_can('escalated_reply_tickets')) { ?>
+            <?php if (current_user_can('escalated_reply_create')) { ?>
                 <div class="escalated-card" style="padding: 15px; margin-bottom: 15px;">
                     <h3 style="margin-top: 0; font-size: 14px;"><?php esc_html_e('Add Reply', 'escalated'); ?></h3>
                     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
@@ -200,7 +200,7 @@ if ($requester_email) {
             <?php } ?>
 
             <!-- Internal Note Form -->
-            <?php if (current_user_can('escalated_add_internal_notes')) { ?>
+            <?php if (current_user_can('escalated_reply_create_internal')) { ?>
                 <div class="escalated-note-card" style="padding: 15px; margin-bottom: 15px;">
                     <h3 class="escalated-text-warning-accent" style="margin-top: 0; font-size: 14px;"><?php esc_html_e('Add Internal Note', 'escalated'); ?></h3>
                     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">

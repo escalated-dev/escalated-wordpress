@@ -37,7 +37,7 @@ class Admin_Escalation_Rules
             return;
         }
 
-        if (! current_user_can('escalated_manage_escalation_rules')) {
+        if (! current_user_can('escalated_escalation_manage')) {
             wp_die(esc_html__('Permission denied.', 'escalated'));
         }
 
