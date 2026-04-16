@@ -173,7 +173,7 @@ class Admin_Tickets
 
         switch ($action) {
             case 'reply':
-                if (! current_user_can('escalated_reply_tickets')) {
+                if (! current_user_can('escalated_reply_create')) {
                     wp_die(esc_html__('Permission denied.', 'escalated'));
                 }
                 $body = isset($_POST['reply_body']) ? wp_kses_post(wp_unslash($_POST['reply_body'])) : '';
@@ -184,7 +184,7 @@ class Admin_Tickets
                 break;
 
             case 'note':
-                if (! current_user_can('escalated_add_internal_notes')) {
+                if (! current_user_can('escalated_reply_create_internal')) {
                     wp_die(esc_html__('Permission denied.', 'escalated'));
                 }
                 $body = isset($_POST['note_body']) ? wp_kses_post(wp_unslash($_POST['note_body'])) : '';
@@ -195,7 +195,7 @@ class Admin_Tickets
                 break;
 
             case 'change_status':
-                if (! current_user_can('escalated_reply_tickets')) {
+                if (! current_user_can('escalated_reply_create')) {
                     wp_die(esc_html__('Permission denied.', 'escalated'));
                 }
                 $new_status = isset($_POST['new_status']) ? sanitize_text_field(wp_unslash($_POST['new_status'])) : '';
@@ -210,7 +210,7 @@ class Admin_Tickets
                 break;
 
             case 'change_priority':
-                if (! current_user_can('escalated_reply_tickets')) {
+                if (! current_user_can('escalated_reply_create')) {
                     wp_die(esc_html__('Permission denied.', 'escalated'));
                 }
                 $new_priority = isset($_POST['new_priority']) ? sanitize_text_field(wp_unslash($_POST['new_priority'])) : '';
@@ -221,7 +221,7 @@ class Admin_Tickets
                 break;
 
             case 'assign':
-                if (! current_user_can('escalated_assign_tickets')) {
+                if (! current_user_can('escalated_ticket_assign')) {
                     wp_die(esc_html__('Permission denied.', 'escalated'));
                 }
                 $assigned_to = isset($_POST['assigned_to']) ? absint($_POST['assigned_to']) : 0;
@@ -236,7 +236,7 @@ class Admin_Tickets
                 break;
 
             case 'change_department':
-                if (! current_user_can('escalated_reply_tickets')) {
+                if (! current_user_can('escalated_reply_create')) {
                     wp_die(esc_html__('Permission denied.', 'escalated'));
                 }
                 $department_id = isset($_POST['department_id']) ? absint($_POST['department_id']) : 0;
@@ -247,7 +247,7 @@ class Admin_Tickets
                 break;
 
             case 'update_tags':
-                if (! current_user_can('escalated_reply_tickets')) {
+                if (! current_user_can('escalated_reply_create')) {
                     wp_die(esc_html__('Permission denied.', 'escalated'));
                 }
                 $tag_ids = isset($_POST['tag_ids']) ? array_map('absint', (array) $_POST['tag_ids']) : [];

@@ -37,7 +37,7 @@ class Admin_Canned_Responses
             return;
         }
 
-        if (! current_user_can('escalated_use_canned_responses')) {
+        if (! current_user_can('escalated_macro_manage')) {
             wp_die(esc_html__('Permission denied.', 'escalated'));
         }
 

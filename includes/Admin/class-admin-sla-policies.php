@@ -39,7 +39,7 @@ class Admin_Sla_Policies
             return;
         }
 
-        if (! current_user_can('escalated_manage_sla')) {
+        if (! current_user_can('escalated_sla_manage')) {
             wp_die(esc_html__('Permission denied.', 'escalated'));
         }
 

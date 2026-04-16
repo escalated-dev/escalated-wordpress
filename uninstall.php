@@ -36,22 +36,30 @@ remove_role('escalated_agent');
 $admin_role = get_role('administrator');
 if ($admin_role) {
     $caps = [
-        'escalated_manage_settings',
-        'escalated_manage_departments',
-        'escalated_manage_sla',
-        'escalated_manage_escalation_rules',
-        'escalated_manage_tags',
-        'escalated_view_reports',
-        'escalated_manage_api_tokens',
-        'escalated_manage_all_tickets',
-        'escalated_view_tickets',
-        'escalated_reply_tickets',
-        'escalated_assign_tickets',
-        'escalated_add_internal_notes',
-        'escalated_use_macros',
-        'escalated_use_canned_responses',
+        'escalated_ticket_view', 'escalated_ticket_create', 'escalated_ticket_edit', 'escalated_ticket_delete',
+        'escalated_ticket_assign', 'escalated_ticket_merge', 'escalated_ticket_close', 'escalated_ticket_export',
+        'escalated_reply_create', 'escalated_reply_create_internal', 'escalated_reply_edit', 'escalated_reply_delete',
+        'escalated_kb_view', 'escalated_kb_create', 'escalated_kb_edit', 'escalated_kb_delete', 'escalated_kb_publish',
+        'escalated_department_view', 'escalated_department_create', 'escalated_department_edit', 'escalated_department_delete',
+        'escalated_report_view', 'escalated_report_export',
+        'escalated_sla_view', 'escalated_sla_manage',
+        'escalated_automation_view', 'escalated_automation_manage',
+        'escalated_escalation_view', 'escalated_escalation_manage',
+        'escalated_macro_view', 'escalated_macro_create', 'escalated_macro_manage',
+        'escalated_tag_view', 'escalated_tag_manage',
+        'escalated_custom_field_view', 'escalated_custom_field_manage',
+        'escalated_role_view', 'escalated_role_manage',
+        'escalated_user_view', 'escalated_user_manage',
+        'escalated_settings_view', 'escalated_settings_manage',
+        'escalated_webhook_view', 'escalated_webhook_manage',
+        'escalated_api_token_view', 'escalated_api_token_manage',
+        'escalated_audit_view',
+        'escalated_plugin_view', 'escalated_plugin_manage',
+        'escalated_custom_object_view', 'escalated_custom_object_manage', 'escalated_custom_object_data',
     ];
     foreach ($caps as $cap) {
         $admin_role->remove_cap($cap);
     }
 }
+
+remove_role('escalated_light_agent');

@@ -97,7 +97,7 @@ class Api_Token_Controller extends Base_Controller
      * Permission check for admin-only endpoints.
      *
      * Validates the Bearer token and checks that the associated user
-     * has the escalated_manage_api_tokens capability.
+     * has the escalated_api_token_manage capability.
      *
      * @param  WP_REST_Request  $request  The incoming request.
      * @return bool|\WP_Error True if authorized, WP_Error otherwise.
@@ -112,7 +112,7 @@ class Api_Token_Controller extends Base_Controller
 
         $user = get_userdata($user_id);
 
-        if (! $user || ! $user->has_cap('escalated_manage_api_tokens')) {
+        if (! $user || ! $user->has_cap('escalated_api_token_manage')) {
             return $this->error(
                 'escalated_forbidden',
                 __('You do not have permission to manage API tokens.', 'escalated'),

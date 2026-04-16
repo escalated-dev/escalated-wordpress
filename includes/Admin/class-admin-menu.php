@@ -15,24 +15,24 @@ class Admin_Menu
         add_menu_page(
             __('Escalated', 'escalated'),
             __('Escalated', 'escalated'),
-            'escalated_view_tickets',
+            'escalated_ticket_view',
             'escalated',
             [new Admin_Tickets, 'render_list'],
             'dashicons-tickets-alt',
             30
         );
 
-        add_submenu_page('escalated', __('Tickets', 'escalated'), __('Tickets', 'escalated'), 'escalated_view_tickets', 'escalated', [new Admin_Tickets, 'render_list']);
-        add_submenu_page('escalated', __('Departments', 'escalated'), __('Departments', 'escalated'), 'escalated_manage_departments', 'escalated-departments', [new Admin_Departments, 'render']);
-        add_submenu_page('escalated', __('SLA Policies', 'escalated'), __('SLA Policies', 'escalated'), 'escalated_manage_sla', 'escalated-sla-policies', [new Admin_Sla_Policies, 'render']);
-        add_submenu_page('escalated', __('Automations', 'escalated'), __('Automations', 'escalated'), 'escalated_automation_manage', 'escalated-automations', [new Admin_Automations, 'render']);
-        add_submenu_page('escalated', __('Escalation Rules', 'escalated'), __('Escalation Rules', 'escalated'), 'escalated_manage_escalation_rules', 'escalated-escalation-rules', [new Admin_Escalation_Rules, 'render']);
-        add_submenu_page('escalated', __('Tags', 'escalated'), __('Tags', 'escalated'), 'escalated_manage_tags', 'escalated-tags', [new Admin_Tags, 'render']);
-        add_submenu_page('escalated', __('Canned Responses', 'escalated'), __('Canned Responses', 'escalated'), 'escalated_use_canned_responses', 'escalated-canned-responses', [new Admin_Canned_Responses, 'render']);
-        add_submenu_page('escalated', __('Macros', 'escalated'), __('Macros', 'escalated'), 'escalated_use_macros', 'escalated-macros', [new Admin_Macros, 'render']);
-        add_submenu_page('escalated', __('Reports', 'escalated'), __('Reports', 'escalated'), 'escalated_view_reports', 'escalated-reports', [new Admin_Reports, 'render']);
-        add_submenu_page('escalated', __('API Tokens', 'escalated'), __('API Tokens', 'escalated'), 'escalated_manage_api_tokens', 'escalated-api-tokens', [new Admin_Api_Tokens, 'render']);
-        add_submenu_page('escalated', __('Settings', 'escalated'), __('Settings', 'escalated'), 'escalated_manage_settings', 'escalated-settings', [new Admin_Settings, 'render']);
+        add_submenu_page('escalated', __('Tickets', 'escalated'), __('Tickets', 'escalated'), 'escalated_ticket_view', 'escalated', [new Admin_Tickets, 'render_list']);
+        add_submenu_page('escalated', __('Departments', 'escalated'), __('Departments', 'escalated'), 'escalated_department_view', 'escalated-departments', [new Admin_Departments, 'render']);
+        add_submenu_page('escalated', __('SLA Policies', 'escalated'), __('SLA Policies', 'escalated'), 'escalated_sla_view', 'escalated-sla-policies', [new Admin_Sla_Policies, 'render']);
+        add_submenu_page('escalated', __('Automations', 'escalated'), __('Automations', 'escalated'), 'escalated_automation_view', 'escalated-automations', [new Admin_Automations, 'render']);
+        add_submenu_page('escalated', __('Escalation Rules', 'escalated'), __('Escalation Rules', 'escalated'), 'escalated_escalation_view', 'escalated-escalation-rules', [new Admin_Escalation_Rules, 'render']);
+        add_submenu_page('escalated', __('Tags', 'escalated'), __('Tags', 'escalated'), 'escalated_tag_view', 'escalated-tags', [new Admin_Tags, 'render']);
+        add_submenu_page('escalated', __('Canned Responses', 'escalated'), __('Canned Responses', 'escalated'), 'escalated_macro_manage', 'escalated-canned-responses', [new Admin_Canned_Responses, 'render']);
+        add_submenu_page('escalated', __('Macros', 'escalated'), __('Macros', 'escalated'), 'escalated_macro_view', 'escalated-macros', [new Admin_Macros, 'render']);
+        add_submenu_page('escalated', __('Reports', 'escalated'), __('Reports', 'escalated'), 'escalated_report_view', 'escalated-reports', [new Admin_Reports, 'render']);
+        add_submenu_page('escalated', __('API Tokens', 'escalated'), __('API Tokens', 'escalated'), 'escalated_api_token_view', 'escalated-api-tokens', [new Admin_Api_Tokens, 'render']);
+        add_submenu_page('escalated', __('Settings', 'escalated'), __('Settings', 'escalated'), 'escalated_settings_view', 'escalated-settings', [new Admin_Settings, 'render']);
     }
 
     public function enqueue_assets(string $hook): void
