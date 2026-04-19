@@ -1,0 +1,63 @@
+name: escalated-wordpress-demo
+
+services:
+  wordpress:
+    image: wordpress:6.6-php8.3-apache
+    ports:
+      - "${APP_PORT:-8090}:80"
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: escalated
+      WORDPRESS_DB_PASSWORD: escalated
+      WORDPRESS_DB_NAME: escalated
+      WORDPRESS_DEBUG: "1"
+      WORDPRESS_CONFIG_EXTRA: |
+        define('WP_ENVIRONMENT_TYPE', 'development');
+    volumes:
+      - ../:/var/www/html/wp-content/plugins/escalated-wordpress:ro
+      - wp-data:/var/www/html
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    # WordPress plays best with MySQL. Note this is the one escalated-* demo
+    # that doesn't use Postgres — the WP ecosystem targets MySQL/MariaDB.
+    image: mariadb:11-noble
+    environment:
+      MARIADB_DATABASE: escalated
+      MARIADB_USER: escalated
+      MARIADB_PASSWORD: escalated
+      MARIADB_ROOT_PASSWORD: escalated
+    healthcheck:
+      test: ["CMD-SHELL", "healthcheck.sh --connect --innodb_initialized"]
+      interval: 3s
+      retries: 20
+
+  wpcli:
+    image: wordpress:cli-php8.3
+    user: "33:33"
+    depends_on:
+      wordpress:
+        condition: service_started
+      db:
+        condition: service_healthy
+    volumes:
+      - wp-data:/var/www/html
+      - ../:/var/www/html/wp-content/plugins/escalated-wordpress:ro
+      - ./setup.sh:/setup.sh:ro
+      - ./demo-picker.php:/demo-picker.php:ro
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: escalated
+      WORDPRESS_DB_PASSWORD: escalated
+      WORDPRESS_DB_NAME: escalated
+    command: ["sh", "/setup.sh"]
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "${MAILPIT_PORT:-8025}:8025"
+
+volumes:
+  wp-data:
