@@ -9,7 +9,7 @@ cd /var/www/html
 if ! wp core is-installed --allow-root 2>/dev/null; then
     echo "[demo] installing WordPress"
     wp core install --allow-root \
-        --url=http://localhost:${APP_PORT:-8080} \
+        --url=http://localhost:${APP_PORT:-8090} \
         --title="Escalated Demo" \
         --admin_user=alice \
         --admin_email=alice@demo.test \
@@ -30,5 +30,15 @@ for u in "bob:bob@demo.test:editor" "carol:carol@demo.test:editor" "frank:frank@
     wp user create "$user" "$email" --role="$role" --user_pass=password --allow-root 2>/dev/null \
         || echo "  $user exists"
 done
+
+echo "[demo] installing /demo picker mu-plugin"
+mkdir -p /var/www/html/wp-content/mu-plugins
+cp /demo-picker.php /var/www/html/wp-content/mu-plugins/demo-picker.php
+
+echo "[demo] enabling pretty permalinks (needed for /demo/ rewrite)"
+wp option update permalink_structure "/%postname%/" --allow-root
+
+echo "[demo] flushing rewrite rules"
+wp rewrite flush --hard --allow-root || true
 
 echo "[demo] WP setup complete"
