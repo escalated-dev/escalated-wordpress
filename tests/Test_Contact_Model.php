@@ -62,4 +62,38 @@ class Test_Contact_Model extends WP_UnitTestCase
         $this->assertEquals('return-existing', Contact::decide_action($existing, null));
         $this->assertEquals('return-existing', Contact::decide_action($existing, ''));
     }
+
+    // -----------------------------------------------------------------
+    // Wire-up: TicketService::create_guest sets contact_id
+    // -----------------------------------------------------------------
+
+    public function test_create_guest_dedupes_contacts_by_email()
+    {
+        $service = new \Escalated\Services\TicketService();
+
+        $t1 = $service->create_guest([
+            'subject' => 'First',
+            'description' => 'body',
+            'guest_name' => 'Alice',
+            'guest_email' => 'alice@example.com',
+            'channel' => 'web',
+        ]);
+        $t2 = $service->create_guest([
+            'subject' => 'Second',
+            'description' => 'body',
+            'guest_name' => 'Alice',
+            'guest_email' => 'ALICE@Example.COM', // casing variant
+            'channel' => 'web',
+        ]);
+
+        global $wpdb;
+        $contacts_table = Contact::table();
+        $count = (int) $wpdb->get_var(
+            $wpdb->prepare("SELECT COUNT(*) FROM {$contacts_table} WHERE email = %s", 'alice@example.com')
+        );
+        $this->assertEquals(1, $count, 'repeat submissions should dedupe to one Contact row');
+        $this->assertNotNull($t1->contact_id);
+        $this->assertNotNull($t2->contact_id);
+        $this->assertEquals((int) $t1->contact_id, (int) $t2->contact_id);
+    }
 }
