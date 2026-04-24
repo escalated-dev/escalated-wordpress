@@ -78,6 +78,11 @@ class Admin_Settings
             'max_attachment_size_kb' => 'absint',
             'max_attachments_per_reply' => 'absint',
 
+            // Public-ticket guest policy
+            'guest_policy_mode' => 'sanitize_text_field',
+            'guest_policy_user_id' => 'absint',
+            'guest_policy_signup_url_template' => 'esc_url_raw',
+
             // Maintenance
             'activity_purge_days' => 'absint',
         ];
@@ -103,6 +108,19 @@ class Admin_Settings
                     Setting::set($key, '0');
                 }
             }
+        }
+
+        // Guest policy mode: reject unknown values, clear fields that don't apply.
+        $mode = Setting::get('guest_policy_mode', 'unassigned');
+        if (! in_array($mode, ['unassigned', 'guest_user', 'prompt_signup'], true)) {
+            Setting::set('guest_policy_mode', 'unassigned');
+            $mode = 'unassigned';
+        }
+        if ($mode !== 'guest_user') {
+            Setting::set('guest_policy_user_id', '');
+        }
+        if ($mode !== 'prompt_signup') {
+            Setting::set('guest_policy_signup_url_template', '');
         }
 
         $redirect = admin_url('admin.php?page=escalated-settings&message=saved');

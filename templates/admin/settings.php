@@ -68,6 +68,53 @@ foreach ($priorities as $key => $data) {
                 </td>
             </tr>
             <tr>
+                <th scope="row">
+                    <label for="guest_policy_mode"><?php esc_html_e('Guest policy', 'escalated'); ?></label>
+                </th>
+                <td>
+                    <?php $guestPolicyMode = $s('guest_policy_mode', 'unassigned'); ?>
+                    <select id="guest_policy_mode" name="guest_policy_mode">
+                        <option value="unassigned" <?php selected($guestPolicyMode, 'unassigned'); ?>>
+                            <?php esc_html_e('Unassigned (Contact carries the email; ticket has no owner)', 'escalated'); ?>
+                        </option>
+                        <option value="guest_user" <?php selected($guestPolicyMode, 'guest_user'); ?>>
+                            <?php esc_html_e('Single shared guest user', 'escalated'); ?>
+                        </option>
+                        <option value="prompt_signup" <?php selected($guestPolicyMode, 'prompt_signup'); ?>>
+                            <?php esc_html_e('Prompt signup (confirmation email embeds invite link)', 'escalated'); ?>
+                        </option>
+                    </select>
+                    <p class="description">
+                        <?php esc_html_e('Who owns a ticket submitted via the public widget or inbound email. Applies at request time, so changes take effect on the next submission.', 'escalated'); ?>
+                    </p>
+
+                    <p style="margin-top: 12px;">
+                        <label>
+                            <?php esc_html_e('Shared guest user ID:', 'escalated'); ?>
+                            <input type="number" min="1" name="guest_policy_user_id"
+                                value="<?php echo esc_attr($s('guest_policy_user_id', '')); ?>"
+                                class="small-text">
+                        </label>
+                        <span class="description">
+                            <?php esc_html_e('Required when mode is "Single shared guest user".', 'escalated'); ?>
+                        </span>
+                    </p>
+
+                    <p style="margin-top: 12px;">
+                        <label style="display: block;">
+                            <?php esc_html_e('Signup URL template (prompt_signup mode only):', 'escalated'); ?>
+                            <input type="url" name="guest_policy_signup_url_template"
+                                value="<?php echo esc_attr($s('guest_policy_signup_url_template', '')); ?>"
+                                class="regular-text"
+                                placeholder="https://app.example.com/register?email={{email}}">
+                        </label>
+                        <span class="description">
+                            <?php esc_html_e('Optional. Use {{email}} as a placeholder for the guest email.', 'escalated'); ?>
+                        </span>
+                    </p>
+                </td>
+            </tr>
+            <tr>
                 <th scope="row"><?php esc_html_e('Powered by Escalated', 'escalated'); ?></th>
                 <td>
                     <label>
