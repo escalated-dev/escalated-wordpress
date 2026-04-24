@@ -315,4 +315,56 @@ class Test_Activator extends WP_UnitTestCase
     {
         $this->assertEquals(ESCALATED_VERSION, get_option('escalated_version'));
     }
+
+    /**
+     * maybe_upgrade() is a no-op when the stored version matches current.
+     */
+    public function test_maybe_upgrade_noop_when_version_matches(): void
+    {
+        global $wpdb;
+
+        // Drop a table to prove activate() did NOT re-run.
+        $dropped = $wpdb->prefix.'escalated_departments';
+        $wpdb->query("DROP TABLE {$dropped}");
+
+        Activator::maybe_upgrade();
+
+        $this->assertNotContains($dropped, $wpdb->get_col('SHOW TABLES'));
+    }
+
+    /**
+     * maybe_upgrade() re-runs activate() when the stored version is stale.
+     */
+    public function test_maybe_upgrade_reactivates_when_version_differs(): void
+    {
+        global $wpdb;
+
+        update_option('escalated_version', '0.0.0-stale');
+
+        // Drop a table to prove activate() DID re-run and re-created it.
+        $dropped = $wpdb->prefix.'escalated_departments';
+        $wpdb->query("DROP TABLE {$dropped}");
+
+        Activator::maybe_upgrade();
+
+        $this->assertContains($dropped, $wpdb->get_col('SHOW TABLES'));
+        $this->assertEquals(ESCALATED_VERSION, get_option('escalated_version'));
+    }
+
+    /**
+     * maybe_upgrade() reactivates on a fresh install where the option is missing.
+     */
+    public function test_maybe_upgrade_reactivates_when_version_missing(): void
+    {
+        global $wpdb;
+
+        delete_option('escalated_version');
+        $dropped = $wpdb->prefix.'escalated_departments';
+        $wpdb->query("DROP TABLE {$dropped}");
+
+        Activator::maybe_upgrade();
+
+        $this->assertContains($dropped, $wpdb->get_col('SHOW TABLES'));
+        $this->assertEquals(ESCALATED_VERSION, get_option('escalated_version'));
+    }
 }

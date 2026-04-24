@@ -24,6 +24,23 @@ class Activator
     }
 
     /**
+     * Re-run `activate()` when the stored plugin version differs from the current one.
+     *
+     * WordPress does not fire activation hooks on auto-update or on manual
+     * upload-overwrite upgrades, so existing installs can end up on new code
+     * without the schema/permission seed having run. Every step inside
+     * `activate()` is idempotent (dbDelta, upsert loops, existence guards),
+     * so re-running on version change is safe.
+     */
+    public static function maybe_upgrade(): void
+    {
+        if (get_option('escalated_version') === ESCALATED_VERSION) {
+            return;
+        }
+        self::activate();
+    }
+
+    /**
      * Create all 21 database tables using dbDelta.
      */
     private static function create_tables(): void

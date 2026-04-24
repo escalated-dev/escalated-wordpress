@@ -62,5 +62,6 @@ register_activation_hook(__FILE__, [\Escalated\Activator::class, 'activate']);
 register_deactivation_hook(__FILE__, [\Escalated\Deactivator::class, 'deactivate']);
 
 add_action('plugins_loaded', function () {
+    \Escalated\Activator::maybe_upgrade();
     \Escalated\Escalated::instance()->boot();
 });
