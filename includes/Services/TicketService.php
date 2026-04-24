@@ -70,6 +70,22 @@ class TicketService
         $priority = $data['priority'] ?? \Escalated\Models\Setting::get('default_priority', 'medium');
         $valid_priorities = array_keys(\Escalated\Helpers\Enums::ticket_priorities());
 
+        $guest_email = sanitize_email($data['guest_email'] ?? '');
+        $guest_name = sanitize_text_field($data['guest_name'] ?? '');
+
+        // Dedupe repeat guests by email (Pattern B). Inline guest_* fields
+        // remain populated for the backwards-compat dual-read period.
+        $contact_id = null;
+        if (! empty($guest_email)) {
+            $contact = \Escalated\Models\Contact::find_or_create_by_email(
+                $guest_email,
+                $guest_name ?: null
+            );
+            if ($contact && isset($contact->id)) {
+                $contact_id = (int) $contact->id;
+            }
+        }
+
         $ticket_data = [
             'reference' => $reference,
             'requester_id' => null,
@@ -80,9 +96,10 @@ class TicketService
             'ticket_type' => in_array($data['ticket_type'] ?? '', ['question', 'problem', 'incident', 'task'], true) ? $data['ticket_type'] : 'question',
             'channel' => sanitize_text_field($data['channel'] ?? 'web'),
             'department_id' => ! empty($data['department_id']) ? absint($data['department_id']) : null,
-            'guest_name' => sanitize_text_field($data['guest_name'] ?? ''),
-            'guest_email' => sanitize_email($data['guest_email'] ?? ''),
+            'guest_name' => $guest_name,
+            'guest_email' => $guest_email,
             'guest_token' => wp_generate_password(64, false),
+            'contact_id' => $contact_id,
             'created_at' => $now,
             'updated_at' => $now,
         ];
