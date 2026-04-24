@@ -390,6 +390,23 @@ class Activator
             KEY priority (priority)
         ) $charset_collate;";
         dbDelta($sql);
+
+        // escalated_deferred_workflow_jobs — queue row for the `delay`
+        // workflow action. Cron\Deferred_Workflow_Jobs_Check polls for
+        // status=pending + run_at <= now and re-dispatches remaining_actions.
+        $sql = "CREATE TABLE {$prefix}deferred_workflow_jobs (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            ticket_id BIGINT UNSIGNED NOT NULL,
+            remaining_actions LONGTEXT NOT NULL,
+            run_at DATETIME NOT NULL,
+            status VARCHAR(16) NOT NULL DEFAULT 'pending',
+            last_error TEXT NULL,
+            created_at DATETIME NOT NULL,
+            updated_at DATETIME NOT NULL,
+            PRIMARY KEY  (id),
+            KEY status_runat (status, run_at)
+        ) $charset_collate;";
+        dbDelta($sql);
     }
 
     /**
@@ -784,6 +801,10 @@ class Activator
 
         if (! wp_next_scheduled('escalated_chat_cleanup')) {
             wp_schedule_event(time(), 'escalated_every_minute', 'escalated_chat_cleanup');
+        }
+
+        if (! wp_next_scheduled('escalated_run_due_deferred_workflow_jobs')) {
+            wp_schedule_event(time(), 'escalated_every_minute', 'escalated_run_due_deferred_workflow_jobs');
         }
     }
 

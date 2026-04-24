@@ -2,8 +2,10 @@
 
 namespace Escalated\Services;
 
+use Escalated\Models\DeferredWorkflowJob;
 use Escalated\Models\Reply;
 use Escalated\Models\Tag;
+use Escalated\Models\Ticket;
 
 /**
  * Performs the side-effects dictated by a matched Workflow.
@@ -13,9 +15,14 @@ use Escalated\Models\Tag;
  * dispatches each entry to the relevant service.
  *
  * Action catalog: change_priority, change_status, assign_agent,
- * set_department, add_tag, remove_tag, add_note, insert_canned_reply.
- * Mirrors the NestJS reference impl in
+ * set_department, add_tag, remove_tag, add_note, insert_canned_reply,
+ * delay. Mirrors the NestJS reference impl in
  * escalated-nestjs/src/services/workflow-executor.service.ts.
+ *
+ * `delay` splits a run into two halves: everything before the delay
+ * runs inline, everything after is persisted as a DeferredWorkflowJob
+ * row and picked up by Escalated\Cron\Deferred_Workflow_Jobs_Check
+ * once the wait expires.
  *
  * One failing action never halts the others — matches NestJS. Unknown
  * action types warn-log (via error_log when WP_DEBUG) and skip.
@@ -46,7 +53,15 @@ class WorkflowExecutorService
     public function execute(object $ticket, ?string $actions_json): array
     {
         $actions = $this->parse_actions($actions_json);
-        foreach ($actions as $action) {
+        $count = count($actions);
+        for ($i = 0; $i < $count; $i++) {
+            $action = $actions[$i];
+            if (($action['type'] ?? '') === 'delay') {
+                $remaining = array_slice($actions, $i + 1);
+                $this->schedule_delay($ticket, (string) ($action['value'] ?? ''), $remaining);
+
+                return $actions;
+            }
             try {
                 $this->dispatch($ticket, $action);
             } catch (\Throwable $e) {
@@ -55,6 +70,73 @@ class WorkflowExecutorService
         }
 
         return $actions;
+    }
+
+    /**
+     * Persist remaining actions to the deferred-jobs queue with
+     * run_at = now + $seconds. Logs a warning + skips when the value
+     * isn't a positive integer. Mirrors NestJS scheduleDelay.
+     *
+     * @param  array<int,array<string,mixed>>  $remaining
+     */
+    protected function schedule_delay(object $ticket, string $value, array $remaining): void
+    {
+        $seconds = (int) $value;
+        if (! ctype_digit($value) || $seconds <= 0) {
+            $this->log_debug(sprintf(
+                'delay: invalid seconds value "%s", skipping remaining actions',
+                $value
+            ));
+
+            return;
+        }
+        $run_at = gmdate('Y-m-d H:i:s', time() + $seconds);
+        DeferredWorkflowJob::create([
+            'ticket_id' => (int) $ticket->id,
+            'remaining_actions' => wp_json_encode($remaining),
+            'run_at' => $run_at,
+            'status' => 'pending',
+        ]);
+    }
+
+    /**
+     * Dispatch every pending deferred job whose `run_at` has elapsed.
+     *
+     * For each row, re-loads the ticket, re-invokes execute() with the
+     * stored remaining_actions JSON, and flips status to `done` /
+     * `failed`. Called by Cron\Deferred_Workflow_Jobs_Check.
+     *
+     * @return array{processed:int,failed:int}
+     */
+    public function run_due_deferred_jobs(): array
+    {
+        $processed = 0;
+        $failed = 0;
+        foreach (DeferredWorkflowJob::pending() as $job) {
+            try {
+                $ticket = Ticket::find((int) $job->ticket_id);
+                if (! $ticket) {
+                    DeferredWorkflowJob::update((int) $job->id, [
+                        'status' => 'failed',
+                        'last_error' => sprintf('Ticket #%d not found', (int) $job->ticket_id),
+                    ]);
+                    $failed++;
+
+                    continue;
+                }
+                $this->execute($ticket, $job->remaining_actions);
+                DeferredWorkflowJob::update((int) $job->id, ['status' => 'done']);
+                $processed++;
+            } catch (\Throwable $e) {
+                DeferredWorkflowJob::update((int) $job->id, [
+                    'status' => 'failed',
+                    'last_error' => $e->getMessage(),
+                ]);
+                $failed++;
+            }
+        }
+
+        return ['processed' => $processed, 'failed' => $failed];
     }
 
     protected function parse_actions(?string $actions_json): array
