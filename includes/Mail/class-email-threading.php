@@ -3,6 +3,10 @@
 /**
  * Email Threading - adds In-Reply-To, References, and Message-ID headers
  * to outbound WordPress emails for proper email threading support.
+ *
+ * Delegates to Message_Id_Util for header generation so the format
+ * matches the canonical NestJS reference and inbound Reply-To
+ * verification has something to check against.
  */
 
 namespace Escalated\Mail;
@@ -31,8 +35,6 @@ class Email_Threading
 
     /**
      * Set the ticket context for the next outbound email.
-     *
-     * @param  object  $ticket  The ticket object.
      */
     public function set_ticket_context(object $ticket): void
     {
@@ -42,9 +44,6 @@ class Email_Threading
 
     /**
      * Set the reply context for the next outbound email.
-     *
-     * @param  object  $reply  The reply object.
-     * @param  object  $ticket  The parent ticket object.
      */
     public function set_reply_context(object $reply, object $ticket): void
     {
@@ -68,23 +67,27 @@ class Email_Threading
         $reply = self::$current_reply;
         $domain = self::get_email_domain();
 
-        // Generate Message-ID for this email.
-        $message_id = self::generate_message_id($ticket, $reply, $domain);
-
-        // Build threading headers.
         $headers = is_array($args['headers']) ? $args['headers'] : [];
         if (is_string($args['headers'])) {
             $headers = explode("\n", $args['headers']);
             $headers = array_filter(array_map('trim', $headers));
         }
 
-        $headers[] = sprintf('Message-ID: <%s>', $message_id);
+        $message_id = self::generate_message_id($ticket, $reply, $domain);
+        $headers[] = sprintf('Message-ID: %s', $message_id);
 
-        // For replies, reference the original ticket's message ID.
         if ($reply) {
-            $original_message_id = self::generate_ticket_message_id($ticket, $domain);
-            $headers[] = sprintf('In-Reply-To: <%s>', $original_message_id);
-            $headers[] = sprintf('References: <%s>', $original_message_id);
+            // Thread the reply off the ticket root.
+            $root = self::generate_ticket_message_id($ticket, $domain);
+            $headers[] = sprintf('In-Reply-To: %s', $root);
+            $headers[] = sprintf('References: %s', $root);
+        }
+
+        // Signed Reply-To so the inbound webhook can verify ticket
+        // identity even when clients strip the Message-ID chain.
+        $reply_to = self::get_signed_reply_to($ticket, $domain);
+        if ($reply_to !== null) {
+            $headers[] = sprintf('Reply-To: %s', $reply_to);
         }
 
         $args['headers'] = $headers;
@@ -97,40 +100,83 @@ class Email_Threading
     }
 
     /**
-     * Generate a Message-ID for a ticket.
-     *
-     * @param  object  $ticket  The ticket object.
-     * @param  string  $domain  The email domain.
+     * Generate a Message-ID for a ticket (the thread anchor).
      */
     public static function generate_ticket_message_id(object $ticket, string $domain): string
     {
-        return sprintf('ticket-%s@%s', $ticket->reference, $domain);
+        return Message_Id_Util::build_message_id((int) $ticket->id, null, $domain);
     }
 
     /**
-     * Generate a Message-ID for a specific email.
-     *
-     * @param  object  $ticket  The ticket object.
-     * @param  object|null  $reply  The reply object, if any.
-     * @param  string  $domain  The email domain.
+     * Generate a Message-ID for a specific email. Initial ticket
+     * notifications use the anchor form; replies use the reply form
+     * that includes the reply id.
      */
     public static function generate_message_id(object $ticket, ?object $reply, string $domain): string
     {
         if ($reply) {
-            return sprintf('reply-%d-ticket-%s@%s', $reply->id, $ticket->reference, $domain);
+            return Message_Id_Util::build_message_id((int) $ticket->id, (int) $reply->id, $domain);
         }
 
         return self::generate_ticket_message_id($ticket, $domain);
     }
 
     /**
-     * Get the email domain for Message-ID generation.
+     * Return the signed Reply-To address for a ticket, or null when
+     * no inbound secret is configured.
+     *
+     * @return string|null Full `reply+{id}.{hmac8}@{domain}` address.
+     */
+    public static function get_signed_reply_to(object $ticket, ?string $domain = null): ?string
+    {
+        $secret = self::get_inbound_secret();
+        if ($secret === '') {
+            return null;
+        }
+
+        return Message_Id_Util::build_reply_to(
+            (int) $ticket->id,
+            $secret,
+            $domain ?? self::get_email_domain()
+        );
+    }
+
+    /**
+     * Get the email domain for Message-ID generation. Resolution:
+     *   1. escalated_email_domain option (admin-configurable)
+     *   2. ESCALATED_EMAIL_DOMAIN PHP constant
+     *   3. WordPress site_url() host
+     *   4. 'localhost'
      */
     public static function get_email_domain(): string
     {
+        $configured = get_option('escalated_email_domain', '');
+        if (is_string($configured) && $configured !== '') {
+            return $configured;
+        }
+        if (defined('ESCALATED_EMAIL_DOMAIN') && ESCALATED_EMAIL_DOMAIN !== '') {
+            return (string) ESCALATED_EMAIL_DOMAIN;
+        }
         $site_url = wp_parse_url(site_url(), PHP_URL_HOST);
 
         return $site_url ?: 'localhost';
+    }
+
+    /**
+     * Return the HMAC secret used to sign Reply-To addresses. Empty
+     * string means "Reply-To signing disabled".
+     */
+    public static function get_inbound_secret(): string
+    {
+        $configured = get_option('escalated_email_inbound_secret', '');
+        if (is_string($configured) && $configured !== '') {
+            return $configured;
+        }
+        if (defined('ESCALATED_EMAIL_INBOUND_SECRET') && ESCALATED_EMAIL_INBOUND_SECRET !== '') {
+            return (string) ESCALATED_EMAIL_INBOUND_SECRET;
+        }
+
+        return '';
     }
 
     /**

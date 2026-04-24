@@ -58,15 +58,19 @@ class Test_Email_Threading extends WP_UnitTestCase
     // Message-ID Generation Tests
     // =========================================================================
 
+    // Message-ID format matches the canonical Message_Id_Util shape:
+    //   anchor:  <ticket-{id}@{domain}>
+    //   reply:   <ticket-{id}-reply-{replyId}@{domain}>
+    // Reference strings are no longer embedded — inbound routing uses
+    // the ticket id from the Message-ID or the signed Reply-To.
+
     public function test_generate_ticket_message_id(): void
     {
         $ticket = $this->create_ticket();
 
         $message_id = Email_Threading::generate_ticket_message_id($ticket, 'example.com');
 
-        $this->assertStringContainsString('ticket-', $message_id);
-        $this->assertStringContainsString($ticket->reference, $message_id);
-        $this->assertStringContainsString('@example.com', $message_id);
+        $this->assertEquals("<ticket-{$ticket->id}@example.com>", $message_id);
     }
 
     public function test_generate_reply_message_id(): void
@@ -76,9 +80,7 @@ class Test_Email_Threading extends WP_UnitTestCase
 
         $message_id = Email_Threading::generate_message_id($ticket, $reply, 'example.com');
 
-        $this->assertStringContainsString('reply-', $message_id);
-        $this->assertStringContainsString((string) $reply->id, $message_id);
-        $this->assertStringContainsString($ticket->reference, $message_id);
+        $this->assertEquals("<ticket-{$ticket->id}-reply-{$reply->id}@example.com>", $message_id);
     }
 
     public function test_generate_message_id_without_reply(): void
@@ -89,6 +91,74 @@ class Test_Email_Threading extends WP_UnitTestCase
 
         $this->assertStringContainsString('ticket-', $message_id);
         $this->assertStringNotContainsString('reply-', $message_id);
+    }
+
+    // =========================================================================
+    // Signed Reply-To Tests
+    // =========================================================================
+
+    public function test_signed_reply_to_returns_null_when_secret_blank(): void
+    {
+        delete_option('escalated_email_inbound_secret');
+        $ticket = $this->create_ticket();
+
+        $this->assertNull(Email_Threading::get_signed_reply_to($ticket, 'example.com'));
+    }
+
+    public function test_signed_reply_to_returns_signed_address_when_configured(): void
+    {
+        update_option('escalated_email_inbound_secret', 'test-secret-for-hmac');
+        $ticket = $this->create_ticket();
+
+        $reply_to = Email_Threading::get_signed_reply_to($ticket, 'example.com');
+        $this->assertNotNull($reply_to);
+        $this->assertMatchesRegularExpression(
+            "/^reply\\+{$ticket->id}\\.[a-f0-9]{8}@example\\.com$/",
+            $reply_to
+        );
+
+        delete_option('escalated_email_inbound_secret');
+    }
+
+    public function test_threading_headers_include_reply_to_when_secret_configured(): void
+    {
+        update_option('escalated_email_domain', 'support.test');
+        update_option('escalated_email_inbound_secret', 'hmac-key');
+        $threading = new Email_Threading;
+        $ticket = $this->create_ticket();
+
+        $threading->set_ticket_context($ticket);
+        $args = $threading->add_threading_headers([
+            'to' => 'user@example.com',
+            'subject' => 'Test',
+            'message' => 'Body',
+            'headers' => [],
+        ]);
+
+        $headers_str = implode("\n", $args['headers']);
+        $this->assertStringContainsString('Reply-To: reply+', $headers_str);
+        $this->assertStringContainsString('@support.test', $headers_str);
+
+        delete_option('escalated_email_domain');
+        delete_option('escalated_email_inbound_secret');
+    }
+
+    public function test_threading_headers_omit_reply_to_when_secret_blank(): void
+    {
+        delete_option('escalated_email_inbound_secret');
+        $threading = new Email_Threading;
+        $ticket = $this->create_ticket();
+
+        $threading->set_ticket_context($ticket);
+        $args = $threading->add_threading_headers([
+            'to' => 'user@example.com',
+            'subject' => 'Test',
+            'message' => 'Body',
+            'headers' => [],
+        ]);
+
+        $headers_str = implode("\n", $args['headers']);
+        $this->assertStringNotContainsString('Reply-To:', $headers_str);
     }
 
     // =========================================================================
@@ -113,7 +183,7 @@ class Test_Email_Threading extends WP_UnitTestCase
 
         $headers_str = implode("\n", $args['headers']);
         $this->assertStringContainsString('Message-ID:', $headers_str);
-        $this->assertStringContainsString($ticket->reference, $headers_str);
+        $this->assertStringContainsString("ticket-{$ticket->id}@", $headers_str);
     }
 
     public function test_add_threading_headers_for_reply(): void
