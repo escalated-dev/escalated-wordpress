@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - Dark mode support across admin and frontend CSS.
 - Granular permission tables and seeder on activation.
 - "Powered by Escalated" badge with admin toggle.
+- Workflow `delay` action — pauses a workflow run for N seconds and resumes the remaining actions via a per-minute WP-Cron sweep. Backed by a new `escalated_deferred_workflow_jobs` table with a composite `(status, run_at)` index for efficient polling. Existing installs need to reactivate the plugin to pick up the new table.
 
 ### Changed
 - License changed from GPL-2.0-or-later to MIT.
