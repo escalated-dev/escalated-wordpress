@@ -98,12 +98,30 @@ class Activator
             guest_name VARCHAR(255) NULL,
             guest_email VARCHAR(255) NULL,
             guest_token VARCHAR(64) NULL,
+            contact_id BIGINT UNSIGNED NULL,
             created_at DATETIME,
             updated_at DATETIME,
             deleted_at DATETIME NULL,
             PRIMARY KEY  (id),
             UNIQUE KEY reference (reference),
-            UNIQUE KEY guest_token (guest_token)
+            UNIQUE KEY guest_token (guest_token),
+            KEY contact_id (contact_id)
+        ) $charset_collate;";
+        dbDelta($sql);
+
+        // 4b. escalated_contacts (Pattern B convergence — first-class
+        // identity for guest requesters, deduped by email).
+        $sql = "CREATE TABLE {$prefix}contacts (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            email VARCHAR(320) NOT NULL,
+            name VARCHAR(255) NULL,
+            user_id BIGINT UNSIGNED NULL,
+            metadata TEXT NULL,
+            created_at DATETIME NOT NULL,
+            updated_at DATETIME NOT NULL,
+            PRIMARY KEY  (id),
+            UNIQUE KEY email (email),
+            KEY user_id (user_id)
         ) $charset_collate;";
         dbDelta($sql);
 
