@@ -318,18 +318,25 @@ class Test_Activator extends WP_UnitTestCase
 
     /**
      * maybe_upgrade() is a no-op when the stored version matches current.
+     *
+     * Proof: if activate() re-ran, insert_default_settings() would re-insert
+     * the 'ticket_reference_prefix' row. Deleting it and then calling
+     * maybe_upgrade() with a matching version must leave it deleted.
      */
     public function test_maybe_upgrade_noop_when_version_matches(): void
     {
         global $wpdb;
+        $settings_table = $wpdb->prefix.'escalated_settings';
 
-        // Drop a table to prove activate() did NOT re-run.
-        $dropped = $wpdb->prefix.'escalated_departments';
-        $wpdb->query("DROP TABLE {$dropped}");
+        $wpdb->delete($settings_table, ['option_key' => 'ticket_reference_prefix']);
+        $this->assertNull(\Escalated\Models\Setting::get('ticket_reference_prefix'));
 
         Activator::maybe_upgrade();
 
-        $this->assertNotContains($dropped, $wpdb->get_col('SHOW TABLES'));
+        $this->assertNull(
+            \Escalated\Models\Setting::get('ticket_reference_prefix'),
+            'activate() must not have re-run'
+        );
     }
 
     /**
@@ -338,16 +345,15 @@ class Test_Activator extends WP_UnitTestCase
     public function test_maybe_upgrade_reactivates_when_version_differs(): void
     {
         global $wpdb;
+        $settings_table = $wpdb->prefix.'escalated_settings';
 
         update_option('escalated_version', '0.0.0-stale');
-
-        // Drop a table to prove activate() DID re-run and re-created it.
-        $dropped = $wpdb->prefix.'escalated_departments';
-        $wpdb->query("DROP TABLE {$dropped}");
+        $wpdb->delete($settings_table, ['option_key' => 'ticket_reference_prefix']);
+        $this->assertNull(\Escalated\Models\Setting::get('ticket_reference_prefix'));
 
         Activator::maybe_upgrade();
 
-        $this->assertContains($dropped, $wpdb->get_col('SHOW TABLES'));
+        $this->assertEquals('ESC', \Escalated\Models\Setting::get('ticket_reference_prefix'));
         $this->assertEquals(ESCALATED_VERSION, get_option('escalated_version'));
     }
 
@@ -357,14 +363,15 @@ class Test_Activator extends WP_UnitTestCase
     public function test_maybe_upgrade_reactivates_when_version_missing(): void
     {
         global $wpdb;
+        $settings_table = $wpdb->prefix.'escalated_settings';
 
         delete_option('escalated_version');
-        $dropped = $wpdb->prefix.'escalated_departments';
-        $wpdb->query("DROP TABLE {$dropped}");
+        $wpdb->delete($settings_table, ['option_key' => 'ticket_reference_prefix']);
+        $this->assertNull(\Escalated\Models\Setting::get('ticket_reference_prefix'));
 
         Activator::maybe_upgrade();
 
-        $this->assertContains($dropped, $wpdb->get_col('SHOW TABLES'));
+        $this->assertEquals('ESC', \Escalated\Models\Setting::get('ticket_reference_prefix'));
         $this->assertEquals(ESCALATED_VERSION, get_option('escalated_version'));
     }
 }
