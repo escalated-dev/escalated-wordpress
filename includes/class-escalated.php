@@ -39,6 +39,7 @@ class Escalated
         (new Services\BroadcastService)->register();
         (new Cron\Snooze_Check)->register();
         (new Cron\Chat_Cleanup)->register();
+        (new Cron\Deferred_Workflow_Jobs_Check)->register();
 
         Cli\AutomationCommand::register();
     }
