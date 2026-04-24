@@ -83,19 +83,23 @@ class DeferredWorkflowJob
     /**
      * Fetch every `pending` row whose `run_at` has elapsed.
      *
+     * `run_at` is stored in UTC (written via `gmdate` in
+     * {@see WorkflowExecutorService::schedule_delay}), so we compare
+     * against GMT here regardless of WordPress's configured timezone.
+     *
      * @return array<object>
      */
     public static function pending(): array
     {
         global $wpdb;
         $table = static::table();
-        $now = current_time('mysql');
+        $now_gmt = current_time('mysql', true);
 
         return $wpdb->get_results(
             $wpdb->prepare(
                 "SELECT * FROM {$table} WHERE status = %s AND run_at <= %s ORDER BY run_at ASC",
                 'pending',
-                $now
+                $now_gmt
             )
         ) ?: [];
     }
