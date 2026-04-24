@@ -150,30 +150,62 @@ class InboundEmailService
      */
     public function find_ticket_by_email(array $message): ?object
     {
-        global $wpdb;
+        $header_ids = $this->candidate_header_message_ids($message);
 
-        $subject = $message['subject'] ?? '';
-
-        // Check subject for ticket reference pattern like [ESC-00001].
-        if (preg_match('/\[([A-Z]+-\d{5,})\]/', $subject, $matches)) {
-            $reference = $matches[1];
-            $ticket = Ticket::find_by_reference($reference);
+        // 1 + 2. Parse our own Message-IDs out of In-Reply-To /
+        // References via Message_Id_Util. Cold-start path — no DB
+        // lookup needed when the incoming thread references a
+        // Message-ID we issued.
+        foreach ($header_ids as $raw) {
+            $ticket_id = \Escalated\Mail\Message_Id_Util::parse_ticket_id_from_message_id($raw);
+            if ($ticket_id === null) {
+                continue;
+            }
+            $ticket = Ticket::find($ticket_id);
             if ($ticket) {
                 return $ticket;
             }
         }
 
-        // Check In-Reply-To header.
-        $inbound_table = Escalated::table('inbound_emails');
+        // 3. Signed Reply-To on the recipient address
+        // (reply+{id}.{hmac8}@...) verified with Message_Id_Util.
+        // Survives clients that strip our threading headers; forged
+        // signatures are rejected.
+        $secret = \Escalated\Mail\Email_Threading::get_inbound_secret();
+        if ($secret !== '' && ! empty($message['toEmail'])) {
+            $verified = \Escalated\Mail\Message_Id_Util::verify_reply_to(
+                (string) $message['toEmail'],
+                $secret
+            );
+            if ($verified !== null) {
+                $ticket = Ticket::find($verified);
+                if ($ticket) {
+                    return $ticket;
+                }
+            }
+        }
 
-        if (! empty($message['inReplyTo'])) {
+        // 4. Subject line reference tag (legacy).
+        $subject = $message['subject'] ?? '';
+        if (preg_match('/\[([A-Z]+-\d{5,})\]/', $subject, $matches)) {
+            $ticket = Ticket::find_by_reference($matches[1]);
+            if ($ticket) {
+                return $ticket;
+            }
+        }
+
+        // 5. InboundEmail lookup (weakest fallback; relies on our own
+        // reply history). Ensures legacy deployments keep working
+        // during the Message-ID format transition.
+        global $wpdb;
+        $inbound_table = Escalated::table('inbound_emails');
+        foreach ($header_ids as $raw) {
             $related = $wpdb->get_row(
                 $wpdb->prepare(
                     "SELECT ticket_id FROM {$inbound_table} WHERE message_id = %s AND ticket_id IS NOT NULL LIMIT 1",
-                    $message['inReplyTo']
+                    $raw
                 )
             );
-
             if ($related && ! empty($related->ticket_id)) {
                 $ticket = Ticket::find((int) $related->ticket_id);
                 if ($ticket) {
@@ -182,35 +214,33 @@ class InboundEmailService
             }
         }
 
-        // Check References header (may contain multiple message IDs).
+        return null;
+    }
+
+    /**
+     * Return every candidate Message-ID from the inbound headers.
+     *
+     * @return array<string>
+     */
+    protected function candidate_header_message_ids(array $message): array
+    {
+        $ids = [];
+        if (! empty($message['inReplyTo'])) {
+            $ids[] = (string) $message['inReplyTo'];
+        }
         if (! empty($message['references'])) {
-            $references = is_array($message['references'])
+            $refs = is_array($message['references'])
                 ? $message['references']
-                : preg_split('/\s+/', $message['references']);
-
-            foreach ($references as $ref_message_id) {
-                $ref_message_id = trim($ref_message_id);
-                if (empty($ref_message_id)) {
-                    continue;
-                }
-
-                $related = $wpdb->get_row(
-                    $wpdb->prepare(
-                        "SELECT ticket_id FROM {$inbound_table} WHERE message_id = %s AND ticket_id IS NOT NULL LIMIT 1",
-                        $ref_message_id
-                    )
-                );
-
-                if ($related && ! empty($related->ticket_id)) {
-                    $ticket = Ticket::find((int) $related->ticket_id);
-                    if ($ticket) {
-                        return $ticket;
-                    }
+                : preg_split('/\s+/', (string) $message['references']);
+            foreach ((array) $refs as $ref) {
+                $ref = trim((string) $ref);
+                if ($ref !== '') {
+                    $ids[] = $ref;
                 }
             }
         }
 
-        return null;
+        return $ids;
     }
 
     /**
