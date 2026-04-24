@@ -69,7 +69,7 @@ class Test_Contact_Model extends WP_UnitTestCase
 
     public function test_create_guest_dedupes_contacts_by_email()
     {
-        $service = new \Escalated\Services\TicketService();
+        $service = new \Escalated\Services\TicketService;
 
         $t1 = $service->create_guest([
             'subject' => 'First',

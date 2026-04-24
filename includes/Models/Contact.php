@@ -41,6 +41,7 @@ class Contact
         if (! is_string($email)) {
             return '';
         }
+
         return strtolower(trim($email));
     }
 
@@ -49,9 +50,9 @@ class Contact
      * lookup result and incoming name. Pure function — testable
      * without touching the database.
      *
-     * @param  object|null  $existing   Row from wpdb->get_row or null
+     * @param  object|null  $existing  Row from wpdb->get_row or null
      * @param  string|null  $incoming_name
-     * @return string  One of 'create', 'update-name', 'return-existing'
+     * @return string One of 'create', 'update-name', 'return-existing'
      */
     public static function decide_action($existing, $incoming_name)
     {
@@ -62,6 +63,7 @@ class Contact
         if ((is_null($existing_name) || $existing_name === '') && ! empty($incoming_name)) {
             return 'update-name';
         }
+
         return 'return-existing';
     }
 
@@ -73,6 +75,7 @@ class Contact
     {
         global $wpdb;
         $table = static::table();
+
         return $wpdb->get_row(
             $wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $id)
         );
@@ -90,6 +93,7 @@ class Contact
         if ($normalized === '') {
             return null;
         }
+
         return $wpdb->get_row(
             $wpdb->prepare("SELECT * FROM {$table} WHERE email = %s", $normalized)
         );
@@ -103,7 +107,7 @@ class Contact
      *
      * @param  string  $email
      * @param  string|null  $name
-     * @return object  Row from wpdb->get_row
+     * @return object Row from wpdb->get_row
      */
     public static function find_or_create_by_email($email, $name = null)
     {
@@ -126,6 +130,7 @@ class Contact
                 ['name' => $name, 'updated_at' => $now],
                 ['id' => $existing->id]
             );
+
             return static::find($existing->id);
         }
 
@@ -134,10 +139,11 @@ class Contact
             'email' => $normalized,
             'name' => $name ?: null,
             'user_id' => null,
-            'metadata' => wp_json_encode(new \stdClass()),
+            'metadata' => wp_json_encode(new \stdClass),
             'created_at' => $now,
             'updated_at' => $now,
         ]);
+
         return static::find((int) $wpdb->insert_id);
     }
 
@@ -157,6 +163,7 @@ class Contact
             ['user_id' => $user_id, 'updated_at' => current_time('mysql')],
             ['id' => $contact_id]
         );
+
         return static::find($contact_id);
     }
 
@@ -178,6 +185,7 @@ class Contact
             ['requester_id' => $user_id, 'updated_at' => current_time('mysql')],
             ['contact_id' => $contact_id]
         );
+
         return $contact;
     }
 }
