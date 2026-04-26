@@ -24,6 +24,47 @@ class Activator
     }
 
     /**
+     * Run upgrade-time work when the stored plugin version differs from the current one.
+     *
+     * WordPress does not fire activation hooks on auto-update or on manual
+     * upload-overwrite upgrades, so existing installs can end up on new code
+     * without the schema/permission seed having run.
+     *
+     * IMPORTANT: this is **not** the same as a full `activate()` call. The
+     * activation hook fires once per install and bootstraps everything
+     * including custom WP roles. On *upgrade*, repeating that role bootstrap
+     * via `create_roles()` would unconditionally `remove_role(...)` + re-add
+     * the escalated_admin / escalated_agent / escalated_light_agent roles,
+     * destroying any per-install customizations an admin made.
+     *
+     * Instead, only the steps that are safely idempotent and additive run on
+     * upgrade:
+     *   - create_tables()        — dbDelta is purpose-built for this
+     *   - seed_permissions()     — upserts permission rows + role pivots
+     *   - add_admin_caps()       — only adds caps; doesn't remove
+     *   - insert_default_settings() — `if not exists` guarded
+     *   - schedule_cron_events() — `wp_next_scheduled` guarded
+     *
+     * `create_roles()` is intentionally skipped on upgrade. New installs still
+     * call `activate()` from the activation hook, which runs `create_roles()`
+     * once.
+     */
+    public static function maybe_upgrade(): void
+    {
+        if (get_option('escalated_version') === ESCALATED_VERSION) {
+            return;
+        }
+
+        self::create_tables();
+        self::seed_permissions();
+        self::add_admin_caps();
+        self::insert_default_settings();
+        self::schedule_cron_events();
+
+        update_option('escalated_version', ESCALATED_VERSION);
+    }
+
+    /**
      * Create all 21 database tables using dbDelta.
      */
     private static function create_tables(): void

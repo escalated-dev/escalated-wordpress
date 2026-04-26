@@ -315,4 +315,63 @@ class Test_Activator extends WP_UnitTestCase
     {
         $this->assertEquals(ESCALATED_VERSION, get_option('escalated_version'));
     }
+
+    /**
+     * maybe_upgrade() is a no-op when the stored version matches current.
+     *
+     * Proof: if activate() re-ran, insert_default_settings() would re-insert
+     * the 'ticket_reference_prefix' row. Deleting it and then calling
+     * maybe_upgrade() with a matching version must leave it deleted.
+     */
+    public function test_maybe_upgrade_noop_when_version_matches(): void
+    {
+        global $wpdb;
+        $settings_table = $wpdb->prefix.'escalated_settings';
+
+        $wpdb->delete($settings_table, ['option_key' => 'ticket_reference_prefix']);
+        $this->assertNull(\Escalated\Models\Setting::get('ticket_reference_prefix'));
+
+        Activator::maybe_upgrade();
+
+        $this->assertNull(
+            \Escalated\Models\Setting::get('ticket_reference_prefix'),
+            'activate() must not have re-run'
+        );
+    }
+
+    /**
+     * maybe_upgrade() re-runs activate() when the stored version is stale.
+     */
+    public function test_maybe_upgrade_reactivates_when_version_differs(): void
+    {
+        global $wpdb;
+        $settings_table = $wpdb->prefix.'escalated_settings';
+
+        update_option('escalated_version', '0.0.0-stale');
+        $wpdb->delete($settings_table, ['option_key' => 'ticket_reference_prefix']);
+        $this->assertNull(\Escalated\Models\Setting::get('ticket_reference_prefix'));
+
+        Activator::maybe_upgrade();
+
+        $this->assertEquals('ESC', \Escalated\Models\Setting::get('ticket_reference_prefix'));
+        $this->assertEquals(ESCALATED_VERSION, get_option('escalated_version'));
+    }
+
+    /**
+     * maybe_upgrade() reactivates on a fresh install where the option is missing.
+     */
+    public function test_maybe_upgrade_reactivates_when_version_missing(): void
+    {
+        global $wpdb;
+        $settings_table = $wpdb->prefix.'escalated_settings';
+
+        delete_option('escalated_version');
+        $wpdb->delete($settings_table, ['option_key' => 'ticket_reference_prefix']);
+        $this->assertNull(\Escalated\Models\Setting::get('ticket_reference_prefix'));
+
+        Activator::maybe_upgrade();
+
+        $this->assertEquals('ESC', \Escalated\Models\Setting::get('ticket_reference_prefix'));
+        $this->assertEquals(ESCALATED_VERSION, get_option('escalated_version'));
+    }
 }
