@@ -413,6 +413,44 @@ class Activator
         ) $charset_collate;";
         dbDelta($sql);
 
+        // escalated_workflows — event-driven workflow rows fired by
+        // WorkflowRunnerService. Distinct from automations (time-based
+        // sweep) — see escalated-developer-context for the taxonomy.
+        $sql = "CREATE TABLE {$prefix}workflows (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            name VARCHAR(255) NOT NULL,
+            trigger_event VARCHAR(64) NOT NULL,
+            conditions LONGTEXT DEFAULT NULL,
+            actions LONGTEXT NOT NULL,
+            is_active TINYINT(1) NOT NULL DEFAULT 1,
+            position INT UNSIGNED NOT NULL DEFAULT 0,
+            stop_on_match TINYINT(1) NOT NULL DEFAULT 0,
+            created_at DATETIME NOT NULL,
+            updated_at DATETIME NOT NULL,
+            PRIMARY KEY  (id),
+            KEY trigger_active (trigger_event, is_active),
+            KEY position (position)
+        ) $charset_collate;";
+        dbDelta($sql);
+
+        // escalated_workflow_logs — one row per workflow firing attempt.
+        $sql = "CREATE TABLE {$prefix}workflow_logs (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            workflow_id BIGINT UNSIGNED NOT NULL,
+            ticket_id BIGINT UNSIGNED NOT NULL,
+            trigger_event VARCHAR(64) NOT NULL,
+            conditions_matched TINYINT(1) NOT NULL DEFAULT 0,
+            actions_executed LONGTEXT DEFAULT NULL,
+            error_message TEXT DEFAULT NULL,
+            started_at DATETIME NOT NULL,
+            completed_at DATETIME DEFAULT NULL,
+            created_at DATETIME NOT NULL,
+            PRIMARY KEY  (id),
+            KEY workflow_id (workflow_id),
+            KEY ticket_id (ticket_id)
+        ) $charset_collate;";
+        dbDelta($sql);
+
         // escalated_chat_sessions
         $sql = "CREATE TABLE {$prefix}chat_sessions (
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
