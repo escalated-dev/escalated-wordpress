@@ -316,7 +316,7 @@ class Test_Workflow_Executor_Service extends WP_UnitTestCase
         $remaining = json_decode($row->remaining_actions, true);
         $this->assertCount(1, $remaining);
         $this->assertEquals('add_note', $remaining[0]['type']);
-        $this->assertGreaterThanOrEqual($before + 59, strtotime($row->run_at . ' UTC'));
+        $this->assertGreaterThanOrEqual($before + 59, strtotime($row->run_at.' UTC'));
     }
 
     public function test_execute_delay_invalid_value_skips_remaining(): void
