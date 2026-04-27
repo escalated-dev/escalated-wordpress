@@ -34,10 +34,16 @@ class Email_Threading
     }
 
     /**
-     * Set the ticket context for the next outbound email.
+     * Set the ticket context for the next outbound email. Tolerates
+     * non-object args (e.g. listeners firing with `null`) by no-op'ing,
+     * since other action handlers in the same hook may have legitimate
+     * reasons to receive bogus payloads (test fixtures, internal tools).
      */
-    public function set_ticket_context(object $ticket): void
+    public function set_ticket_context($ticket): void
     {
+        if (! is_object($ticket)) {
+            return;
+        }
         self::$current_ticket = $ticket;
         self::$current_reply = null;
     }

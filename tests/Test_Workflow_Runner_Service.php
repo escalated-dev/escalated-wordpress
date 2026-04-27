@@ -29,6 +29,20 @@ class Test_Workflow_Runner_Service extends WP_UnitTestCase
 
         \Escalated\Activator::activate();
 
+        // The plugin auto-registers WorkflowListener at boot — testing
+        // that integration is what Test_Workflow_Listener does. These
+        // tests exercise the runner in isolation, so detach the hooks
+        // here or every make_ticket() would double-fire the runner.
+        remove_all_actions('escalated_ticket_created');
+        remove_all_actions('escalated_ticket_updated');
+        remove_all_actions('escalated_ticket_status_changed');
+        remove_all_actions('escalated_ticket_assigned');
+        remove_all_actions('escalated_ticket_reopened');
+        remove_all_actions('escalated_reply_created');
+        remove_all_actions('escalated_tag_added');
+        remove_all_actions('escalated_tag_removed');
+        remove_all_actions('escalated_department_changed');
+
         $this->runner = new WorkflowRunnerService;
         $this->ticket_service = new TicketService;
         $this->user_id = $this->factory->user->create(['role' => 'subscriber']);

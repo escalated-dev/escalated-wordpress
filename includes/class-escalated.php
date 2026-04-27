@@ -37,6 +37,7 @@ class Escalated
         (new Cron\Auto_Close)->register();
         (new Cron\Activity_Purge)->register();
         (new Services\BroadcastService)->register();
+        (new Services\WorkflowListener)->register();
         (new Cron\Snooze_Check)->register();
         (new Cron\Chat_Cleanup)->register();
         (new Cron\Deferred_Workflow_Jobs_Check)->register();
