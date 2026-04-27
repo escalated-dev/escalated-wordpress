@@ -12,17 +12,25 @@ class Admin_Menu
 
     public function add_menus(): void
     {
+        // Top-level menu. WordPress auto-creates a submenu entry with
+        // the same slug pointing at the same callback. Adding an
+        // explicit add_submenu_page with that same slug ('escalated')
+        // re-registers the callback on the page-load hook, which makes
+        // render_list fire twice and the entire ticket list render
+        // twice on a single page view (see screenshots/results/
+        // ticket-list.png in the bug-report screenshot pre-fix).
+        // Pass the desired submenu label as the menu_title argument
+        // and rely on the auto-created submenu — WordPress reuses the
+        // menu_title for that entry.
         add_menu_page(
             __('Escalated', 'escalated'),
-            __('Escalated', 'escalated'),
+            __('Tickets', 'escalated'),
             'escalated_ticket_view',
             'escalated',
             [new Admin_Tickets, 'render_list'],
             self::menu_icon_data_uri(),
             30
         );
-
-        add_submenu_page('escalated', __('Tickets', 'escalated'), __('Tickets', 'escalated'), 'escalated_ticket_view', 'escalated', [new Admin_Tickets, 'render_list']);
         add_submenu_page('escalated', __('Departments', 'escalated'), __('Departments', 'escalated'), 'escalated_department_view', 'escalated-departments', [new Admin_Departments, 'render']);
         add_submenu_page('escalated', __('SLA Policies', 'escalated'), __('SLA Policies', 'escalated'), 'escalated_sla_view', 'escalated-sla-policies', [new Admin_Sla_Policies, 'render']);
         add_submenu_page('escalated', __('Automations', 'escalated'), __('Automations', 'escalated'), 'escalated_automation_view', 'escalated-automations', [new Admin_Automations, 'render']);
