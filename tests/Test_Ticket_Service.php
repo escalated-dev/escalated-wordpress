@@ -192,6 +192,72 @@ class Test_Ticket_Service extends WP_UnitTestCase
         $this->assertEquals($ticket->id, $found->id);
     }
 
+    // Guest-policy wiring tests — the admin settings page writes three
+    // keys that create_guest() must read so the setting has actual
+    // behavioral effect.
+
+    public function test_create_guest_defaults_to_unassigned_mode(): void
+    {
+        // No setting written → default behavior (requester_id null).
+        $ticket = $this->service->create_guest([
+            'subject' => 'Default mode',
+            'description' => 'd',
+            'guest_name' => 'Alice',
+            'guest_email' => 'alice@example.com',
+        ]);
+
+        $this->assertNull($ticket->requester_id);
+        $this->assertEquals('alice@example.com', $ticket->guest_email);
+    }
+
+    public function test_create_guest_routes_to_host_user_in_guest_user_mode(): void
+    {
+        $user_id = self::factory()->user->create(['user_email' => 'support@site.test']);
+        \Escalated\Models\Setting::set('guest_policy_mode', 'guest_user');
+        \Escalated\Models\Setting::set('guest_policy_user_id', (string) $user_id);
+
+        $ticket = $this->service->create_guest([
+            'subject' => 'Guest user mode',
+            'description' => 'd',
+            'guest_name' => 'Bob',
+            'guest_email' => 'bob@example.com',
+        ]);
+
+        $this->assertEquals($user_id, (int) $ticket->requester_id);
+        // guest_email is still recorded so agents see who submitted.
+        $this->assertEquals('bob@example.com', $ticket->guest_email);
+    }
+
+    public function test_create_guest_falls_through_when_guest_user_id_missing(): void
+    {
+        \Escalated\Models\Setting::set('guest_policy_mode', 'guest_user');
+        \Escalated\Models\Setting::set('guest_policy_user_id', '0');
+
+        $ticket = $this->service->create_guest([
+            'subject' => 'Misconfigured guest_user',
+            'description' => 'd',
+            'guest_name' => 'Charlie',
+            'guest_email' => 'charlie@example.com',
+        ]);
+
+        $this->assertNull($ticket->requester_id);
+    }
+
+    public function test_create_guest_prompt_signup_uses_unassigned_path(): void
+    {
+        \Escalated\Models\Setting::set('guest_policy_mode', 'prompt_signup');
+
+        $ticket = $this->service->create_guest([
+            'subject' => 'Signup prompt mode',
+            'description' => 'd',
+            'guest_name' => 'Dana',
+            'guest_email' => 'dana@example.com',
+        ]);
+
+        $this->assertNull($ticket->requester_id);
+        $this->assertEquals('dana@example.com', $ticket->guest_email);
+    }
+
     // =========================================================================
     // Update Tests
     // =========================================================================

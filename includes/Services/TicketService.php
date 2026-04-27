@@ -86,9 +86,32 @@ class TicketService
             }
         }
 
+        // Apply the admin-configured guest policy from the
+        // public-tickets settings page. Persisted under three keys:
+        //   - guest_policy_mode: unassigned | guest_user | prompt_signup
+        //   - guest_policy_user_id: WordPress user id for guest_user mode
+        //   - guest_policy_signup_url_template: for prompt_signup mode
+        //
+        // Modes:
+        //   - unassigned (default): requester_id = null
+        //   - guest_user: requester_id = configured shared WordPress user
+        //   - prompt_signup: same as unassigned for ticket creation;
+        //     signup-invite emission is a listener-level follow-up
+        //
+        // Misconfigured guest_user (zero/missing id) falls through to
+        // unassigned so bad admin input can't 500 public submissions.
+        $requester_id = null;
+        $policy_mode = \Escalated\Models\Setting::get('guest_policy_mode', 'unassigned');
+        if ($policy_mode === 'guest_user') {
+            $guest_user_id = (int) \Escalated\Models\Setting::get('guest_policy_user_id', 0);
+            if ($guest_user_id > 0) {
+                $requester_id = $guest_user_id;
+            }
+        }
+
         $ticket_data = [
             'reference' => $reference,
-            'requester_id' => null,
+            'requester_id' => $requester_id,
             'subject' => sanitize_text_field($data['subject']),
             'description' => wp_kses_post($data['description']),
             'status' => 'open',
