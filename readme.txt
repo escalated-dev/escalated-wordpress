@@ -4,7 +4,7 @@ Tags: helpdesk, support, tickets, customer support, SLA, ticketing system
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 1.0.0
+Stable tag: 1.2.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -95,6 +95,19 @@ Yes. Internal notes are visible only to agents and admins. They are never shown 
 
 == Changelog ==
 
+= 1.2.0 =
+* Added: public-ticket Contact model with email-based dedupe (Pattern B).
+* Added: public-ticket guest policy admin page (unassigned / guest_user / prompt_signup).
+* Added: WorkflowExecutorService dispatches change_priority, change_status, assign_agent, set_department, add_tag, remove_tag, add_note, insert_canned_reply.
+* Added: WorkflowRunnerService fires matched workflows on ticket.created / .updated / .status_changed / .assigned / .reopened / reply.created hooks.
+* Added: Workflow delay action with deferred-job queue.
+* Added: WorkflowListener bridging WP hooks → runner.
+* Added: Message-ID utility for RFC 5322 threading + signed Reply-To verification, wired into Email_Threading for outbound headers.
+* Added: Activator::maybe_upgrade() runs idempotent steps on version bump (skips role re-creation to preserve admin customizations).
+* Added: Brand chevron icon in wp-admin sidebar (replaces generic dashicons).
+* Fixed: honor guest_policy_mode on widget + guest ticket submissions.
+* Fixed: ticket list no longer renders twice on the wp-admin page (duplicate add_submenu_page registration with parent slug).
+
 = 1.0.0 =
 * Initial release.
 * Ticket management with full CRUD and status transitions.
@@ -114,6 +127,9 @@ Yes. Internal notes are visible only to agents and admins. They are never shown 
 * Auto-close and activity purge cron jobs.
 
 == Upgrade Notice ==
+
+= 1.2.0 =
+Adds Pattern B contact dedupe, workflow runner/executor/listener, RFC 5322 email threading, public-ticket guest policy, and an Activator::maybe_upgrade path so existing installs pick up new tables on plugin upgrade. Schema changes are additive; existing tickets remain readable.
 
 = 1.0.0 =
 Initial release of Escalated.
