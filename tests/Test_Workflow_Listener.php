@@ -30,8 +30,10 @@ class Test_Workflow_Listener extends WP_UnitTestCase
         parent::set_up();
         \Escalated\Activator::activate();
 
+        // The WorkflowListener registers itself during plugin boot
+        // (Escalated::boot()). Re-registering here would double-fire
+        // every workflow. Keep a reference for assertions only.
         $this->listener = new WorkflowListener;
-        $this->listener->register();
 
         $this->ticket_service = new TicketService;
         $this->user_id = $this->factory->user->create(['role' => 'subscriber']);
@@ -40,15 +42,6 @@ class Test_Workflow_Listener extends WP_UnitTestCase
 
     public function tear_down(): void
     {
-        remove_action('escalated_ticket_created', [$this->listener, 'on_ticket_created'], 50);
-        remove_action('escalated_ticket_updated', [$this->listener, 'on_ticket_updated'], 50);
-        remove_action('escalated_ticket_status_changed', [$this->listener, 'on_ticket_status_changed'], 50);
-        remove_action('escalated_ticket_assigned', [$this->listener, 'on_ticket_assigned'], 50);
-        remove_action('escalated_ticket_reopened', [$this->listener, 'on_ticket_reopened'], 50);
-        remove_action('escalated_reply_created', [$this->listener, 'on_reply_created'], 50);
-        remove_action('escalated_tag_added', [$this->listener, 'on_tag_changed'], 50);
-        remove_action('escalated_tag_removed', [$this->listener, 'on_tag_changed'], 50);
-        remove_action('escalated_department_changed', [$this->listener, 'on_department_changed'], 50);
         parent::tear_down();
     }
 
