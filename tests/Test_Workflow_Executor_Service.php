@@ -9,6 +9,7 @@
  * the service boundary.
  */
 
+use Escalated\Models\DeferredWorkflowJob;
 use Escalated\Models\Reply;
 use Escalated\Models\Tag;
 use Escalated\Models\Ticket;
@@ -271,5 +272,142 @@ class Test_Workflow_Executor_Service extends WP_UnitTestCase
         $this->assertCount(2, $result);
         $this->assertEquals('change_priority', $result[0]['type']);
         $this->assertEquals('add_note', $result[1]['type']);
+    }
+
+    // --- delay action ---
+
+    public function test_execute_delay_pauses_and_persists_remaining(): void
+    {
+        global $wpdb;
+        $ticket = $this->make_ticket(['priority' => 'low']);
+        $before = time();
+
+        $this->executor->execute(
+            $ticket,
+            wp_json_encode([
+                ['type' => 'change_priority', 'value' => 'high'],
+                ['type' => 'delay', 'value' => '60'],
+                ['type' => 'add_note', 'value' => 'after wait'],
+            ])
+        );
+
+        // Pre-delay action ran.
+        $fresh = Ticket::find($ticket->id);
+        $this->assertEquals('high', $fresh->priority);
+
+        // Post-delay action did NOT run: no note reply inserted yet.
+        $reply_table = Reply::table();
+        $notes = (int) $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT COUNT(*) FROM {$reply_table} WHERE ticket_id = %d AND type = %s",
+                $ticket->id,
+                'note'
+            )
+        );
+        $this->assertEquals(0, $notes);
+
+        // One DeferredWorkflowJob row was persisted with the remaining tail.
+        $jobs_table = DeferredWorkflowJob::table();
+        $row = $wpdb->get_row(
+            $wpdb->prepare("SELECT * FROM {$jobs_table} WHERE ticket_id = %d", $ticket->id)
+        );
+        $this->assertNotNull($row);
+        $this->assertEquals('pending', $row->status);
+        $remaining = json_decode($row->remaining_actions, true);
+        $this->assertCount(1, $remaining);
+        $this->assertEquals('add_note', $remaining[0]['type']);
+        $this->assertGreaterThanOrEqual($before + 59, strtotime($row->run_at.' UTC'));
+    }
+
+    public function test_execute_delay_invalid_value_skips_remaining(): void
+    {
+        global $wpdb;
+        $ticket = $this->make_ticket(['priority' => 'low']);
+
+        $this->executor->execute(
+            $ticket,
+            wp_json_encode([
+                ['type' => 'delay', 'value' => 'nonsense'],
+                ['type' => 'change_priority', 'value' => 'urgent'],
+            ])
+        );
+
+        // Priority unchanged — post-delay action did not run.
+        $fresh = Ticket::find($ticket->id);
+        $this->assertEquals('low', $fresh->priority);
+
+        // No deferred job row was created.
+        $jobs_table = DeferredWorkflowJob::table();
+        $count = (int) $wpdb->get_var(
+            $wpdb->prepare("SELECT COUNT(*) FROM {$jobs_table} WHERE ticket_id = %d", $ticket->id)
+        );
+        $this->assertEquals(0, $count);
+    }
+
+    public function test_run_due_deferred_jobs_resumes_and_marks_done(): void
+    {
+        global $wpdb;
+        $ticket = $this->make_ticket(['priority' => 'low']);
+
+        // Seed a job whose run_at has already elapsed.
+        $id = DeferredWorkflowJob::create([
+            'ticket_id' => $ticket->id,
+            'remaining_actions' => wp_json_encode([
+                ['type' => 'change_priority', 'value' => 'urgent'],
+            ]),
+            'run_at' => gmdate('Y-m-d H:i:s', time() - 60),
+            'status' => 'pending',
+        ]);
+        $this->assertNotFalse($id);
+
+        $result = $this->executor->run_due_deferred_jobs();
+
+        $this->assertEquals(1, $result['processed']);
+        $this->assertEquals(0, $result['failed']);
+
+        // Ticket priority was updated.
+        $fresh = Ticket::find($ticket->id);
+        $this->assertEquals('urgent', $fresh->priority);
+
+        // Row flipped to done.
+        $row = DeferredWorkflowJob::find($id);
+        $this->assertEquals('done', $row->status);
+    }
+
+    public function test_run_due_deferred_jobs_marks_failed_when_ticket_missing(): void
+    {
+        $id = DeferredWorkflowJob::create([
+            'ticket_id' => 9_999_999,
+            'remaining_actions' => wp_json_encode([]),
+            'run_at' => gmdate('Y-m-d H:i:s', time() - 60),
+            'status' => 'pending',
+        ]);
+
+        $result = $this->executor->run_due_deferred_jobs();
+
+        $this->assertEquals(0, $result['processed']);
+        $this->assertEquals(1, $result['failed']);
+
+        $row = DeferredWorkflowJob::find($id);
+        $this->assertEquals('failed', $row->status);
+        $this->assertStringContainsString('9999999', $row->last_error);
+    }
+
+    public function test_run_due_deferred_jobs_skips_rows_not_yet_due(): void
+    {
+        $id = DeferredWorkflowJob::create([
+            'ticket_id' => $this->make_ticket()->id,
+            'remaining_actions' => wp_json_encode([]),
+            'run_at' => gmdate('Y-m-d H:i:s', time() + 3600),
+            'status' => 'pending',
+        ]);
+
+        $result = $this->executor->run_due_deferred_jobs();
+
+        $this->assertEquals(0, $result['processed']);
+        $this->assertEquals(0, $result['failed']);
+
+        $row = DeferredWorkflowJob::find($id);
+        $this->assertEquals('pending', $row->status);
     }
 }
