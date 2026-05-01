@@ -183,7 +183,7 @@ jobs:
           curl -s -o /dev/null -w "WordPress HTTP status: %{http_code}\n" http://localhost:8080/wp-login.php
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
 
