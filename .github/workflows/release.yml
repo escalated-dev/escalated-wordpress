@@ -16,10 +16,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer:v2
+          coverage: none
+
+      - name: Install runtime Composer dependencies
+        run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
       - name: Build plugin zip
         run: |
           mkdir -p build/escalated release
 
+          # Include vendor/ so escalated-dev/locale (central translations) ships
+          # with the plugin. Without this, the plugin silently falls back to the
+          # legacy in-tree languages/ catalog and misses portfolio-wide updates.
           rsync -av ./ build/escalated/ \
             --exclude='.git' \
             --exclude='.gitignore' \
