@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - License changed from GPL-2.0-or-later to MIT.
+- Translations now load from the central `escalated-dev/locale` Composer package (`vendor/escalated-dev/locale/languages/escalated-{locale}.mo`) with optional site-level overrides from `languages/overrides/escalated-{locale}.mo`. Falls back to the in-tree `languages/` dir when the central package is not installed.
 
 ### Fixed
 - Validate priority against allowed enum values in ticket creation.

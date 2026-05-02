@@ -135,6 +135,30 @@ On activation, Escalated schedules:
 - `escalated_auto_close` (daily)
 - `escalated_purge_activities` (weekly)
 
+## Translations
+
+Escalated for WordPress consumes translations from the central
+[`escalated-dev/locale`](https://github.com/escalated-dev/escalated-locale)
+Composer package, which is the single source of truth for translations
+across every Escalated host plugin.
+
+At runtime the plugin loads translations in two layers (later layer wins):
+
+1. **Central** — `vendor/escalated-dev/locale/languages/escalated-{locale}.mo`
+   (installed automatically via `composer install`).
+2. **Local overrides** — `languages/overrides/escalated-{locale}.mo`
+   (drop your own compiled `.mo` here to override individual entries
+   without forking the central package).
+
+If the central package is not yet installed, the plugin falls back to
+the legacy in-tree `languages/*.po`/`*.mo` files so existing sites keep
+working.
+
+To submit translation fixes, open a PR against
+[`escalated-dev/escalated-locale`](https://github.com/escalated-dev/escalated-locale).
+Do **not** edit the in-tree `.po` files — they exist only as a fallback
+and will be removed once the central package reaches a stable release.
+
 ## Development
 
 Install dependencies:
