@@ -4,8 +4,50 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ced39379909209d87a2ef7b72cb77788",
-    "packages": [],
+    "content-hash": "ef9124c8ff46258852e7cb216be3eb8f",
+    "packages": [
+        {
+            "name": "escalated-dev/locale",
+            "version": "v0.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/escalated-dev/escalated-locale.git",
+                "reference": "803ddf003005f872fb15a4653cc2be8630b8cc60"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/escalated-dev/escalated-locale/zipball/803ddf003005f872fb15a4653cc2be8630b8cc60",
+                "reference": "803ddf003005f872fb15a4653cc2be8630b8cc60",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.1"
+            },
+            "type": "library",
+            "extra": {
+                "escalated-locale": {
+                    "json-locales-dir": "packages/composer/locales",
+                    "symfony-translations-dir": "packages/composer/translations",
+                    "wordpress-languages-dir": "packages/composer/languages"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Escalated\\Locale\\": "packages/composer/src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Canonical Escalated locale bundle for PHP consumers (Laravel, Symfony, WordPress, Filament).",
+            "homepage": "https://github.com/escalated-dev/escalated-locale",
+            "support": {
+                "issues": "https://github.com/escalated-dev/escalated-locale/issues",
+                "source": "https://github.com/escalated-dev/escalated-locale"
+            },
+            "time": "2026-05-02T18:59:37+00:00"
+        }
+    ],
     "packages-dev": [
         {
             "name": "doctrine/instantiator",
