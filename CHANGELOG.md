@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 - Granular permission tables and seeder on activation.
 - "Powered by Escalated" badge with admin toggle.
 - Workflow `delay` action — pauses a workflow run for N seconds and resumes the remaining actions via a per-minute WP-Cron sweep. Backed by a new `escalated_deferred_workflow_jobs` table with a composite `(status, run_at)` index for efficient polling. Existing installs need to reactivate the plugin to pick up the new table.
+- Users management admin page (Escalated → Users) — list WordPress users with their Escalated admin/agent roles, search by name/email, paginated 20 per page. Toggle the `escalated_admin` / `escalated_agent` WP roles per user with the same self-demote and admin→agent cascade rules as the Laravel reference (escalated-laravel #94). Gated by the `escalated_user_manage` capability (held by `escalated_admin` and `administrator` roles).
 
 ### Changed
 - License changed from GPL-2.0-or-later to MIT.
