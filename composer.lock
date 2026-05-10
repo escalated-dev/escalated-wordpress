@@ -8,16 +8,16 @@
     "packages": [
         {
             "name": "escalated-dev/locale",
-            "version": "v0.1.1",
+            "version": "v0.1.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/escalated-dev/escalated-locale.git",
-                "reference": "803ddf003005f872fb15a4653cc2be8630b8cc60"
+                "reference": "f9b2516b6bca15758c0aed64b0541fa5645599ba"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/escalated-dev/escalated-locale/zipball/803ddf003005f872fb15a4653cc2be8630b8cc60",
-                "reference": "803ddf003005f872fb15a4653cc2be8630b8cc60",
+                "url": "https://api.github.com/repos/escalated-dev/escalated-locale/zipball/f9b2516b6bca15758c0aed64b0541fa5645599ba",
+                "reference": "f9b2516b6bca15758c0aed64b0541fa5645599ba",
                 "shasum": ""
             },
             "require": {
@@ -45,7 +45,7 @@
                 "issues": "https://github.com/escalated-dev/escalated-locale/issues",
                 "source": "https://github.com/escalated-dev/escalated-locale"
             },
-            "time": "2026-05-02T18:59:37+00:00"
+            "time": "2026-05-07T03:27:22+00:00"
         }
     ],
     "packages-dev": [
