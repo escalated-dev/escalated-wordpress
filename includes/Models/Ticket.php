@@ -475,4 +475,20 @@ class Ticket
     {
         return array_map([static::class, 'enrich'], $tickets);
     }
+
+    /**
+     * Tag IDs linked to a ticket (pivot escalated_ticket_tag).
+     *
+     * @return int[]
+     */
+    public static function tag_ids(int $ticket_id): array
+    {
+        global $wpdb;
+        $pivot = Escalated::table('ticket_tag');
+        $ids = $wpdb->get_col(
+            $wpdb->prepare("SELECT tag_id FROM {$pivot} WHERE ticket_id = %d", $ticket_id)
+        );
+
+        return $ids ? array_map('intval', $ids) : [];
+    }
 }
