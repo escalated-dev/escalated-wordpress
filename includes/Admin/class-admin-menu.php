@@ -36,6 +36,7 @@ class Admin_Menu
         add_submenu_page('escalated', __('Automations', 'escalated'), __('Automations', 'escalated'), 'escalated_automation_view', 'escalated-automations', [new Admin_Automations, 'render']);
         add_submenu_page('escalated', __('Escalation Rules', 'escalated'), __('Escalation Rules', 'escalated'), 'escalated_escalation_view', 'escalated-escalation-rules', [new Admin_Escalation_Rules, 'render']);
         add_submenu_page('escalated', __('Tags', 'escalated'), __('Tags', 'escalated'), 'escalated_tag_view', 'escalated-tags', [new Admin_Tags, 'render']);
+        add_submenu_page('escalated', __('Skills', 'escalated'), __('Skills', 'escalated'), 'escalated_skill_manage', 'escalated-skills', [new Admin_Skills, 'render']);
         add_submenu_page('escalated', __('Canned Responses', 'escalated'), __('Canned Responses', 'escalated'), 'escalated_macro_manage', 'escalated-canned-responses', [new Admin_Canned_Responses, 'render']);
         add_submenu_page('escalated', __('Macros', 'escalated'), __('Macros', 'escalated'), 'escalated_macro_view', 'escalated-macros', [new Admin_Macros, 'render']);
         add_submenu_page('escalated', __('Reports', 'escalated'), __('Reports', 'escalated'), 'escalated_report_view', 'escalated-reports', [new Admin_Reports, 'render']);

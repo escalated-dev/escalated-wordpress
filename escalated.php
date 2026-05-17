@@ -4,7 +4,7 @@
  * Plugin Name: Escalated
  * Plugin URI:  https://github.com/escalated-dev/escalated-wordpress
  * Description: A full-featured helpdesk and ticketing system with multi-role support, SLA tracking, escalation rules, inbound email, macros, and REST API.
- * Version:     1.2.0
+ * Version:     1.2.1
  * Author:      Escalated
  * Author URI:  https://escalated.dev
  * License:     MIT
@@ -18,7 +18,7 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
-define('ESCALATED_VERSION', '1.2.0');
+define('ESCALATED_VERSION', '1.2.1');
 define('ESCALATED_PLUGIN_FILE', __FILE__);
 define('ESCALATED_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('ESCALATED_PLUGIN_URL', plugin_dir_url(__FILE__));

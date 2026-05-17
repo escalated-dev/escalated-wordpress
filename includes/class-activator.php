@@ -7,7 +7,7 @@ class Activator
     /**
      * Run on plugin activation.
      *
-     * Creates all 21 database tables, registers custom roles and capabilities,
+     * Creates all plugin database tables, registers custom roles and capabilities,
      * inserts default settings, and schedules cron events.
      */
     public static function activate(): void
@@ -65,7 +65,7 @@ class Activator
     }
 
     /**
-     * Create all 21 database tables using dbDelta.
+     * Create all plugin database tables using dbDelta.
      */
     private static function create_tables(): void
     {
@@ -504,10 +504,60 @@ class Activator
             KEY status_runat (status, run_at)
         ) $charset_collate;";
         dbDelta($sql);
+
+        // escalated_skills — admin-managed capabilities for routing + agent proficiency.
+        $sql = "CREATE TABLE {$prefix}skills (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            name VARCHAR(100) NOT NULL,
+            slug VARCHAR(100) NOT NULL,
+            description TEXT NULL,
+            created_at DATETIME,
+            updated_at DATETIME,
+            PRIMARY KEY  (id),
+            UNIQUE KEY slug (slug),
+            UNIQUE KEY name (name)
+        ) $charset_collate;";
+        dbDelta($sql);
+
+        // escalated_skill_routing_tags — explicit tag → skill routing (ADR 2026-05-13).
+        $sql = "CREATE TABLE {$prefix}skill_routing_tags (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            skill_id BIGINT UNSIGNED NOT NULL,
+            tag_id BIGINT UNSIGNED NOT NULL,
+            PRIMARY KEY  (id),
+            UNIQUE KEY skill_tag (skill_id, tag_id),
+            KEY tag_id (tag_id)
+        ) $charset_collate;";
+        dbDelta($sql);
+
+        // escalated_skill_routing_departments — explicit department → skill routing.
+        $sql = "CREATE TABLE {$prefix}skill_routing_departments (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            skill_id BIGINT UNSIGNED NOT NULL,
+            department_id BIGINT UNSIGNED NOT NULL,
+            PRIMARY KEY  (id),
+            UNIQUE KEY skill_department (skill_id, department_id),
+            KEY department_id (department_id)
+        ) $charset_collate;";
+        dbDelta($sql);
+
+        // escalated_agent_skills — user_id + proficiency junction (portable pattern).
+        $sql = "CREATE TABLE {$prefix}agent_skills (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            user_id BIGINT UNSIGNED NOT NULL,
+            skill_id BIGINT UNSIGNED NOT NULL,
+            proficiency SMALLINT NOT NULL DEFAULT 3,
+            created_at DATETIME,
+            updated_at DATETIME,
+            PRIMARY KEY  (id),
+            UNIQUE KEY user_skill (user_id, skill_id),
+            KEY skill_id (skill_id)
+        ) $charset_collate;";
+        dbDelta($sql);
     }
 
     /**
-     * Get all 52 granular permission definitions.
+     * Get all granular permission definitions.
      *
      * Each entry maps to a row in the escalated_permissions table AND
      * a WordPress capability prefixed with "escalated_".
@@ -561,6 +611,9 @@ class Activator
             // Tags
             ['slug' => 'tag.view',   'name' => 'View tags',   'group' => 'Tags', 'description' => 'View tags'],
             ['slug' => 'tag.manage', 'name' => 'Manage tags', 'group' => 'Tags', 'description' => 'Create, edit, delete tags'],
+            // Skills
+            ['slug' => 'skill.view',   'name' => 'View skills',   'group' => 'Skills', 'description' => 'View skills and routing mappings'],
+            ['slug' => 'skill.manage', 'name' => 'Manage skills', 'group' => 'Skills', 'description' => 'Create, edit, delete skills and agent proficiency'],
             // Custom Fields
             ['slug' => 'custom_field.view',   'name' => 'View custom fields',   'group' => 'Custom Fields', 'description' => 'View custom fields'],
             ['slug' => 'custom_field.manage', 'name' => 'Manage custom fields', 'group' => 'Custom Fields', 'description' => 'Create, edit, delete custom fields'],
