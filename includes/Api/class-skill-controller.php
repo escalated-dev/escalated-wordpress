@@ -163,9 +163,12 @@ class Skill_Controller extends Base_Controller
     }
 
     /**
-     * PUT/PATCH /admin/skills/{id} — update.
+     * PUT/PATCH /admin/skills/{id} — update. Signature matches
+     * WP_REST_Controller::update_item which is typed `$request`
+     * (no class hint) — adding WP_REST_Request here triggers PHP's
+     * LSP variance check.
      */
-    public function update_item(WP_REST_Request $request)
+    public function update_item($request)
     {
         $id = (int) $request->get_param('id');
         $payload = $this->parse_json_body($request);
@@ -178,9 +181,10 @@ class Skill_Controller extends Base_Controller
     }
 
     /**
-     * DELETE /admin/skills/{id} — destroy.
+     * DELETE /admin/skills/{id} — destroy. Signature matches the parent
+     * WP_REST_Controller::delete_item which is typed `$request` (no hint).
      */
-    public function delete_item(WP_REST_Request $request)
+    public function delete_item($request)
     {
         $id = (int) $request->get_param('id');
         $result = SkillService::delete($id);
