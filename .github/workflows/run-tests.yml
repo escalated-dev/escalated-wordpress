@@ -57,18 +57,41 @@ jobs:
 
       - name: Install WordPress test suite
         run: |
+          set -o pipefail
           WP_TESTS_DIR=/tmp/wordpress-tests-lib
           WP_CORE_DIR=/tmp/wordpress
 
+          # Download with retries: WordPress.org occasionally rate-limits or returns
+          # HTML instead of a tarball when under load, which produces
+          # "gzip: stdin: not in gzip format" — retrying clears it.
+          download_with_retry() {
+            local url="$1"
+            local dest="$2"
+            shift 2
+            for attempt in 1 2 3 4 5; do
+              if curl -sSL --retry 3 --retry-delay 5 --fail "$url" -o /tmp/wp-download.tar.gz; then
+                if tar tzf /tmp/wp-download.tar.gz > /dev/null 2>&1; then
+                  tar xz --strip-components=1 -C "$dest" "$@" -f /tmp/wp-download.tar.gz
+                  rm -f /tmp/wp-download.tar.gz
+                  return 0
+                fi
+              fi
+              echo "Attempt $attempt failed for $url, sleeping before retry..."
+              sleep $((attempt * 5))
+            done
+            echo "Failed to download $url after 5 attempts" >&2
+            return 1
+          }
+
           # Download WordPress
           mkdir -p "$WP_CORE_DIR"
-          curl -sL https://wordpress.org/latest.tar.gz | tar xz --strip-components=1 -C "$WP_CORE_DIR"
+          download_with_retry https://wordpress.org/latest.tar.gz "$WP_CORE_DIR"
 
           # Download WordPress test suite
           mkdir -p "$WP_TESTS_DIR"
           WP_VERSION=$(php -r "require '$WP_CORE_DIR/wp-includes/version.php'; echo \$wp_version;")
           WP_BRANCH="${WP_VERSION%.*}"
-          curl -sL "https://github.com/WordPress/wordpress-develop/archive/refs/heads/${WP_BRANCH}.tar.gz" | tar xz --strip-components=1 -C "$WP_TESTS_DIR" "wordpress-develop-${WP_BRANCH}/tests/phpunit/includes" "wordpress-develop-${WP_BRANCH}/tests/phpunit/data"
+          download_with_retry "https://github.com/WordPress/wordpress-develop/archive/refs/heads/${WP_BRANCH}.tar.gz" "$WP_TESTS_DIR" "wordpress-develop-${WP_BRANCH}/tests/phpunit/includes" "wordpress-develop-${WP_BRANCH}/tests/phpunit/data"
           # Move extracted contents to expected layout
           mv "$WP_TESTS_DIR/tests/phpunit/includes" "$WP_TESTS_DIR/includes"
           mv "$WP_TESTS_DIR/tests/phpunit/data" "$WP_TESTS_DIR/data"
