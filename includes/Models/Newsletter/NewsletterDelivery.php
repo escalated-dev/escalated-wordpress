@@ -16,8 +16,9 @@ class NewsletterDelivery
     public static function find_by_token(string $token): ?object
     {
         global $wpdb;
+
         return $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM " . self::table() . " WHERE tracking_token = %s",
+            'SELECT * FROM '.self::table().' WHERE tracking_token = %s',
             $token
         )) ?: null;
     }

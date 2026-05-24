@@ -18,16 +18,16 @@
 </head>
 <body>
   <div class="container">
-    <div class="content"><?php echo $body; // intentionally not escaped — pre-rendered safe HTML ?></div>
+    <div class="content"><?php echo $body; // intentionally not escaped — pre-rendered safe HTML?></div>
     <div class="footer">
       <p>
         <a href="<?php echo esc_url($view_in_browser_url); ?>">View in browser</a>
         ·
         <a href="<?php echo esc_url($unsubscribe_url); ?>">Unsubscribe</a>
       </p>
-      <?php if (! empty($brand['physical_address'])): ?>
+      <?php if (! empty($brand['physical_address'])) { ?>
         <p><?php echo esc_html($brand['physical_address']); ?></p>
-      <?php endif; ?>
+      <?php } ?>
     </div>
   </div>
 </body>

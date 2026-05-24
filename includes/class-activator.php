@@ -874,8 +874,8 @@ class Activator
     public static function create_newsletter_tables(): void
     {
         global $wpdb;
-        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-        $prefix = $wpdb->prefix . 'escalated_';
+        require_once ABSPATH.'wp-admin/includes/upgrade.php';
+        $prefix = $wpdb->prefix.'escalated_';
         $charset_collate = $wpdb->get_charset_collate();
 
         $sql = "CREATE TABLE {$prefix}newsletter_lists (
@@ -978,7 +978,7 @@ class Activator
         dbDelta($sql);
 
         // Add marketing_opt_out_at column to contacts if it doesn't exist.
-        $contacts_table = $prefix . 'contacts';
+        $contacts_table = $prefix.'contacts';
         $col = $wpdb->get_var($wpdb->prepare(
             "SHOW COLUMNS FROM `{$contacts_table}` LIKE %s",
             'marketing_opt_out_at'

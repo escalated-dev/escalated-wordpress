@@ -38,12 +38,12 @@ class NewsletterRenderer
 
     public function unsubscribe_url(object $delivery): string
     {
-        return untrailingslashit(home_url()) . '/escalated/n/u/' . $delivery->tracking_token;
+        return untrailingslashit(home_url()).'/escalated/n/u/'.$delivery->tracking_token;
     }
 
     public function view_in_browser_url(object $delivery): string
     {
-        return untrailingslashit(home_url()) . '/escalated/n/v/' . $delivery->tracking_token;
+        return untrailingslashit(home_url()).'/escalated/n/v/'.$delivery->tracking_token;
     }
 
     private function brand(): array
@@ -63,7 +63,8 @@ class NewsletterRenderer
             return $rendered;
         }
         $escaped = esc_html($md);
-        return '<p>' . implode('</p><p>', preg_split('/\n{2,}/', $escaped)) . '</p>';
+
+        return '<p>'.implode('</p><p>', preg_split('/\n{2,}/', $escaped)).'</p>';
     }
 
     private function resolve_merge_fields(string $html, object $contact, object $delivery): string
@@ -86,8 +87,10 @@ class NewsletterRenderer
         if (strpos($path, 'contact.metadata.') === 0) {
             $key = substr($path, strlen('contact.metadata.'));
             $meta = json_decode($contact->metadata ?? '{}', true) ?: [];
+
             return isset($meta[$key]) ? (string) $meta[$key] : '';
         }
+
         return '';
     }
 
@@ -95,15 +98,16 @@ class NewsletterRenderer
     {
         $themes_dir = apply_filters(
             'escalated_newsletter_themes_dir',
-            ESCALATED_PLUGIN_DIR . 'templates/newsletter_themes'
+            ESCALATED_PLUGIN_DIR.'templates/newsletter_themes'
         );
-        $path = $themes_dir . '/' . $slug . '.php';
+        $path = $themes_dir.'/'.$slug.'.php';
         if (! file_exists($path)) {
-            $path = $themes_dir . '/default.php';
+            $path = $themes_dir.'/default.php';
         }
         extract($ctx, EXTR_OVERWRITE);
         ob_start();
         include $path;
+
         return (string) ob_get_clean();
     }
 
@@ -111,26 +115,39 @@ class NewsletterRenderer
     {
         $unsub = $this->unsubscribe_url($delivery);
         $view = $this->view_in_browser_url($delivery);
+
         return preg_replace_callback('#(<a\s[^>]*\bhref=)("|\')(.*?)\2#i', function ($m) use ($delivery, $unsub, $view) {
-            $prefix = $m[1]; $quote = $m[2]; $href = $m[3];
-            if ($href === '' || strpos($href, '#') === 0) return $m[0];
+            $prefix = $m[1];
+            $quote = $m[2];
+            $href = $m[3];
+            if ($href === '' || strpos($href, '#') === 0) {
+                return $m[0];
+            }
             $scheme = strtolower(parse_url($href, PHP_URL_SCHEME) ?: '');
-            if (! in_array($scheme, self::ALLOWED_SCHEMES, true)) return "{$prefix}{$quote}#{$quote}";
-            if (in_array($scheme, ['mailto', 'tel'], true)) return $m[0];
-            if (strpos($href, $unsub) === 0 || strpos($href, $view) === 0) return $m[0];
+            if (! in_array($scheme, self::ALLOWED_SCHEMES, true)) {
+                return "{$prefix}{$quote}#{$quote}";
+            }
+            if (in_array($scheme, ['mailto', 'tel'], true)) {
+                return $m[0];
+            }
+            if (strpos($href, $unsub) === 0 || strpos($href, $view) === 0) {
+                return $m[0];
+            }
             $encoded = rtrim(strtr(base64_encode($href), '+/', '-_'), '=');
-            $tracked = untrailingslashit(home_url()) . '/escalated/n/c/' . $delivery->tracking_token . '?u=' . $encoded;
+            $tracked = untrailingslashit(home_url()).'/escalated/n/c/'.$delivery->tracking_token.'?u='.$encoded;
+
             return "{$prefix}{$quote}{$tracked}{$quote}";
         }, $html);
     }
 
     private function inject_pixel(string $html, object $delivery): string
     {
-        $url = untrailingslashit(home_url()) . '/escalated/n/o/' . $delivery->tracking_token . '.gif';
-        $pixel = '<img src="' . esc_attr($url) . '" width="1" height="1" alt="" />';
+        $url = untrailingslashit(home_url()).'/escalated/n/o/'.$delivery->tracking_token.'.gif';
+        $pixel = '<img src="'.esc_attr($url).'" width="1" height="1" alt="" />';
         if (strpos($html, '</body>') !== false) {
-            return str_replace('</body>', $pixel . '</body>', $html);
+            return str_replace('</body>', $pixel.'</body>', $html);
         }
-        return $html . $pixel;
+
+        return $html.$pixel;
     }
 }

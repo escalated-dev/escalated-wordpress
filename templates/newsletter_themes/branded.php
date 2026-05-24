@@ -20,11 +20,11 @@
 <body>
   <div class="container">
     <div class="header">
-      <?php if (! empty($brand['logo_url'])): ?>
+      <?php if (! empty($brand['logo_url'])) { ?>
         <img src="<?php echo esc_url($brand['logo_url']); ?>" alt="<?php echo esc_attr($brand['name']); ?>" />
-      <?php else: ?>
+      <?php } else { ?>
         <h1><?php echo esc_html($brand['name']); ?></h1>
-      <?php endif; ?>
+      <?php } ?>
     </div>
     <div class="content"><?php echo $body; ?></div>
     <div class="footer">
@@ -33,9 +33,9 @@
         ·
         <a href="<?php echo esc_url($unsubscribe_url); ?>">Unsubscribe</a>
       </p>
-      <?php if (! empty($brand['physical_address'])): ?>
+      <?php if (! empty($brand['physical_address'])) { ?>
         <p><?php echo esc_html($brand['physical_address']); ?></p>
-      <?php endif; ?>
+      <?php } ?>
     </div>
   </div>
 </body>
