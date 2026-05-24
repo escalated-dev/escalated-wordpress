@@ -14,6 +14,7 @@ class NewsletterTemplate
     public static function find(int $id): ?object
     {
         global $wpdb;
-        return $wpdb->get_row($wpdb->prepare("SELECT * FROM " . self::table() . " WHERE id = %d", $id)) ?: null;
+
+        return $wpdb->get_row($wpdb->prepare('SELECT * FROM '.self::table().' WHERE id = %d', $id)) ?: null;
     }
 }
