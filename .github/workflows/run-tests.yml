@@ -90,7 +90,10 @@ jobs:
           # Download WordPress test suite
           mkdir -p "$WP_TESTS_DIR"
           WP_VERSION=$(php -r "require '$WP_CORE_DIR/wp-includes/version.php'; echo \$wp_version;")
-          WP_BRANCH="${WP_VERSION%.*}"
+          # Compute MAJOR.MINOR branch name (e.g. "6.7" from "6.7.1" or "6.7"; "7.0" from "7.0").
+          # The legacy `${WP_VERSION%.*}` form strips a `7.0` to just `7`, which is not a real
+          # wordpress-develop branch — they're always named MAJOR.MINOR.
+          WP_BRANCH=$(echo "$WP_VERSION" | awk -F. '{ if ($2 != "") print $1"."$2; else print $1 }')
           download_with_retry "https://github.com/WordPress/wordpress-develop/archive/refs/heads/${WP_BRANCH}.tar.gz" "$WP_TESTS_DIR" "wordpress-develop-${WP_BRANCH}/tests/phpunit/includes" "wordpress-develop-${WP_BRANCH}/tests/phpunit/data"
           # Move extracted contents to expected layout
           mv "$WP_TESTS_DIR/tests/phpunit/includes" "$WP_TESTS_DIR/includes"
