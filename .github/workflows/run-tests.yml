@@ -62,13 +62,15 @@ jobs:
 
           # Download WordPress
           mkdir -p "$WP_CORE_DIR"
-          curl -sL https://wordpress.org/latest.tar.gz | tar xz --strip-components=1 -C "$WP_CORE_DIR"
+          curl -fsSL https://wordpress.org/latest.tar.gz | tar xz --strip-components=1 -C "$WP_CORE_DIR"
 
           # Download WordPress test suite
           mkdir -p "$WP_TESTS_DIR"
           WP_VERSION=$(php -r "require '$WP_CORE_DIR/wp-includes/version.php'; echo \$wp_version;")
-          WP_BRANCH="${WP_VERSION%.*}"
-          curl -sL "https://github.com/WordPress/wordpress-develop/archive/refs/heads/${WP_BRANCH}.tar.gz" | tar xz --strip-components=1 -C "$WP_TESTS_DIR" "wordpress-develop-${WP_BRANCH}/tests/phpunit/includes" "wordpress-develop-${WP_BRANCH}/tests/phpunit/data"
+          WP_VERSION_BASE="${WP_VERSION%%-*}"
+          IFS='.' read -r WP_MAJOR WP_MINOR _ <<< "$WP_VERSION_BASE"
+          WP_BRANCH="${WP_MAJOR}.${WP_MINOR}"
+          curl -fsSL "https://github.com/WordPress/wordpress-develop/archive/refs/heads/${WP_BRANCH}.tar.gz" | tar xz --strip-components=1 -C "$WP_TESTS_DIR" "wordpress-develop-${WP_BRANCH}/tests/phpunit/includes" "wordpress-develop-${WP_BRANCH}/tests/phpunit/data"
           # Move extracted contents to expected layout
           mv "$WP_TESTS_DIR/tests/phpunit/includes" "$WP_TESTS_DIR/includes"
           mv "$WP_TESTS_DIR/tests/phpunit/data" "$WP_TESTS_DIR/data"
