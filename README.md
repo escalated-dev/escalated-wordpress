@@ -114,6 +114,46 @@ Main route groups:
 - `/dashboard`
 - `/admin/api-tokens`
 
+## Custom Ticket Actions
+
+Host plugins can add custom buttons to the agent ticket screen and handle clicks
+with normal WordPress hooks. Register actions via the `escalated_ticket_actions`
+filter:
+
+```php
+add_filter('escalated_ticket_actions', function (array $actions): array {
+    $actions[] = [
+        'key' => 'sync-crm',
+        'label' => 'Sync CRM',
+        'variant' => 'primary',           // primary | secondary | danger
+        'confirmation' => 'Sync this ticket to the CRM?',
+        'metadata' => ['icon' => 'refresh-cw'],
+        // 'visible' / 'enabled' may be bool or callable($ticket, $user_id)
+        'enabled' => fn ($ticket, $user_id) => empty($ticket->metadata['crm_synced']),
+    ];
+
+    return $actions;
+});
+```
+
+Visible actions appear on the ticket detail response as `custom_actions` (each
+with a `url` and `method`). Triggering one
+(`POST /wp-json/escalated/v1/tickets/{ref}/actions/{key}`) validates the action
+is visible (404) and enabled (403), then fires the
+`escalated_ticket_action_triggered` hook:
+
+```php
+add_action('escalated_ticket_action_triggered', function ($ticket, $action_key, $user_id, $payload, $metadata) {
+    if ($action_key !== 'sync-crm') {
+        return;
+    }
+    // your handler
+}, 10, 5);
+```
+
+Escalated also records an internal note on the ticket whenever an action fires,
+for auditability.
+
 ## Inbound Email Webhooks
 
 Inbound route pattern:
