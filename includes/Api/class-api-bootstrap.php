@@ -40,6 +40,7 @@ class Api_Bootstrap
             new Chat_Controller,
             new Widget_Chat_Controller,
             new Skill_Controller,
+            new Ticket_Subject_Controller,
         ];
 
         foreach ($controllers as $controller) {

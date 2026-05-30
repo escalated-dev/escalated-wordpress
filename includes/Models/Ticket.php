@@ -5,6 +5,7 @@ namespace Escalated\Models;
 use Escalated\Escalated;
 use Escalated\Services\TicketSnoozeService;
 use Escalated\Services\TicketSplitService;
+use Escalated\Services\TicketSubjectService;
 
 class Ticket
 {
@@ -461,6 +462,8 @@ class Ticket
                 'link_type' => $link->link_type ?? 'related',
             ];
         }, $linked);
+
+        $ticket->subjects = TicketSubjectService::serialize_for_ticket((int) $ticket->id);
 
         return $ticket;
     }
