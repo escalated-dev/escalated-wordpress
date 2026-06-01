@@ -129,6 +129,10 @@ class Widget_Controller extends Base_Controller
                             'required' => true,
                             'type' => 'string',
                         ],
+                        'guest_token' => [
+                            'type' => 'string',
+                            'sanitize_callback' => 'sanitize_text_field',
+                        ],
                     ],
                 ],
             ]
@@ -271,15 +275,20 @@ class Widget_Controller extends Base_Controller
     }
 
     /**
-     * Lookup a ticket by reference (requires guest_email for verification).
+     * Lookup a ticket by reference (requires the guest token for verification).
      */
     public function get_ticket(WP_REST_Request $request)
     {
         $ref = sanitize_text_field($request->get_param('ref'));
+        $guest_token = sanitize_text_field((string) $request->get_param('guest_token'));
 
         $ticket = Ticket::find_by_reference($ref);
         if (! $ticket) {
             return $this->error('escalated_not_found', __('Ticket not found.', 'escalated'), 404);
+        }
+
+        if (empty($ticket->guest_token) || ! hash_equals((string) $ticket->guest_token, $guest_token)) {
+            return $this->error('escalated_forbidden', __('Ticket verification failed.', 'escalated'), 403);
         }
 
         return $this->success([
