@@ -6,6 +6,7 @@
 
 namespace Escalated\Api;
 
+use Escalated\Models\ApiToken;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_REST_Server;
@@ -186,8 +187,6 @@ class Api_Token_Controller extends Base_Controller
      */
     public function create_item($request)
     {
-        global $wpdb;
-
         $name = sanitize_text_field($request->get_param('name'));
         $user_id = absint($request->get_param('user_id'));
 
@@ -221,36 +220,28 @@ class Api_Token_Controller extends Base_Controller
             }
         }
 
-        // Generate a cryptographically secure random token.
-        $plain_token = wp_generate_password(64, false, false);
+        $result = ApiToken::create_token($user_id, $name, $abilities);
 
-        $table = \Escalated\Escalated::table('api_tokens');
-
-        $inserted = $wpdb->insert($table, [
-            'user_id' => $user_id,
-            'name' => $name,
-            'token' => $plain_token,
-            'abilities' => wp_json_encode($abilities),
-            'expires_at' => $expires_at,
-            'created_at' => current_time('mysql'),
-        ]);
-
-        if ($inserted === false) {
+        if ($result === false) {
             return $this->error('escalated_create_failed', __('Failed to create API token.', 'escalated'), 500);
         }
 
-        $token_id = $wpdb->insert_id;
+        if ($expires_at !== null) {
+            ApiToken::update($result['record']->id, ['expires_at' => $expires_at]);
+        }
+
+        $token = ApiToken::find($result['record']->id);
 
         return $this->success([
             'message' => __('API token created successfully. Store this token securely - it will not be shown again.', 'escalated'),
             'token' => [
-                'id' => $token_id,
+                'id' => (int) $token->id,
                 'name' => $name,
-                'plain_token' => $plain_token,
+                'plain_token' => $result['token'],
                 'user_id' => $user_id,
                 'abilities' => $abilities,
-                'expires_at' => $expires_at,
-                'created_at' => current_time('mysql'),
+                'expires_at' => $token->expires_at,
+                'created_at' => $token->created_at,
             ],
         ], 201);
     }

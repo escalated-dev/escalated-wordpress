@@ -144,6 +144,39 @@ class Test_Api extends WP_UnitTestCase
         $this->assertEquals(200, $response->get_status());
     }
 
+    public function test_rest_created_api_token_is_hashed_and_authenticates(): void
+    {
+        $request = $this->create_request('POST', 'admin/api-tokens', [
+            'name' => 'REST Created Token',
+            'user_id' => $this->admin_id,
+            'abilities' => ['*'],
+        ]);
+
+        $response = $this->server->dispatch($request);
+        $data = $response->get_data();
+
+        $this->assertEquals(201, $response->get_status());
+        $this->assertArrayHasKey('token', $data);
+        $this->assertArrayHasKey('plain_token', $data['token']);
+
+        $plain_token = $data['token']['plain_token'];
+
+        global $wpdb;
+        $token_table = \Escalated\Escalated::table('api_tokens');
+        $stored_token = $wpdb->get_var(
+            $wpdb->prepare('SELECT token FROM '.$token_table.' WHERE id = %d', $data['token']['id'])
+        );
+
+        $this->assertNotSame($plain_token, $stored_token);
+        $this->assertSame(hash('sha256', $plain_token), $stored_token);
+
+        $auth_request = new WP_REST_Request('GET', '/escalated/v1/tickets');
+        $auth_request->set_header('Authorization', 'Bearer '.$plain_token);
+        $auth_response = $this->server->dispatch($auth_request);
+
+        $this->assertEquals(200, $auth_response->get_status());
+    }
+
     // =========================================================================
     // List Tickets
     // =========================================================================
