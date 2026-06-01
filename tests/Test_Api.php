@@ -144,6 +144,33 @@ class Test_Api extends WP_UnitTestCase
         $this->assertEquals(200, $response->get_status());
     }
 
+    public function test_legacy_plaintext_api_token_is_rehashed_after_authentication(): void
+    {
+        global $wpdb;
+        $token_table = \Escalated\Escalated::table('api_tokens');
+        $legacy_token = wp_generate_password(64, false, false);
+
+        $wpdb->insert($token_table, [
+            'user_id' => $this->admin_id,
+            'name' => 'Legacy Plaintext Token',
+            'token' => $legacy_token,
+            'abilities' => wp_json_encode(['*']),
+            'created_at' => current_time('mysql'),
+        ]);
+
+        $request = new WP_REST_Request('GET', '/escalated/v1/tickets');
+        $request->set_header('Authorization', 'Bearer '.$legacy_token);
+        $response = $this->server->dispatch($request);
+
+        $this->assertEquals(200, $response->get_status());
+
+        $stored_token = $wpdb->get_var(
+            $wpdb->prepare('SELECT token FROM '.$token_table.' WHERE name = %s', 'Legacy Plaintext Token')
+        );
+
+        $this->assertSame(hash('sha256', $legacy_token), $stored_token);
+    }
+
     public function test_rest_created_api_token_is_hashed_and_authenticates(): void
     {
         $request = $this->create_request('POST', 'admin/api-tokens', [
