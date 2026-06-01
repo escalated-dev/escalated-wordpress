@@ -6,8 +6,11 @@
 
 namespace Escalated\Api;
 
+use Escalated\Models\ChatSession;
+use Escalated\Models\Ticket;
 use Escalated\Services\ChatSessionService;
 use WP_REST_Request;
+use WP_REST_Response;
 use WP_REST_Server;
 
 class Widget_Chat_Controller extends Base_Controller
@@ -32,7 +35,7 @@ class Widget_Chat_Controller extends Base_Controller
                 [
                     'methods' => WP_REST_Server::READABLE,
                     'callback' => [$this, 'availability'],
-                    'permission_callback' => '__return_true',
+                    'permission_callback' => [$this, 'widget_enabled_check'],
                     'args' => [
                         'department_id' => [
                             'type' => 'integer',
@@ -51,7 +54,7 @@ class Widget_Chat_Controller extends Base_Controller
                 [
                     'methods' => WP_REST_Server::CREATABLE,
                     'callback' => [$this, 'start_chat'],
-                    'permission_callback' => '__return_true',
+                    'permission_callback' => [$this, 'widget_enabled_check'],
                     'args' => [
                         'name' => [
                             'type' => 'string',
@@ -92,6 +95,11 @@ class Widget_Chat_Controller extends Base_Controller
                             'required' => true,
                             'type' => 'string',
                         ],
+                        'guest_token' => [
+                            'required' => true,
+                            'type' => 'string',
+                            'sanitize_callback' => 'sanitize_text_field',
+                        ],
                     ],
                 ],
             ]
@@ -105,12 +113,17 @@ class Widget_Chat_Controller extends Base_Controller
                 [
                     'methods' => WP_REST_Server::CREATABLE,
                     'callback' => [$this, 'end_chat'],
-                    'permission_callback' => '__return_true',
+                    'permission_callback' => [$this, 'widget_enabled_check'],
                     'args' => [
                         'session_id' => [
                             'required' => true,
                             'type' => 'integer',
                             'sanitize_callback' => 'absint',
+                        ],
+                        'guest_token' => [
+                            'required' => true,
+                            'type' => 'string',
+                            'sanitize_callback' => 'sanitize_text_field',
                         ],
                     ],
                 ],
@@ -125,12 +138,17 @@ class Widget_Chat_Controller extends Base_Controller
                 [
                     'methods' => WP_REST_Server::READABLE,
                     'callback' => [$this, 'poll_events'],
-                    'permission_callback' => '__return_true',
+                    'permission_callback' => [$this, 'widget_enabled_check'],
                     'args' => [
                         'session_id' => [
                             'required' => true,
                             'type' => 'integer',
                             'sanitize_callback' => 'absint',
+                        ],
+                        'guest_token' => [
+                            'required' => true,
+                            'type' => 'string',
+                            'sanitize_callback' => 'sanitize_text_field',
                         ],
                         'since' => [
                             'type' => 'string',
@@ -142,7 +160,15 @@ class Widget_Chat_Controller extends Base_Controller
         );
     }
 
-    public function availability(WP_REST_Request $request): \WP_REST_Response
+    /**
+     * Reuse the ticket widget's enabled setting and per-IP rate limit.
+     */
+    public function widget_enabled_check()
+    {
+        return (new Widget_Controller)->widget_enabled_check();
+    }
+
+    public function availability(WP_REST_Request $request): WP_REST_Response
     {
         $service = new ChatSessionService;
         $department_id = $request->get_param('department_id') ? (int) $request->get_param('department_id') : null;
@@ -165,12 +191,14 @@ class Widget_Chat_Controller extends Base_Controller
                 $request->get_param('message'),
                 $request->get_param('department_id') ? (int) $request->get_param('department_id') : null
             );
+            $ticket = Ticket::find((int) $session->ticket_id);
 
             return $this->success([
                 'id' => (int) $session->id,
                 'ticket_id' => (int) $session->ticket_id,
                 'status' => $session->status,
                 'visitor_name' => $session->visitor_name,
+                'guest_token' => $ticket->guest_token ?? null,
                 'created_at' => $session->created_at,
             ], 201);
         } catch (\Throwable $e) {
@@ -185,6 +213,11 @@ class Widget_Chat_Controller extends Base_Controller
         $body = $request->get_param('body');
 
         try {
+            $session = $this->verified_session($session_id, (string) $request->get_param('guest_token'));
+            if ($session instanceof \WP_Error) {
+                return $session;
+            }
+
             $reply = $service->send_message($session_id, $body, null, 'visitor');
 
             return $this->success($reply, 201);
@@ -199,6 +232,11 @@ class Widget_Chat_Controller extends Base_Controller
         $session_id = (int) $request->get_param('session_id');
 
         try {
+            $session = $this->verified_session($session_id, (string) $request->get_param('guest_token'));
+            if ($session instanceof \WP_Error) {
+                return $session;
+            }
+
             $session = $service->end($session_id);
 
             return $this->success([
@@ -215,14 +253,14 @@ class Widget_Chat_Controller extends Base_Controller
      * Poll for new messages in a chat session.
      * WordPress doesn't support WebSocket, so this provides long-polling.
      */
-    public function poll_events(WP_REST_Request $request): \WP_REST_Response
+    public function poll_events(WP_REST_Request $request): WP_REST_Response|\WP_Error
     {
         $session_id = (int) $request->get_param('session_id');
         $since = $request->get_param('since') ?: gmdate('Y-m-d H:i:s', strtotime('-30 seconds'));
 
-        $session = \Escalated\Models\ChatSession::find($session_id);
-        if (! $session) {
-            return $this->error('escalated_not_found', __('Chat session not found.', 'escalated'), 404);
+        $session = $this->verified_session($session_id, (string) $request->get_param('guest_token'));
+        if ($session instanceof \WP_Error) {
+            return $session;
         }
 
         global $wpdb;
@@ -239,5 +277,23 @@ class Widget_Chat_Controller extends Base_Controller
             'session_status' => $session->status,
             'messages' => $replies,
         ]);
+    }
+
+    /**
+     * Verify that a public widget caller knows the ticket guest token for a session.
+     */
+    private function verified_session(int $session_id, string $guest_token): \stdClass|\WP_Error
+    {
+        $session = ChatSession::find($session_id);
+        if (! $session) {
+            return $this->error('escalated_not_found', __('Chat session not found.', 'escalated'), 404);
+        }
+
+        $ticket = Ticket::find((int) $session->ticket_id);
+        if (! $ticket || empty($ticket->guest_token) || ! hash_equals((string) $ticket->guest_token, $guest_token)) {
+            return $this->error('escalated_forbidden', __('Chat session verification failed.', 'escalated'), 403);
+        }
+
+        return $session;
     }
 }
