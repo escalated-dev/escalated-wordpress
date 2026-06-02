@@ -373,6 +373,43 @@ class TicketService
     }
 
     /**
+     * Subscribe a host user as a follower of the ticket. Idempotent — a user
+     * cannot follow the same ticket twice (mirrors the unique check in the
+     * REST controller's toggle_follow). No-op on a non-positive id.
+     *
+     * @param  int  $ticket_id  Ticket ID.
+     * @param  int  $user_id  Host user ID to add as a follower.
+     */
+    public function follow(int $ticket_id, int $user_id): void
+    {
+        if ($ticket_id <= 0 || $user_id <= 0) {
+            return;
+        }
+
+        global $wpdb;
+        $table = \Escalated\Escalated::table('ticket_followers');
+
+        $exists = (int) $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT COUNT(*) FROM {$table} WHERE ticket_id = %d AND user_id = %d",
+                $ticket_id,
+                $user_id
+            )
+        );
+        if ($exists > 0) {
+            return;
+        }
+
+        $wpdb->insert($table, [
+            'ticket_id' => $ticket_id,
+            'user_id' => $user_id,
+            'created_at' => current_time('mysql'),
+        ]);
+
+        do_action('escalated_ticket_followed', $ticket_id, $user_id);
+    }
+
+    /**
      * Change a ticket's department.
      *
      * @param  int  $ticket_id  Ticket ID.
