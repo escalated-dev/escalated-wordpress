@@ -554,6 +554,23 @@ class Activator
             KEY skill_id (skill_id)
         ) $charset_collate;";
         dbDelta($sql);
+
+        // escalated_ticket_subjects — host entities a ticket is *about* (polymorphic).
+        $sql = "CREATE TABLE {$prefix}ticket_subjects (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            ticket_id BIGINT UNSIGNED NOT NULL,
+            subject_type VARCHAR(255) NOT NULL,
+            subject_id VARCHAR(255) NOT NULL,
+            role VARCHAR(255) NULL,
+            position INT NOT NULL DEFAULT 0,
+            created_at DATETIME,
+            updated_at DATETIME,
+            PRIMARY KEY  (id),
+            KEY ticket_id (ticket_id),
+            UNIQUE KEY ticket_subject_unique (ticket_id, subject_type, subject_id),
+            KEY subject_lookup (subject_type, subject_id)
+        ) $charset_collate;";
+        dbDelta($sql);
     }
 
     /**
