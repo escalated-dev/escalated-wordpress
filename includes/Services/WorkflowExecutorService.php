@@ -188,6 +188,10 @@ class WorkflowExecutorService
                 $this->insert_canned_reply($ticket, $value);
                 break;
 
+            case 'add_follower':
+                $this->add_follower($ticket_id, $value);
+                break;
+
             default:
                 $this->log_debug(sprintf('unknown action type: %s', $type));
         }
@@ -270,6 +274,20 @@ class WorkflowExecutorService
         }
 
         return null;
+    }
+
+    /**
+     * Add a host user as a follower of the ticket. The value is a numeric
+     * user id; non-positive values are skipped. TicketService::follow is
+     * idempotent, so following the same user twice is a harmless no-op.
+     */
+    protected function add_follower(int $ticket_id, string $value): void
+    {
+        $user_id = (int) $value;
+        if ($user_id <= 0) {
+            return;
+        }
+        $this->ticket_service->follow($ticket_id, $user_id);
     }
 
     protected function add_note(int $ticket_id, string $body): void

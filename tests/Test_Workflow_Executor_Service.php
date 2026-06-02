@@ -257,6 +257,60 @@ class Test_Workflow_Executor_Service extends WP_UnitTestCase
         $this->assertEquals(1, $attached);
     }
 
+    public function test_execute_add_follower_inserts_row(): void
+    {
+        $ticket = $this->make_ticket();
+
+        $this->executor->execute(
+            $ticket,
+            wp_json_encode([['type' => 'add_follower', 'value' => (string) $this->agent_id]])
+        );
+
+        global $wpdb;
+        $table = Escalated\Escalated::table('ticket_followers');
+        $count = (int) $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT COUNT(*) FROM {$table} WHERE ticket_id = %d AND user_id = %d",
+                $ticket->id,
+                $this->agent_id
+            )
+        );
+        $this->assertEquals(1, $count);
+    }
+
+    public function test_execute_add_follower_is_idempotent(): void
+    {
+        $ticket = $this->make_ticket();
+        $json = wp_json_encode([['type' => 'add_follower', 'value' => (string) $this->agent_id]]);
+
+        $this->executor->execute($ticket, $json);
+        $this->executor->execute($ticket, $json);
+
+        global $wpdb;
+        $table = Escalated\Escalated::table('ticket_followers');
+        $count = (int) $wpdb->get_var(
+            $wpdb->prepare("SELECT COUNT(*) FROM {$table} WHERE ticket_id = %d", $ticket->id)
+        );
+        $this->assertEquals(1, $count);
+    }
+
+    public function test_execute_add_follower_blank_value_is_noop(): void
+    {
+        $ticket = $this->make_ticket();
+
+        $this->executor->execute(
+            $ticket,
+            wp_json_encode([['type' => 'add_follower', 'value' => '0']])
+        );
+
+        global $wpdb;
+        $table = Escalated\Escalated::table('ticket_followers');
+        $count = (int) $wpdb->get_var(
+            $wpdb->prepare("SELECT COUNT(*) FROM {$table} WHERE ticket_id = %d", $ticket->id)
+        );
+        $this->assertEquals(0, $count);
+    }
+
     public function test_execute_returns_parsed_action_list(): void
     {
         $ticket = $this->make_ticket();
