@@ -29,7 +29,7 @@ class NewsletterRenderer
             'brand' => $this->brand(),
         ]);
 
-        if (! get_option('escalated_newsletter_tracking_enabled', '1')) {
+        if (! NewsletterConfig::tracking_enabled()) {
             return $themed;
         }
 
