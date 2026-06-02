@@ -133,6 +133,7 @@ class TicketSubjectService
      * or a numeric array [type, id] or [type, id, role].
      *
      * @param  array<int, array<string, mixed>|array<int, string>>  $subjects
+     *
      * @throws \InvalidArgumentException
      */
     public static function sync(int $ticket_id, array $subjects, bool $enforce_allowlist = true): void
