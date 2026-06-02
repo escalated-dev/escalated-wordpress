@@ -134,17 +134,34 @@ class Test_Widget_Api extends WP_UnitTestCase
     // Widget Ticket Lookup Tests
     // =========================================================================
 
-    public function test_lookup_ticket_by_reference(): void
+    public function test_lookup_ticket_by_reference_requires_guest_token(): void
     {
-        // Create a ticket first.
         $service = new \Escalated\Services\TicketService;
-        $user_id = $this->factory->user->create(['role' => 'subscriber']);
-        $ticket = $service->create($user_id, [
+        $ticket = $service->create_guest([
             'subject' => 'Lookup test',
             'description' => 'Test.',
+            'guest_name' => 'Lookup User',
+            'guest_email' => 'lookup@example.com',
         ]);
 
         $request = new WP_REST_Request('GET', '/escalated/v1/widget/tickets/'.$ticket->reference);
+        $response = $this->server->dispatch($request);
+
+        $this->assertEquals(403, $response->get_status());
+    }
+
+    public function test_lookup_ticket_by_reference_with_guest_token(): void
+    {
+        $service = new \Escalated\Services\TicketService;
+        $ticket = $service->create_guest([
+            'subject' => 'Lookup test',
+            'description' => 'Test.',
+            'guest_name' => 'Lookup User',
+            'guest_email' => 'lookup@example.com',
+        ]);
+
+        $request = new WP_REST_Request('GET', '/escalated/v1/widget/tickets/'.$ticket->reference);
+        $request->set_param('guest_token', $ticket->guest_token);
         $response = $this->server->dispatch($request);
 
         $this->assertEquals(200, $response->get_status());

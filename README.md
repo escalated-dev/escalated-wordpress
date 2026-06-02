@@ -113,6 +113,126 @@ Main route groups:
 - `/agents`
 - `/dashboard`
 - `/admin/api-tokens`
+- `/admin/tickets/{ref}/subjects` (attach/detach ticket subjects)
+
+## Ticket subjects
+
+A ticket has a **requester** (who raised it) and a **subject line** (free text).
+Tickets can also be *about* host-app entities — a project, customer, or asset —
+that are not people. Attach them as **subjects** so agents see context and can
+link into your app.
+
+WordPress does not own those models. Register allowed type strings and resolve
+each `(type, id)` via a filter:
+
+```php
+// Allow attaching via the agent REST API (empty list disables API attach).
+update_option('escalated_ticket_subject_types', ['project', 'customer']);
+
+add_filter('escalated_resolve_ticket_subject', function ($subject, $type, $id) {
+    if ($type === 'project') {
+        $post = get_post((int) $id);
+        if (! $post || $post->post_type !== 'project') {
+            return null;
+        }
+
+        return new class ($post) implements \Escalated\Contracts\TicketSubject {
+            public function __construct(private \WP_Post $post) {}
+
+            public function ticketSubjectTitle(): string
+            {
+                return $this->post->post_title;
+            }
+
+            public function ticketSubjectSubtitle(): ?string
+            {
+                return 'Project';
+            }
+
+            public function ticketSubjectUrl(): ?string
+            {
+                return get_permalink($this->post);
+            }
+
+            public function ticketSubjectColor(): ?string
+            {
+                return null;
+            }
+
+            public function ticketSubjectIcon(): ?string
+            {
+                return 'folder';
+            }
+        };
+    }
+
+    return $subject;
+}, 10, 3);
+```
+
+Programmatic attach/detach/sync (idempotent on `ticket_id` + `type` + `id`):
+
+```php
+use Escalated\Services\TicketSubjectService;
+
+TicketSubjectService::attach($ticket_id, 'project', '42', 'project');
+TicketSubjectService::detach($ticket_id, 'project', '42');
+TicketSubjectService::sync($ticket_id, [
+    ['type' => 'project', 'id' => '42', 'role' => 'primary'],
+    ['type' => 'customer', 'id' => '7'],
+]);
+```
+
+Serialized on each ticket as `subjects[]`:
+
+`{ type, id, role, title, subtitle, url, color, icon, missing }`
+
+(`title` falls back to `type#id` when the resolver returns null.)
+
+Admin REST (logged-in user with `escalated_ticket_edit`):
+
+- `POST /wp-json/escalated/v1/admin/tickets/{ref}/subjects` — body: `type`, `id`, optional `role`
+- `DELETE /wp-json/escalated/v1/admin/tickets/{ref}/subjects/{link_id}`
+
+## Custom Ticket Actions
+
+Host plugins can add custom buttons to the agent ticket screen and handle clicks
+with normal WordPress hooks. Register actions via the `escalated_ticket_actions`
+filter:
+
+```php
+add_filter('escalated_ticket_actions', function (array $actions): array {
+    $actions[] = [
+        'key' => 'sync-crm',
+        'label' => 'Sync CRM',
+        'variant' => 'primary',           // primary | secondary | danger
+        'confirmation' => 'Sync this ticket to the CRM?',
+        'metadata' => ['icon' => 'refresh-cw'],
+        // 'visible' / 'enabled' may be bool or callable($ticket, $user_id)
+        'enabled' => fn ($ticket, $user_id) => empty($ticket->metadata['crm_synced']),
+    ];
+
+    return $actions;
+});
+```
+
+Visible actions appear on the ticket detail response as `custom_actions` (each
+with a `url` and `method`). Triggering one
+(`POST /wp-json/escalated/v1/tickets/{ref}/actions/{key}`) validates the action
+is visible (404) and enabled (403), then fires the
+`escalated_ticket_action_triggered` hook:
+
+```php
+add_action('escalated_ticket_action_triggered', function ($ticket, $action_key, $user_id, $payload, $metadata) {
+    if ($action_key !== 'sync-crm') {
+        return;
+    }
+    // your handler
+}, 10, 5);
+```
+
+Escalated also records an internal note on the ticket whenever an action fires,
+for auditability.
 
 ## Inbound Email Webhooks
 

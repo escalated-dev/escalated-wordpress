@@ -15,6 +15,7 @@ use Escalated\Models\TicketActivity;
 use Escalated\Services\AssignmentService;
 use Escalated\Services\AttachmentService;
 use Escalated\Services\MacroService;
+use Escalated\Services\TicketActionRegistry;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_REST_Server;
@@ -282,6 +283,35 @@ class Ticket_Controller extends Base_Controller
                             'required' => true,
                             'type' => 'integer',
                             'sanitize_callback' => 'absint',
+                        ],
+                    ],
+                ],
+            ]
+        );
+
+        // Trigger a custom (host-defined) ticket action.
+        register_rest_route(
+            $this->namespace,
+            '/'.$this->rest_base.'/'.self::REF_PATTERN.'/actions/(?P<action>[A-Za-z0-9_-]+)',
+            [
+                [
+                    'methods' => WP_REST_Server::CREATABLE,
+                    'callback' => [$this, 'trigger_custom_action'],
+                    'permission_callback' => [$this, 'token_permissions_check'],
+                    'args' => [
+                        'ref' => [
+                            'required' => true,
+                            'type' => 'string',
+                            'sanitize_callback' => 'sanitize_text_field',
+                        ],
+                        'action' => [
+                            'required' => true,
+                            'type' => 'string',
+                            'sanitize_callback' => 'sanitize_text_field',
+                        ],
+                        'payload' => [
+                            'type' => 'object',
+                            'default' => [],
                         ],
                     ],
                 ],
@@ -558,8 +588,11 @@ class Ticket_Controller extends Base_Controller
             ];
         }
 
+        $enriched = Ticket::enrich($ticket);
+        $enriched->custom_actions = $this->custom_actions_for($enriched, $user_id);
+
         return $this->success([
-            'ticket' => Ticket::enrich($ticket),
+            'ticket' => $enriched,
             'requester' => $requester,
             'assigned' => $assigned,
             'replies' => $replies,
@@ -1008,6 +1041,72 @@ class Ticket_Controller extends Base_Controller
             'message' => __('Macro applied successfully.', 'escalated'),
             'ticket' => Ticket::enrich($updated_ticket),
         ]);
+    }
+
+    /**
+     * Trigger a host-defined custom ticket action.
+     *
+     * @param  WP_REST_Request  $request  The incoming request.
+     * @return WP_REST_Response|\WP_Error
+     */
+    public function trigger_custom_action(WP_REST_Request $request)
+    {
+        $user_id = $this->check_token_permission($request, 'tickets:update');
+
+        if ($user_id === null) {
+            return $this->error('escalated_unauthorized', __('Unauthorized.', 'escalated'), 401);
+        }
+
+        $ticket = $this->resolve_ticket($request);
+        if (is_wp_error($ticket)) {
+            return $ticket;
+        }
+
+        $action_key = sanitize_text_field($request->get_param('action'));
+        $action = TicketActionRegistry::find($action_key);
+
+        if ($action === null || ! TicketActionRegistry::is_visible($action, $ticket, $user_id)) {
+            return $this->error('escalated_action_not_found', __('Custom action not found.', 'escalated'), 404);
+        }
+
+        if (! TicketActionRegistry::is_enabled($action, $ticket, $user_id)) {
+            return $this->error('escalated_action_disabled', __('Custom action is not enabled.', 'escalated'), 403);
+        }
+
+        $payload = (array) $request->get_param('payload');
+        $metadata = TicketActionRegistry::metadata($action, $ticket, $user_id);
+
+        /**
+         * Fires when an agent triggers a custom ticket action. Host plugins
+         * hook this to do their own work (CRM sync, etc.).
+         *
+         * @param  object  $ticket  The ticket.
+         * @param  string  $action_key  The triggered action key.
+         * @param  int  $user_id  The agent who triggered it.
+         * @param  array  $payload  Optional payload from the request.
+         * @param  array  $metadata  Action metadata.
+         */
+        do_action('escalated_ticket_action_triggered', $ticket, $action_key, $user_id, $payload, $metadata);
+
+        return $this->success([
+            'message' => __('Custom action dispatched.', 'escalated'),
+            'action' => $action_key,
+        ]);
+    }
+
+    /**
+     * Serialize the visible custom actions for a ticket, adding url + method.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function custom_actions_for(object $ticket, int $user_id): array
+    {
+        return array_map(function (array $action) use ($ticket) {
+            $action['url'] = rest_url($this->namespace.'/'.$this->rest_base.'/'.$ticket->reference.'/actions/'.$action['key']);
+            $action['method'] = 'post';
+
+            return $action;
+        }, TicketActionRegistry::visible_for($ticket, $user_id));
     }
 
     /**

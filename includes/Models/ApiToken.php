@@ -171,9 +171,26 @@ class ApiToken
         $table = static::table();
         $token_hash = hash('sha256', $plain_token);
 
-        return $wpdb->get_row(
+        $record = $wpdb->get_row(
             $wpdb->prepare("SELECT * FROM {$table} WHERE token = %s", $token_hash)
         );
+
+        if ($record) {
+            return $record;
+        }
+
+        $legacy_record = $wpdb->get_row(
+            $wpdb->prepare("SELECT * FROM {$table} WHERE token = %s", $plain_token)
+        );
+
+        if (! $legacy_record) {
+            return null;
+        }
+
+        static::update($legacy_record->id, ['token' => $token_hash]);
+        $legacy_record->token = $token_hash;
+
+        return $legacy_record;
     }
 
     /**

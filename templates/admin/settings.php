@@ -36,6 +36,7 @@ $s = function ($key, $default = '') use ($settings) {
                 </th>
                 <td>
                     <input type="text" id="ticket_reference_prefix" name="ticket_reference_prefix" class="regular-text"
+                           maxlength="10" pattern="[^-]*"
                            value="<?php echo esc_attr($s('ticket_reference_prefix', 'ESC')); ?>">
                     <p class="description"><?php esc_html_e('Prefix for ticket references (e.g., ESC-00001).', 'escalated'); ?></p>
                 </td>

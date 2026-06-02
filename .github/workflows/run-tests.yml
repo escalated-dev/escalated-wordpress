@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ main, develop ]
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -57,44 +60,20 @@ jobs:
 
       - name: Install WordPress test suite
         run: |
-          set -o pipefail
           WP_TESTS_DIR=/tmp/wordpress-tests-lib
           WP_CORE_DIR=/tmp/wordpress
 
-          # Download with retries: WordPress.org occasionally rate-limits or returns
-          # HTML instead of a tarball when under load, which produces
-          # "gzip: stdin: not in gzip format" — retrying clears it.
-          download_with_retry() {
-            local url="$1"
-            local dest="$2"
-            shift 2
-            for attempt in 1 2 3 4 5; do
-              if curl -sSL --retry 3 --retry-delay 5 --fail "$url" -o /tmp/wp-download.tar.gz; then
-                if tar tzf /tmp/wp-download.tar.gz > /dev/null 2>&1; then
-                  tar xz --strip-components=1 -C "$dest" "$@" -f /tmp/wp-download.tar.gz
-                  rm -f /tmp/wp-download.tar.gz
-                  return 0
-                fi
-              fi
-              echo "Attempt $attempt failed for $url, sleeping before retry..."
-              sleep $((attempt * 5))
-            done
-            echo "Failed to download $url after 5 attempts" >&2
-            return 1
-          }
-
           # Download WordPress
           mkdir -p "$WP_CORE_DIR"
-          download_with_retry https://wordpress.org/latest.tar.gz "$WP_CORE_DIR"
+          curl -fsSL https://wordpress.org/latest.tar.gz | tar xz --strip-components=1 -C "$WP_CORE_DIR"
 
           # Download WordPress test suite
           mkdir -p "$WP_TESTS_DIR"
           WP_VERSION=$(php -r "require '$WP_CORE_DIR/wp-includes/version.php'; echo \$wp_version;")
-          # Compute MAJOR.MINOR branch name (e.g. "6.7" from "6.7.1" or "6.7"; "7.0" from "7.0").
-          # The legacy `${WP_VERSION%.*}` form strips a `7.0` to just `7`, which is not a real
-          # wordpress-develop branch — they're always named MAJOR.MINOR.
-          WP_BRANCH=$(echo "$WP_VERSION" | awk -F. '{ if ($2 != "") print $1"."$2; else print $1 }')
-          download_with_retry "https://github.com/WordPress/wordpress-develop/archive/refs/heads/${WP_BRANCH}.tar.gz" "$WP_TESTS_DIR" "wordpress-develop-${WP_BRANCH}/tests/phpunit/includes" "wordpress-develop-${WP_BRANCH}/tests/phpunit/data"
+          WP_VERSION_BASE="${WP_VERSION%%-*}"
+          IFS='.' read -r WP_MAJOR WP_MINOR _ <<< "$WP_VERSION_BASE"
+          WP_BRANCH="${WP_MAJOR}.${WP_MINOR}"
+          curl -fsSL "https://github.com/WordPress/wordpress-develop/archive/refs/heads/${WP_BRANCH}.tar.gz" | tar xz --strip-components=1 -C "$WP_TESTS_DIR" "wordpress-develop-${WP_BRANCH}/tests/phpunit/includes" "wordpress-develop-${WP_BRANCH}/tests/phpunit/data"
           # Move extracted contents to expected layout
           mv "$WP_TESTS_DIR/tests/phpunit/includes" "$WP_TESTS_DIR/includes"
           mv "$WP_TESTS_DIR/tests/phpunit/data" "$WP_TESTS_DIR/data"

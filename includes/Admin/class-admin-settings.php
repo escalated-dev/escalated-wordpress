@@ -91,6 +91,11 @@ class Admin_Settings
             if (isset($_POST[$key])) {
                 $value = wp_unslash($_POST[$key]);
                 $value = call_user_func($sanitizer, $value);
+
+                if ($key === 'ticket_reference_prefix' && ! $this->is_valid_ticket_reference_prefix((string) $value)) {
+                    continue;
+                }
+
                 Setting::set($key, (string) $value);
             } else {
                 // Checkbox fields: if not present, store 0.
@@ -126,5 +131,14 @@ class Admin_Settings
         $redirect = admin_url('admin.php?page=escalated-settings&message=saved');
         wp_safe_redirect($redirect);
         exit;
+    }
+
+    /**
+     * Ticket references are generated as PREFIX-00001, so the prefix itself
+     * must not contain a hyphen.
+     */
+    private function is_valid_ticket_reference_prefix(string $value): bool
+    {
+        return $value !== '' && strlen($value) <= 10 && strpos($value, '-') === false;
     }
 }

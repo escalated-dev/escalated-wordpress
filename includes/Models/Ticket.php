@@ -5,6 +5,7 @@ namespace Escalated\Models;
 use Escalated\Escalated;
 use Escalated\Services\TicketSnoozeService;
 use Escalated\Services\TicketSplitService;
+use Escalated\Services\TicketSubjectService;
 
 class Ticket
 {
@@ -462,6 +463,8 @@ class Ticket
             ];
         }, $linked);
 
+        $ticket->subjects = TicketSubjectService::serialize_for_ticket((int) $ticket->id);
+
         return $ticket;
     }
 
@@ -474,5 +477,21 @@ class Ticket
     public static function enrich_many(array $tickets): array
     {
         return array_map([static::class, 'enrich'], $tickets);
+    }
+
+    /**
+     * Tag IDs linked to a ticket (pivot escalated_ticket_tag).
+     *
+     * @return int[]
+     */
+    public static function tag_ids(int $ticket_id): array
+    {
+        global $wpdb;
+        $pivot = Escalated::table('ticket_tag');
+        $ids = $wpdb->get_col(
+            $wpdb->prepare("SELECT tag_id FROM {$pivot} WHERE ticket_id = %d", $ticket_id)
+        );
+
+        return $ids ? array_map('intval', $ids) : [];
     }
 }

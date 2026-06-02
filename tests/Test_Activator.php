@@ -21,7 +21,7 @@ class Test_Activator extends WP_UnitTestCase
     }
 
     /**
-     * All 21 database tables should exist after activation.
+     * Core Escalated tables exist after activation (including skills management).
      */
     public function test_tables_created(): void
     {
@@ -49,6 +49,11 @@ class Test_Activator extends WP_UnitTestCase
             'escalated_roles',
             'escalated_role_permissions',
             'escalated_role_users',
+            'escalated_skills',
+            'escalated_skill_routing_tags',
+            'escalated_skill_routing_departments',
+            'escalated_agent_skills',
+            'escalated_ticket_subjects',
         ];
 
         $existing_tables = $wpdb->get_col('SHOW TABLES');
@@ -70,7 +75,7 @@ class Test_Activator extends WP_UnitTestCase
     }
 
     /**
-     * All 52 granular capability names derived from permission slugs.
+     * All granular capability names derived from permission slugs.
      *
      * Each slug like "ticket.view" maps to the WordPress capability
      * "escalated_ticket_view" (prefix "escalated_", dots become underscores).
@@ -124,6 +129,8 @@ class Test_Activator extends WP_UnitTestCase
             // Tags
             'escalated_tag_view',
             'escalated_tag_manage',
+            'escalated_skill_view',
+            'escalated_skill_manage',
             // Custom Fields
             'escalated_custom_field_view',
             'escalated_custom_field_manage',
@@ -155,14 +162,14 @@ class Test_Activator extends WP_UnitTestCase
     }
 
     /**
-     * The escalated_admin role should have all 52 escalated capabilities.
+     * The escalated_admin role should have all granular escalated capabilities.
      */
     public function test_admin_role_has_all_caps(): void
     {
         $role = get_role('escalated_admin');
 
         $all_caps = $this->get_all_caps();
-        $this->assertCount(52, $all_caps, 'There should be exactly 52 granular capabilities.');
+        $this->assertCount(54, $all_caps, 'There should be exactly 54 granular capabilities.');
 
         foreach ($all_caps as $cap) {
             $this->assertTrue($role->has_cap($cap), "escalated_admin should have capability: {$cap}");
@@ -273,7 +280,7 @@ class Test_Activator extends WP_UnitTestCase
     }
 
     /**
-     * The WP administrator role should receive all 52 escalated capabilities.
+     * The WP administrator role should receive all granular escalated capabilities.
      */
     public function test_administrator_has_escalated_caps(): void
     {
