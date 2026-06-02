@@ -13,6 +13,7 @@ class Activator
     public static function activate(): void
     {
         self::create_tables();
+        self::create_newsletter_tables();
         self::seed_permissions();
         self::create_roles();
         self::add_admin_caps();
@@ -56,6 +57,7 @@ class Activator
         }
 
         self::create_tables();
+        self::create_newsletter_tables();
         self::seed_permissions();
         self::add_admin_caps();
         self::insert_default_settings();
@@ -931,6 +933,129 @@ class Activator
                     ['%s', '%s', '%s', '%s']
                 );
             }
+        }
+    }
+
+    /**
+     * Optional newsletter system tables. Not registered to any specific
+     * activation flag — the data is harmless if unused. Behavior is gated by
+     * the `escalated_newsletters_enabled` option.
+     */
+    public static function create_newsletter_tables(): void
+    {
+        global $wpdb;
+        require_once ABSPATH.'wp-admin/includes/upgrade.php';
+        $prefix = $wpdb->prefix.'escalated_';
+        $charset_collate = $wpdb->get_charset_collate();
+
+        $sql = "CREATE TABLE {$prefix}newsletter_lists (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            name VARCHAR(255) NOT NULL,
+            description TEXT NULL,
+            kind VARCHAR(16) NOT NULL,
+            filter_json TEXT NULL,
+            created_by BIGINT UNSIGNED NULL,
+            created_at DATETIME NOT NULL,
+            updated_at DATETIME NOT NULL,
+            PRIMARY KEY  (id),
+            KEY kind (kind),
+            KEY created_by (created_by)
+        ) $charset_collate;";
+        dbDelta($sql);
+
+        $sql = "CREATE TABLE {$prefix}newsletter_list_members (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            list_id BIGINT UNSIGNED NOT NULL,
+            contact_id BIGINT UNSIGNED NOT NULL,
+            added_at DATETIME NOT NULL,
+            added_by BIGINT UNSIGNED NULL,
+            PRIMARY KEY  (id),
+            UNIQUE KEY list_contact (list_id, contact_id),
+            KEY contact_id (contact_id)
+        ) $charset_collate;";
+        dbDelta($sql);
+
+        $sql = "CREATE TABLE {$prefix}newsletter_templates (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            name VARCHAR(255) NOT NULL,
+            theme VARCHAR(64) NOT NULL DEFAULT 'default',
+            subject_template VARCHAR(998) NULL,
+            body_markdown LONGTEXT NOT NULL,
+            merge_fields_schema TEXT NULL,
+            created_by BIGINT UNSIGNED NULL,
+            created_at DATETIME NOT NULL,
+            updated_at DATETIME NOT NULL,
+            PRIMARY KEY  (id),
+            KEY theme (theme),
+            KEY created_by (created_by)
+        ) $charset_collate;";
+        dbDelta($sql);
+
+        $sql = "CREATE TABLE {$prefix}newsletters (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            subject VARCHAR(998) NOT NULL,
+            from_email VARCHAR(320) NOT NULL,
+            from_name VARCHAR(255) NULL,
+            reply_to VARCHAR(320) NULL,
+            target_list_id BIGINT UNSIGNED NOT NULL,
+            template_id BIGINT UNSIGNED NULL,
+            theme VARCHAR(64) NULL,
+            body_markdown LONGTEXT NULL,
+            status VARCHAR(16) NOT NULL DEFAULT 'draft',
+            scheduled_at DATETIME NULL,
+            sent_at DATETIME NULL,
+            created_by BIGINT UNSIGNED NULL,
+            sent_by BIGINT UNSIGNED NULL,
+            summary_total INT UNSIGNED NOT NULL DEFAULT 0,
+            summary_sent INT UNSIGNED NOT NULL DEFAULT 0,
+            summary_opened INT UNSIGNED NOT NULL DEFAULT 0,
+            summary_clicked INT UNSIGNED NOT NULL DEFAULT 0,
+            summary_bounced INT UNSIGNED NOT NULL DEFAULT 0,
+            summary_complained INT UNSIGNED NOT NULL DEFAULT 0,
+            created_at DATETIME NOT NULL,
+            updated_at DATETIME NOT NULL,
+            PRIMARY KEY  (id),
+            KEY status (status),
+            KEY scheduled_at (scheduled_at),
+            KEY status_sched (status, scheduled_at),
+            KEY created_by (created_by)
+        ) $charset_collate;";
+        dbDelta($sql);
+
+        $sql = "CREATE TABLE {$prefix}newsletter_deliveries (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            newsletter_id BIGINT UNSIGNED NOT NULL,
+            contact_id BIGINT UNSIGNED NOT NULL,
+            email_at_send VARCHAR(320) NOT NULL,
+            status VARCHAR(16) NOT NULL DEFAULT 'pending',
+            tracking_token VARCHAR(40) NOT NULL,
+            sent_at DATETIME NULL,
+            opened_at DATETIME NULL,
+            last_clicked_at DATETIME NULL,
+            clicks_count INT UNSIGNED NOT NULL DEFAULT 0,
+            bounce_reason TEXT NULL,
+            failure_reason TEXT NULL,
+            attempt_count SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+            claimed_at DATETIME NULL,
+            is_test TINYINT(1) NOT NULL DEFAULT 0,
+            created_at DATETIME NOT NULL,
+            PRIMARY KEY  (id),
+            UNIQUE KEY tracking_token (tracking_token),
+            KEY nl_status (newsletter_id, status),
+            KEY contact_id (contact_id),
+            KEY status_claimed (status, claimed_at)
+        ) $charset_collate;";
+        dbDelta($sql);
+
+        // Add marketing_opt_out_at column to contacts if it doesn't exist.
+        $contacts_table = $prefix.'contacts';
+        $col = $wpdb->get_var($wpdb->prepare(
+            "SHOW COLUMNS FROM `{$contacts_table}` LIKE %s",
+            'marketing_opt_out_at'
+        ));
+        if (! $col) {
+            $wpdb->query("ALTER TABLE `{$contacts_table}` ADD COLUMN marketing_opt_out_at DATETIME NULL");
+            $wpdb->query("ALTER TABLE `{$contacts_table}` ADD INDEX marketing_opt_out_at (marketing_opt_out_at)");
         }
     }
 
