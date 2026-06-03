@@ -96,6 +96,12 @@ class NewsletterRenderer
 
     private function render_theme(string $slug, array $ctx): string
     {
+        // Theme slugs are file names, not paths — strip anything that could
+        // traverse out of the themes directory (e.g. "../../wp-config").
+        $slug = preg_replace('/[^a-zA-Z0-9_-]/', '', (string) $slug);
+        if ($slug === '') {
+            $slug = 'default';
+        }
         $themes_dir = apply_filters(
             'escalated_newsletter_themes_dir',
             ESCALATED_PLUGIN_DIR.'templates/newsletter_themes'
