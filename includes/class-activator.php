@@ -18,6 +18,7 @@ class Activator
         self::create_roles();
         self::add_admin_caps();
         self::insert_default_settings();
+        self::seed_newsletter_options();
         self::schedule_cron_events();
 
         update_option('escalated_version', ESCALATED_VERSION);
@@ -61,9 +62,20 @@ class Activator
         self::seed_permissions();
         self::add_admin_caps();
         self::insert_default_settings();
+        self::seed_newsletter_options();
         self::schedule_cron_events();
 
         update_option('escalated_version', ESCALATED_VERSION);
+    }
+
+    /**
+     * Seed newsletter feature flag (default off).
+     */
+    public static function seed_newsletter_options(): void
+    {
+        if (get_option('escalated_newsletters_enabled', null) === null) {
+            add_option('escalated_newsletters_enabled', '0', '', false);
+        }
     }
 
     /**
@@ -651,6 +663,9 @@ class Activator
             // API Tokens
             ['slug' => 'api_token.view',   'name' => 'View API tokens',   'group' => 'API Tokens', 'description' => 'View API tokens'],
             ['slug' => 'api_token.manage', 'name' => 'Manage API tokens', 'group' => 'API Tokens', 'description' => 'Create, revoke API tokens'],
+            // Newsletters
+            ['slug' => 'newsletters.manage', 'name' => 'Manage newsletters', 'group' => 'Newsletters', 'description' => 'Create, edit, delete drafts and lists/templates; send test emails'],
+            ['slug' => 'newsletters.send', 'name' => 'Send newsletters', 'group' => 'Newsletters', 'description' => 'Schedule or send newsletters now'],
             // Audit Log
             ['slug' => 'audit.view', 'name' => 'View audit log', 'group' => 'Audit Log', 'description' => 'View audit log'],
             // Plugins
@@ -1037,6 +1052,7 @@ class Activator
             failure_reason TEXT NULL,
             attempt_count SMALLINT UNSIGNED NOT NULL DEFAULT 0,
             claimed_at DATETIME NULL,
+            next_attempt_at DATETIME NULL,
             is_test TINYINT(1) NOT NULL DEFAULT 0,
             created_at DATETIME NOT NULL,
             PRIMARY KEY  (id),
@@ -1056,6 +1072,15 @@ class Activator
         if (! $col) {
             $wpdb->query("ALTER TABLE `{$contacts_table}` ADD COLUMN marketing_opt_out_at DATETIME NULL");
             $wpdb->query("ALTER TABLE `{$contacts_table}` ADD INDEX marketing_opt_out_at (marketing_opt_out_at)");
+        }
+
+        $deliveries_table = $prefix.'newsletter_deliveries';
+        $next_col = $wpdb->get_var($wpdb->prepare(
+            "SHOW COLUMNS FROM `{$deliveries_table}` LIKE %s",
+            'next_attempt_at'
+        ));
+        if (! $next_col) {
+            $wpdb->query("ALTER TABLE `{$deliveries_table}` ADD COLUMN next_attempt_at DATETIME NULL");
         }
     }
 
@@ -1097,6 +1122,10 @@ class Activator
 
         if (! wp_next_scheduled('escalated_run_due_deferred_workflow_jobs')) {
             wp_schedule_event(time(), 'escalated_every_minute', 'escalated_run_due_deferred_workflow_jobs');
+        }
+
+        if (! wp_next_scheduled('escalated_dispatch_newsletters')) {
+            wp_schedule_event(time(), 'escalated_every_minute', 'escalated_dispatch_newsletters');
         }
     }
 

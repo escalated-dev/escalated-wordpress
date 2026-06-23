@@ -41,6 +41,11 @@ class Api_Bootstrap
             new Widget_Chat_Controller,
             new Skill_Controller,
             new Ticket_Subject_Controller,
+            new Newsletter_List_Controller,
+            new Newsletter_Template_Controller,
+            new Newsletter_Settings_Controller,
+            new Newsletter_Controller,
+            new Newsletter_Esp_Webhook_Controller,
         ];
 
         foreach ($controllers as $controller) {

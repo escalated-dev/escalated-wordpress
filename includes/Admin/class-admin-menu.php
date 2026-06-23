@@ -41,6 +41,7 @@ class Admin_Menu
         add_submenu_page('escalated', __('Macros', 'escalated'), __('Macros', 'escalated'), 'escalated_macro_view', 'escalated-macros', [new Admin_Macros, 'render']);
         add_submenu_page('escalated', __('Reports', 'escalated'), __('Reports', 'escalated'), 'escalated_report_view', 'escalated-reports', [new Admin_Reports, 'render']);
         add_submenu_page('escalated', __('Users', 'escalated'), __('Users', 'escalated'), 'escalated_user_manage', 'escalated-users', [new Admin_Users, 'render']);
+        add_submenu_page('escalated', __('Newsletters', 'escalated'), __('Newsletters', 'escalated'), 'escalated_newsletters_manage', 'escalated-newsletters', [new Admin_Newsletters, 'render']);
         add_submenu_page('escalated', __('API Tokens', 'escalated'), __('API Tokens', 'escalated'), 'escalated_api_token_view', 'escalated-api-tokens', [new Admin_Api_Tokens, 'render']);
         add_submenu_page('escalated', __('Settings', 'escalated'), __('Settings', 'escalated'), 'escalated_settings_view', 'escalated-settings', [new Admin_Settings, 'render']);
     }
