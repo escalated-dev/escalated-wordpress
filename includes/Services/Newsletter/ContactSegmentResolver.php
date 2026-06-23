@@ -142,6 +142,7 @@ class ContactSegmentResolver
                 $needle = '%"'.$key.'":'.wp_json_encode($value).'%';
                 $clauses[] = ' AND metadata LIKE %s';
                 $params[] = $needle;
+
                 continue;
             }
             if (! in_array($field, self::ALLOWED_FIELDS, true)) {

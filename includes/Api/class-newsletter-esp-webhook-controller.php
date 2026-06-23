@@ -2,9 +2,9 @@
 
 namespace Escalated\Api;
 
+use Escalated\Services\Newsletter\BounceSuppressionStore;
 use Escalated\Services\Newsletter\NewsletterConfig;
 use Escalated\Services\Newsletter\NewsletterTracker;
-use Escalated\Services\Newsletter\BounceSuppressionStore;
 use WP_REST_Request;
 use WP_REST_Server;
 

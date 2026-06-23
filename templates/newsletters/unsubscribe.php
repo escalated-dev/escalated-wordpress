@@ -4,7 +4,7 @@
  *
  * @var string $token
  * @var string $email
- * @var bool   $confirmed
+ * @var bool $confirmed
  */
 ?>
 <!doctype html>
@@ -14,16 +14,16 @@
     <title><?php esc_html_e('Unsubscribe', 'escalated'); ?></title>
 </head>
 <body>
-<?php if ($confirmed) : ?>
+<?php if ($confirmed) { ?>
     <p><?php esc_html_e('You have been unsubscribed.', 'escalated'); ?></p>
-<?php else : ?>
+<?php } else { ?>
     <p><?php esc_html_e('Unsubscribe from future marketing emails.', 'escalated'); ?></p>
-    <?php if ($email) : ?>
+    <?php if ($email) { ?>
         <p><?php echo esc_html($email); ?></p>
-    <?php endif; ?>
+    <?php } ?>
     <form method="post" action="<?php echo esc_url($action); ?>">
         <button type="submit"><?php esc_html_e('Confirm unsubscribe', 'escalated'); ?></button>
     </form>
-<?php endif; ?>
+<?php } ?>
 </body>
 </html>
