@@ -585,6 +585,20 @@ class Activator
             KEY subject_lookup (subject_type, subject_id)
         ) $charset_collate;";
         dbDelta($sql);
+
+        // 31. escalated_agent_capacity
+        $sql = "CREATE TABLE {$prefix}agent_capacity (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            user_id BIGINT UNSIGNED NOT NULL,
+            channel VARCHAR(64) NOT NULL DEFAULT 'default',
+            max_concurrent INT UNSIGNED NOT NULL DEFAULT 10,
+            current_count INT UNSIGNED NOT NULL DEFAULT 0,
+            created_at DATETIME,
+            updated_at DATETIME,
+            PRIMARY KEY  (id),
+            UNIQUE KEY user_channel (user_id, channel)
+        ) $charset_collate;";
+        dbDelta($sql);
     }
 
     /**
