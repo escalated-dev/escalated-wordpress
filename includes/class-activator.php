@@ -599,6 +599,34 @@ class Activator
             UNIQUE KEY user_channel (user_id, channel)
         ) $charset_collate;";
         dbDelta($sql);
+
+        // 32. escalated_side_conversations
+        $sql = "CREATE TABLE {$prefix}side_conversations (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            ticket_id BIGINT UNSIGNED NOT NULL,
+            subject VARCHAR(255) NOT NULL,
+            channel VARCHAR(32) NOT NULL,
+            status VARCHAR(32) NOT NULL,
+            created_by BIGINT UNSIGNED NULL,
+            created_at DATETIME,
+            updated_at DATETIME,
+            PRIMARY KEY  (id),
+            KEY ticket_id (ticket_id)
+        ) $charset_collate;";
+        dbDelta($sql);
+
+        // 33. escalated_side_conversation_replies
+        $sql = "CREATE TABLE {$prefix}side_conversation_replies (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            side_conversation_id BIGINT UNSIGNED NOT NULL,
+            body LONGTEXT NOT NULL,
+            author_id BIGINT UNSIGNED NULL,
+            created_at DATETIME,
+            updated_at DATETIME,
+            PRIMARY KEY  (id),
+            KEY side_conversation_id (side_conversation_id)
+        ) $charset_collate;";
+        dbDelta($sql);
     }
 
     /**
