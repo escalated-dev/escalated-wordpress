@@ -627,6 +627,24 @@ class Activator
             KEY side_conversation_id (side_conversation_id)
         ) $charset_collate;";
         dbDelta($sql);
+
+        // 34. escalated_two_factors — per-user TOTP secret + single-use
+        // recovery codes. One row per user. `secret` is encrypted at rest;
+        // `recovery_codes` is a JSON array of SHA-256 hashes. Mirrors the
+        // Laravel reference `two_factor` schema (secret / recovery_codes /
+        // confirmed_at).
+        $sql = "CREATE TABLE {$prefix}two_factors (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            user_id BIGINT UNSIGNED NOT NULL,
+            secret TEXT NOT NULL,
+            recovery_codes TEXT NULL,
+            confirmed_at DATETIME NULL,
+            created_at DATETIME,
+            updated_at DATETIME,
+            PRIMARY KEY  (id),
+            UNIQUE KEY user_id (user_id)
+        ) $charset_collate;";
+        dbDelta($sql);
     }
 
     /**
