@@ -9,8 +9,11 @@
 
 namespace Escalated\Api;
 
+use Escalated\Models\Article;
+use Escalated\Models\ArticleCategory;
 use Escalated\Models\Setting;
 use Escalated\Models\Ticket;
+use Escalated\Services\KnowledgeBaseService;
 use Escalated\Services\TicketService;
 use WP_REST_Request;
 use WP_REST_Server;
@@ -75,6 +78,30 @@ class Widget_Controller extends Base_Controller
                             'required' => true,
                             'type' => 'string',
                             'sanitize_callback' => 'sanitize_title',
+                        ],
+                    ],
+                ],
+            ]
+        );
+
+        // Submit helpful / not-helpful feedback for a KB article.
+        register_rest_route(
+            $this->namespace,
+            '/'.$this->rest_base.'/articles/(?P<slug>[a-z0-9-]+)/feedback',
+            [
+                [
+                    'methods' => WP_REST_Server::CREATABLE,
+                    'callback' => [$this, 'submit_feedback'],
+                    'permission_callback' => [$this, 'widget_enabled_check'],
+                    'args' => [
+                        'slug' => [
+                            'required' => true,
+                            'type' => 'string',
+                            'sanitize_callback' => 'sanitize_title',
+                        ],
+                        'helpful' => [
+                            'required' => true,
+                            'type' => 'boolean',
                         ],
                     ],
                 ],
@@ -186,33 +213,29 @@ class Widget_Controller extends Base_Controller
     }
 
     /**
-     * Get KB articles for the widget.
+     * Get published KB articles for the widget.
+     *
+     * Reads from the escalated_articles table (previously this queried a
+     * never-registered `escalated_article` custom post type and always
+     * returned nothing).
      */
     public function get_articles(WP_REST_Request $request)
     {
         $search = $request->get_param('search');
 
-        $args = [
-            'post_type' => 'escalated_article',
-            'post_status' => 'publish',
-            'posts_per_page' => 10,
-            'orderby' => 'date',
-            'order' => 'DESC',
-        ];
-
+        $filters = ['limit' => 10];
         if (! empty($search)) {
-            $args['s'] = $search;
+            $filters['search'] = $search;
         }
 
-        $query = new \WP_Query($args);
         $articles = [];
-
-        foreach ($query->posts as $post) {
+        foreach (Article::published($filters) as $row) {
             $articles[] = [
-                'id' => $post->ID,
-                'title' => $post->post_title,
-                'slug' => $post->post_name,
-                'excerpt' => wp_trim_words($post->post_content, 30),
+                'id' => (int) $row->id,
+                'title' => $row->title,
+                'slug' => $row->slug,
+                'excerpt' => wp_trim_words(wp_strip_all_tags((string) $row->body), 30),
+                'category' => $this->article_category($row),
             ];
         }
 
@@ -220,32 +243,82 @@ class Widget_Controller extends Base_Controller
     }
 
     /**
-     * Get a single KB article by slug.
+     * Get a single published KB article by slug. Increments the view counter
+     * and returns related articles from the same category.
      */
     public function get_article(WP_REST_Request $request)
     {
         $slug = $request->get_param('slug');
 
-        $posts = get_posts([
-            'post_type' => 'escalated_article',
-            'post_status' => 'publish',
-            'name' => $slug,
-            'numberposts' => 1,
-        ]);
+        $article = Article::find_published_by_slug($slug);
 
-        if (empty($posts)) {
+        if (! $article) {
             return $this->error('escalated_not_found', __('Article not found.', 'escalated'), 404);
         }
 
-        $post = $posts[0];
+        Article::increment_views($article->id);
+
+        $related = [];
+        foreach (Article::related($article->category_id, $article->id, 5) as $row) {
+            $related[] = [
+                'id' => (int) $row->id,
+                'title' => $row->title,
+                'slug' => $row->slug,
+            ];
+        }
 
         return $this->success([
-            'id' => $post->ID,
-            'title' => $post->post_title,
-            'slug' => $post->post_name,
-            'content' => wp_kses_post($post->post_content),
-            'date' => $post->post_date,
+            'id' => (int) $article->id,
+            'title' => $article->title,
+            'slug' => $article->slug,
+            'content' => wp_kses_post((string) $article->body),
+            'category' => $this->article_category($article),
+            'related' => $related,
+            'feedback_enabled' => KnowledgeBaseService::is_feedback_enabled(),
+            'date' => $article->published_at ?: $article->created_at,
         ]);
+    }
+
+    /**
+     * Record helpful / not-helpful feedback for a published article.
+     */
+    public function submit_feedback(WP_REST_Request $request)
+    {
+        if (! KnowledgeBaseService::is_feedback_enabled()) {
+            return $this->error('escalated_feedback_disabled', __('Article feedback is disabled.', 'escalated'), 404);
+        }
+
+        $article = Article::find_published_by_slug($request->get_param('slug'));
+        if (! $article) {
+            return $this->error('escalated_not_found', __('Article not found.', 'escalated'), 404);
+        }
+
+        if (rest_sanitize_boolean($request->get_param('helpful'))) {
+            Article::mark_helpful($article->id);
+        } else {
+            Article::mark_not_helpful($article->id);
+        }
+
+        return $this->success(['message' => __('Thank you for your feedback!', 'escalated')]);
+    }
+
+    /**
+     * Resolve an article's category to a lightweight {id,name,slug} array.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function article_category($article)
+    {
+        if (empty($article->category_id)) {
+            return null;
+        }
+
+        $category = ArticleCategory::find((int) $article->category_id);
+        if (! $category) {
+            return null;
+        }
+
+        return ['id' => (int) $category->id, 'name' => $category->name, 'slug' => $category->slug];
     }
 
     /**
