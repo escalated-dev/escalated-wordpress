@@ -32,6 +32,7 @@ class Api_Bootstrap
             new Automation_Controller,
             new Dashboard_Controller,
             new Api_Token_Controller,
+            new Two_Factor_Controller,
             new Events_Controller,
             new Widget_Controller,
             new Saved_View_Controller,
