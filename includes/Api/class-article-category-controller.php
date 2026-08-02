@@ -18,6 +18,7 @@
 namespace Escalated\Api;
 
 use Escalated\Models\ArticleCategory;
+use Escalated\Models\AuditLog;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Server;
@@ -132,6 +133,11 @@ class Article_Category_Controller extends Base_Controller
             return $this->error('escalated_create_failed', __('Failed to create category.', 'escalated'), 500);
         }
 
+        AuditLog::record('kb_category.created', 'ArticleCategory', (int) $id, null, [
+            'name' => $validated['name'],
+            'slug' => $validated['slug'],
+        ]);
+
         return $this->success(['id' => (int) $id, 'category' => $this->format_category(ArticleCategory::find($id))], 201);
     }
 
@@ -141,7 +147,8 @@ class Article_Category_Controller extends Base_Controller
     public function update(WP_REST_Request $request)
     {
         $id = (int) $request->get_param('id');
-        if (! ArticleCategory::find($id)) {
+        $existing = ArticleCategory::find($id);
+        if (! $existing) {
             return $this->error('escalated_not_found', __('Category not found.', 'escalated'), 404);
         }
 
@@ -160,6 +167,12 @@ class Article_Category_Controller extends Base_Controller
             return $this->error('escalated_update_failed', __('Failed to update category.', 'escalated'), 500);
         }
 
+        AuditLog::record('kb_category.updated', 'ArticleCategory', $id, [
+            'name' => $existing->name,
+        ], [
+            'name' => $validated['name'],
+        ]);
+
         return $this->success(['category' => $this->format_category(ArticleCategory::find($id))]);
     }
 
@@ -169,11 +182,17 @@ class Article_Category_Controller extends Base_Controller
     public function destroy(WP_REST_Request $request)
     {
         $id = (int) $request->get_param('id');
-        if (! ArticleCategory::find($id)) {
+        $existing = ArticleCategory::find($id);
+        if (! $existing) {
             return $this->error('escalated_not_found', __('Category not found.', 'escalated'), 404);
         }
 
         ArticleCategory::delete($id);
+
+        AuditLog::record('kb_category.deleted', 'ArticleCategory', $id, [
+            'name' => $existing->name,
+            'slug' => $existing->slug,
+        ], null);
 
         return $this->success(null, 204);
     }

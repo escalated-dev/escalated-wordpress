@@ -7,6 +7,7 @@
 namespace Escalated\Api;
 
 use Escalated\Models\ApiToken;
+use Escalated\Models\AuditLog;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_REST_Server;
@@ -19,6 +20,16 @@ class Api_Token_Controller extends Base_Controller
      * @var string
      */
     protected $rest_base = 'admin/api-tokens';
+
+    /**
+     * User ID resolved by the permission callback for the current request.
+     *
+     * Bearer-token requests never call wp_set_current_user, so get_current_user_id()
+     * is 0 inside handlers — we cache the resolved token user here for auditing.
+     *
+     * @var int|null
+     */
+    protected $acting_user_id = null;
 
     /**
      * Register routes.
@@ -110,6 +121,8 @@ class Api_Token_Controller extends Base_Controller
         if ($user_id === null) {
             return $this->error('escalated_unauthorized', __('Invalid or expired API token.', 'escalated'), 401);
         }
+
+        $this->acting_user_id = $user_id;
 
         $user = get_userdata($user_id);
 
@@ -232,6 +245,12 @@ class Api_Token_Controller extends Base_Controller
 
         $token = ApiToken::find($result['record']->id);
 
+        AuditLog::record('api_token.created', 'ApiToken', (int) $token->id, null, [
+            'name' => $name,
+            'user_id' => $user_id,
+            'abilities' => $abilities,
+        ], $this->acting_user_id);
+
         return $this->success([
             'message' => __('API token created successfully. Store this token securely - it will not be shown again.', 'escalated'),
             'token' => [
@@ -273,6 +292,11 @@ class Api_Token_Controller extends Base_Controller
         if ($deleted === false) {
             return $this->error('escalated_delete_failed', __('Failed to revoke API token.', 'escalated'), 500);
         }
+
+        AuditLog::record('api_token.deleted', 'ApiToken', $token_id, [
+            'name' => $token->name,
+            'user_id' => (int) $token->user_id,
+        ], null, $this->acting_user_id);
 
         return $this->success([
             'message' => __('API token revoked successfully.', 'escalated'),

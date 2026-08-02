@@ -2,6 +2,8 @@
 
 namespace Escalated\Admin;
 
+use Escalated\Models\AuditLog;
+
 /**
  * Users management admin page.
  *
@@ -190,6 +192,15 @@ class Admin_Users
                 }
             }
         }
+
+        AuditLog::record(
+            $value ? 'user.role_granted' : 'user.role_revoked',
+            'User',
+            (int) $user->ID,
+            null,
+            ['role' => $role, 'value' => $value],
+            $current_user_id
+        );
 
         return ['ok' => true];
     }

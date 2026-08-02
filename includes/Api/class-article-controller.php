@@ -20,6 +20,7 @@ namespace Escalated\Api;
 
 use Escalated\Models\Article;
 use Escalated\Models\ArticleCategory;
+use Escalated\Models\AuditLog;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Server;
@@ -201,6 +202,12 @@ class Article_Controller extends Base_Controller
             return $this->error('escalated_create_failed', __('Failed to create article.', 'escalated'), 500);
         }
 
+        AuditLog::record('kb_article.created', 'Article', (int) $id, null, [
+            'title' => $validated['title'],
+            'slug' => $validated['slug'],
+            'status' => $validated['status'],
+        ]);
+
         return $this->success(['id' => (int) $id, 'article' => $this->format_article(Article::find($id))], 201);
     }
 
@@ -235,6 +242,14 @@ class Article_Controller extends Base_Controller
             return $this->error('escalated_update_failed', __('Failed to update article.', 'escalated'), 500);
         }
 
+        AuditLog::record('kb_article.updated', 'Article', $id, [
+            'title' => $article->title,
+            'status' => $article->status,
+        ], [
+            'title' => $validated['title'],
+            'status' => $validated['status'],
+        ]);
+
         return $this->success(['article' => $this->format_article(Article::find($id))]);
     }
 
@@ -244,11 +259,18 @@ class Article_Controller extends Base_Controller
     public function destroy(WP_REST_Request $request)
     {
         $id = (int) $request->get_param('id');
-        if (! Article::find($id)) {
+        $article = Article::find($id);
+        if (! $article) {
             return $this->error('escalated_not_found', __('Article not found.', 'escalated'), 404);
         }
 
         Article::delete($id);
+
+        AuditLog::record('kb_article.deleted', 'Article', $id, [
+            'title' => $article->title,
+            'slug' => $article->slug,
+            'status' => $article->status,
+        ], null);
 
         return $this->success(null, 204);
     }

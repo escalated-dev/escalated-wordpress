@@ -2,6 +2,7 @@
 
 namespace Escalated\Admin;
 
+use Escalated\Models\AuditLog;
 use Escalated\Models\Setting;
 
 class Admin_Settings
@@ -39,7 +40,21 @@ class Admin_Settings
             wp_die(esc_html__('Security check failed.', 'escalated'));
         }
 
-        $fields = [
+        $this->persist(wp_unslash($_POST));
+
+        $redirect = admin_url('admin.php?page=escalated-settings&message=saved');
+        wp_safe_redirect($redirect);
+        exit;
+    }
+
+    /**
+     * The editable settings keys and their sanitizers.
+     *
+     * @return array<string, string>
+     */
+    private function fields(): array
+    {
+        return [
             // General
             'ticket_reference_prefix' => 'sanitize_text_field',
             'default_priority' => 'sanitize_text_field',
@@ -86,11 +101,36 @@ class Admin_Settings
             // Maintenance
             'activity_purge_days' => 'absint',
         ];
+    }
+
+    /**
+     * Persist a submitted (already unslashed) settings payload and write a
+     * single `settings.updated` audit entry capturing the keys that changed.
+     *
+     * Extracted from handle_save() so it is unit-testable without the
+     * redirect/exit at the HTTP boundary. Webhook fields (webhook_url,
+     * webhook_secret) flow through here too, so webhook changes are audited.
+     *
+     * @param  array<string, mixed>  $input
+     */
+    public function persist(array $input): void
+    {
+        $fields = $this->fields();
+
+        $audit_keys = array_merge(
+            array_keys($fields),
+            ['guest_policy_mode', 'guest_policy_user_id', 'guest_policy_signup_url_template']
+        );
+
+        // Snapshot the prior values so we can diff after saving.
+        $before = [];
+        foreach ($audit_keys as $key) {
+            $before[$key] = Setting::get($key);
+        }
 
         foreach ($fields as $key => $sanitizer) {
-            if (isset($_POST[$key])) {
-                $value = wp_unslash($_POST[$key]);
-                $value = call_user_func($sanitizer, $value);
+            if (isset($input[$key])) {
+                $value = call_user_func($sanitizer, $input[$key]);
 
                 if ($key === 'ticket_reference_prefix' && ! $this->is_valid_ticket_reference_prefix((string) $value)) {
                     continue;
@@ -128,9 +168,28 @@ class Admin_Settings
             Setting::set('guest_policy_signup_url_template', '');
         }
 
-        $redirect = admin_url('admin.php?page=escalated-settings&message=saved');
-        wp_safe_redirect($redirect);
-        exit;
+        // Diff and record a single audit entry for the changed keys. Secret
+        // values are recorded as a redacted marker rather than plaintext.
+        $secret_keys = ['webhook_secret', 'inbound_email_password'];
+        $old_values = [];
+        $new_values = [];
+        foreach ($audit_keys as $key) {
+            $after = Setting::get($key);
+            if ((string) $after === (string) $before[$key]) {
+                continue;
+            }
+            if (in_array($key, $secret_keys, true)) {
+                $old_values[$key] = $before[$key] !== null && $before[$key] !== '' ? '********' : null;
+                $new_values[$key] = $after !== null && $after !== '' ? '********' : null;
+            } else {
+                $old_values[$key] = $before[$key];
+                $new_values[$key] = $after;
+            }
+        }
+
+        if ($new_values !== []) {
+            AuditLog::record('settings.updated', 'Settings', null, $old_values, $new_values);
+        }
     }
 
     /**
