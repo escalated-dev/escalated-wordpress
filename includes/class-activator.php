@@ -645,6 +645,49 @@ class Activator
             UNIQUE KEY user_id (user_id)
         ) $charset_collate;";
         dbDelta($sql);
+
+        // 35. escalated_article_categories — knowledge base category tree.
+        // Self-referencing parent_id, ordered by position then name. Mirrors
+        // the Laravel reference article_categories schema.
+        $sql = "CREATE TABLE {$prefix}article_categories (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            name VARCHAR(255) NOT NULL,
+            slug VARCHAR(255) NOT NULL,
+            parent_id BIGINT UNSIGNED NULL,
+            position INT UNSIGNED NOT NULL DEFAULT 0,
+            description TEXT NULL,
+            created_at DATETIME,
+            updated_at DATETIME,
+            PRIMARY KEY  (id),
+            UNIQUE KEY slug (slug),
+            KEY parent_id (parent_id)
+        ) $charset_collate;";
+        dbDelta($sql);
+
+        // 36. escalated_articles — knowledge base articles. draft/published
+        // status with published_at, a unique slug, optional category + author,
+        // and view/helpful counters. Mirrors the Laravel reference articles
+        // schema and replaces the never-registered escalated_article CPT.
+        $sql = "CREATE TABLE {$prefix}articles (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            category_id BIGINT UNSIGNED NULL,
+            title VARCHAR(255) NOT NULL,
+            slug VARCHAR(255) NOT NULL,
+            body LONGTEXT NULL,
+            status VARCHAR(20) NOT NULL DEFAULT 'draft',
+            author_id BIGINT UNSIGNED NULL,
+            view_count INT UNSIGNED NOT NULL DEFAULT 0,
+            helpful_count INT UNSIGNED NOT NULL DEFAULT 0,
+            not_helpful_count INT UNSIGNED NOT NULL DEFAULT 0,
+            published_at DATETIME NULL,
+            created_at DATETIME,
+            updated_at DATETIME,
+            PRIMARY KEY  (id),
+            UNIQUE KEY slug (slug),
+            KEY category_id (category_id),
+            KEY status (status)
+        ) $charset_collate;";
+        dbDelta($sql);
     }
 
     /**

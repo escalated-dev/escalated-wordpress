@@ -35,6 +35,8 @@ class Api_Bootstrap
             new Two_Factor_Controller,
             new Events_Controller,
             new Widget_Controller,
+            new Article_Controller,
+            new Article_Category_Controller,
             new Saved_View_Controller,
             new Ticket_Snooze_Controller,
             new Ticket_Split_Controller,
