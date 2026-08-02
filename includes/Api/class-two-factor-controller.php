@@ -11,6 +11,7 @@
 
 namespace Escalated\Api;
 
+use Escalated\Models\AuditLog;
 use Escalated\Models\TwoFactor;
 use Escalated\Services\TwoFactorService;
 use WP_REST_Request;
@@ -217,6 +218,8 @@ class Two_Factor_Controller extends Base_Controller
 
         TwoFactor::confirm($record->id);
 
+        AuditLog::record('two_factor.enabled', 'User', $user_id, null, null, $user_id);
+
         return $this->success([
             'message' => __('Two-factor authentication enabled.', 'escalated'),
             'enabled' => true,
@@ -301,7 +304,13 @@ class Two_Factor_Controller extends Base_Controller
     {
         $user_id = $this->resolve_user_id($request);
 
+        $had_record = TwoFactor::for_user($user_id) !== null;
+
         TwoFactor::delete_for_user($user_id);
+
+        if ($had_record) {
+            AuditLog::record('two_factor.disabled', 'User', $user_id, null, null, $user_id);
+        }
 
         return $this->success([
             'message' => __('Two-factor authentication disabled.', 'escalated'),

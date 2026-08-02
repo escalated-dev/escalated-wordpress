@@ -54,6 +54,7 @@ class Test_Activator extends WP_UnitTestCase
             'escalated_skill_routing_departments',
             'escalated_agent_skills',
             'escalated_ticket_subjects',
+            'escalated_audit_logs',
         ];
 
         $existing_tables = $wpdb->get_col('SHOW TABLES');

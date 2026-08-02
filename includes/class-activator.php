@@ -688,6 +688,31 @@ class Activator
             KEY status (status)
         ) $charset_collate;";
         dbDelta($sql);
+
+        // 37. escalated_audit_logs — system-wide audit trail for admin /
+        // configuration / security / user actions that happen outside a single
+        // ticket (settings + webhooks, role grants, API token + 2FA lifecycle,
+        // knowledge base CRUD). Mirrors the Laravel reference audit_logs schema;
+        // auditable_type / auditable_id are nullable here because some system
+        // events (e.g. settings changes) are not tied to a single model row.
+        $sql = "CREATE TABLE {$prefix}audit_logs (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            user_id BIGINT UNSIGNED NULL,
+            action VARCHAR(255) NOT NULL,
+            auditable_type VARCHAR(255) NULL,
+            auditable_id BIGINT UNSIGNED NULL,
+            old_values LONGTEXT NULL,
+            new_values LONGTEXT NULL,
+            ip_address VARCHAR(45) NULL,
+            user_agent VARCHAR(255) NULL,
+            created_at DATETIME,
+            PRIMARY KEY  (id),
+            KEY auditable (auditable_type, auditable_id),
+            KEY user_id (user_id),
+            KEY action (action),
+            KEY created_at (created_at)
+        ) $charset_collate;";
+        dbDelta($sql);
     }
 
     /**
