@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-09-12
+
 ### Added
 - **Configurable database connection.** Define `ESCALATED_DB_NAME` in `wp-config.php` (optionally with `ESCALATED_DB_USER`, `ESCALATED_DB_PASSWORD`, `ESCALATED_DB_HOST` and `ESCALATED_DB_PREFIX`) to keep Escalated's tables outside the WordPress database. Define nothing and the plugin uses the global `$wpdb` — the same instance, so an unconfigured site is unchanged.
 
