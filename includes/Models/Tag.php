@@ -34,7 +34,7 @@ class Tag
      */
     public static function find($id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_row(
@@ -50,7 +50,7 @@ class Tag
      */
     public static function find_by_slug($slug)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_row(
@@ -65,7 +65,7 @@ class Tag
      */
     public static function create(array $data)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $now = current_time('mysql');
 
@@ -85,7 +85,7 @@ class Tag
      */
     public static function update($id, array $data)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         $data['updated_at'] = current_time('mysql');
@@ -101,7 +101,7 @@ class Tag
      */
     public static function delete($id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $pivot = static::pivot_table();
 
@@ -118,7 +118,7 @@ class Tag
      */
     public static function all(array $filters = [])
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $where = ['1=1'];
         $values = [];
@@ -147,7 +147,7 @@ class Tag
      */
     public static function for_ticket($ticket_id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $pivot = static::pivot_table();
 
@@ -171,7 +171,7 @@ class Tag
      */
     public static function attach($ticket_id, $tag_id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $pivot = static::pivot_table();
 
         // Use INSERT IGNORE to silently skip duplicates.
@@ -193,7 +193,7 @@ class Tag
      */
     public static function detach($ticket_id, $tag_id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $pivot = static::pivot_table();
 
         return $wpdb->delete($pivot, [
@@ -211,7 +211,7 @@ class Tag
      */
     public static function sync($ticket_id, array $tag_ids)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $pivot = static::pivot_table();
 
         // Remove all existing tags for this ticket.

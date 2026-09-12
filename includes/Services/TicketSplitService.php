@@ -108,7 +108,7 @@ class TicketSplitService
      */
     private function link_tickets(int $source_id, int $new_id, string $source_ref, string $new_ref): void
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = Escalated::table('ticket_links');
 
         // Create the links table if it doesn't exist.
@@ -139,7 +139,7 @@ class TicketSplitService
      */
     public static function get_linked_tickets(int $ticket_id): array
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $links_table = Escalated::table('ticket_links');
         $tickets_table = Escalated::table('tickets');
 
@@ -159,7 +159,7 @@ class TicketSplitService
      */
     private function ensure_links_table(): void
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = Escalated::table('ticket_links');
         $charset_collate = $wpdb->get_charset_collate();
 

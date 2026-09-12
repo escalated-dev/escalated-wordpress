@@ -24,7 +24,7 @@ class Reply
      */
     public static function find($id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_row(
@@ -39,7 +39,7 @@ class Reply
      */
     public static function create(array $data)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $now = current_time('mysql');
 
@@ -59,7 +59,7 @@ class Reply
      */
     public static function update($id, array $data)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         $data['updated_at'] = current_time('mysql');
@@ -75,7 +75,7 @@ class Reply
      */
     public static function delete($id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->delete($table, ['id' => $id]) !== false;
@@ -89,7 +89,7 @@ class Reply
      */
     public static function soft_delete($id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->update(
@@ -108,7 +108,7 @@ class Reply
      */
     public static function for_ticket($ticket_id, $include_internal = true)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         $sql = "SELECT * FROM {$table} WHERE ticket_id = %d AND deleted_at IS NULL";
@@ -130,7 +130,7 @@ class Reply
      */
     public static function all(array $filters = [])
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $where = ['deleted_at IS NULL'];
         $values = [];

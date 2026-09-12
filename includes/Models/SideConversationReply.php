@@ -27,7 +27,7 @@ class SideConversationReply
      */
     public static function create(array $data)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $now = current_time('mysql');
 
@@ -47,7 +47,7 @@ class SideConversationReply
      */
     public static function for_conversation($side_conversation_id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_results(

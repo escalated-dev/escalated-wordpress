@@ -13,7 +13,7 @@ class Admin_Reports
      */
     public function render(): void
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
 
         $ticket_table = Ticket::table();
         $dept_table = Department::table();

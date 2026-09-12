@@ -47,7 +47,7 @@ class Dashboard_Controller extends Base_Controller
      */
     public function get_stats(WP_REST_Request $request)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
 
         $user_id = $this->check_token_permission($request, 'dashboard:read');
 

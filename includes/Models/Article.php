@@ -32,7 +32,7 @@ class Article
      */
     public static function find($id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_row(
@@ -48,7 +48,7 @@ class Article
      */
     public static function find_by_slug($slug)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_row(
@@ -65,7 +65,7 @@ class Article
      */
     public static function find_published_by_slug($slug)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_row(
@@ -83,7 +83,7 @@ class Article
      */
     public static function create(array $data)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $now = current_time('mysql');
 
@@ -103,7 +103,7 @@ class Article
      */
     public static function update($id, array $data)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         $data['updated_at'] = current_time('mysql');
@@ -119,7 +119,7 @@ class Article
      */
     public static function delete($id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->delete($table, ['id' => $id]) !== false;
@@ -132,7 +132,7 @@ class Article
      */
     public static function all(array $filters = [])
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $where = ['1=1'];
         $values = [];
@@ -172,7 +172,7 @@ class Article
      */
     public static function published(array $filters = [])
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $where = ["status = 'published'"];
         $values = [];
@@ -215,7 +215,7 @@ class Article
      */
     public static function related($category_id, $exclude_id, $limit = 5)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         if (empty($category_id)) {
@@ -275,7 +275,7 @@ class Article
      */
     private static function bump_counter($id, $column)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         $allowed = ['view_count', 'helpful_count', 'not_helpful_count'];
@@ -299,7 +299,7 @@ class Article
      */
     public static function unique_slug($base, $exclude_id = null)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         $base = $base !== '' ? $base : 'article';

@@ -39,7 +39,7 @@ class Newsletter_Dispatch
 
     private function plan_due(): void
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = Newsletter::table();
         $now = current_time('mysql');
         $rows = $wpdb->get_results($wpdb->prepare(

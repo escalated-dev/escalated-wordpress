@@ -19,7 +19,7 @@ class TicketSubjectLink
      */
     public static function find(int $id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_row(
@@ -32,7 +32,7 @@ class TicketSubjectLink
      */
     public static function for_ticket(int $ticket_id): array
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         $rows = $wpdb->get_results(
@@ -47,7 +47,7 @@ class TicketSubjectLink
 
     public static function max_position(int $ticket_id): int
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return (int) $wpdb->get_var(
@@ -67,7 +67,7 @@ class TicketSubjectLink
         ?string $role = null,
         ?int $position = null
     ) {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $now = current_time('mysql');
 
@@ -115,7 +115,7 @@ class TicketSubjectLink
      */
     public static function detach(int $ticket_id, string $subject_type, string $subject_id): int
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return (int) $wpdb->query(
@@ -130,7 +130,7 @@ class TicketSubjectLink
 
     public static function delete_for_ticket(int $ticket_id): void
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         $wpdb->delete($table, ['ticket_id' => $ticket_id]);
@@ -141,7 +141,7 @@ class TicketSubjectLink
      */
     public static function delete_by_id(int $id, int $ticket_id): int
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return (int) $wpdb->query(

@@ -31,7 +31,7 @@ class ArticleCategory
      */
     public static function find($id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_row(
@@ -47,7 +47,7 @@ class ArticleCategory
      */
     public static function find_by_slug($slug)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_row(
@@ -62,7 +62,7 @@ class ArticleCategory
      */
     public static function create(array $data)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $now = current_time('mysql');
 
@@ -82,7 +82,7 @@ class ArticleCategory
      */
     public static function update($id, array $data)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         $data['updated_at'] = current_time('mysql');
@@ -98,7 +98,7 @@ class ArticleCategory
      */
     public static function delete($id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->delete($table, ['id' => $id]) !== false;
@@ -111,7 +111,7 @@ class ArticleCategory
      */
     public static function all()
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_results(
@@ -127,7 +127,7 @@ class ArticleCategory
      */
     public static function all_with_article_counts()
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $articles = Article::table();
 
@@ -148,7 +148,7 @@ class ArticleCategory
      */
     public static function roots_with_published_counts()
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $articles = Article::table();
 
@@ -173,7 +173,7 @@ class ArticleCategory
      */
     public static function unique_slug($base, $exclude_id = null)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         $base = $base !== '' ? $base : 'category';

@@ -32,7 +32,7 @@ class NewsletterPlanner
             return;
         }
 
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $contacts_table = Contact::table();
         $placeholders = implode(',', array_fill(0, count($contact_ids), '%d'));
         $contacts = $wpdb->get_results($wpdb->prepare(

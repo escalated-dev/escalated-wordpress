@@ -126,7 +126,7 @@ class SkillService
      */
     public static function list_for_admin(): array
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $skills = self::skills_table();
         $rt = self::routing_tags_table();
         $rd = self::routing_departments_table();
@@ -161,7 +161,7 @@ class SkillService
      */
     public static function find_for_edit(int $id): ?array
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $skills = self::skills_table();
         $row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$skills} WHERE id = %d", $id));
         if (! $row) {
@@ -218,7 +218,7 @@ class SkillService
             return new WP_Error('escalated_skill_validation', __('Skill name must be 100 characters or fewer.', 'escalated'), ['status' => 422]);
         }
 
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $skills = self::skills_table();
         if ($exclude_skill_id) {
             $dup = $wpdb->get_var($wpdb->prepare(
@@ -269,7 +269,7 @@ class SkillService
             return $validated;
         }
 
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $name = trim((string) $payload['name']);
         $slug = self::unique_slug(sanitize_title($name));
         $now = current_time('mysql');
@@ -307,7 +307,7 @@ class SkillService
      */
     public static function update(int $id, array $payload)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $skills = self::skills_table();
         $exists = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$skills} WHERE id = %d", $id));
         if (! $exists) {
@@ -351,7 +351,7 @@ class SkillService
      */
     public static function delete(int $id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $skills = self::skills_table();
         $exists = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$skills} WHERE id = %d", $id));
         if (! $exists) {
@@ -418,7 +418,7 @@ class SkillService
 
     private static function unique_slug(string $base, ?int $ignore_skill_id = null): string
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = self::skills_table();
         $slug = $base !== '' ? $base : 'skill';
         $candidate = $slug;
@@ -448,7 +448,7 @@ class SkillService
      */
     private static function replace_routing_and_agents(int $skill_id, array $routing_tag_ids, array $routing_department_ids, array $agents): void
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $wpdb->delete(self::routing_tags_table(), ['skill_id' => $skill_id], ['%d']);
         $wpdb->delete(self::routing_departments_table(), ['skill_id' => $skill_id], ['%d']);
         $wpdb->delete(self::agent_skills_table(), ['skill_id' => $skill_id], ['%d']);

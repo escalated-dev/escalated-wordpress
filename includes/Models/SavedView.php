@@ -24,7 +24,7 @@ class SavedView
      */
     public static function find($id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_row(
@@ -39,7 +39,7 @@ class SavedView
      */
     public static function create(array $data)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $now = current_time('mysql');
 
@@ -59,7 +59,7 @@ class SavedView
      */
     public static function update($id, array $data)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         $data['updated_at'] = current_time('mysql');
@@ -75,7 +75,7 @@ class SavedView
      */
     public static function delete($id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->delete($table, ['id' => $id]) !== false;
@@ -89,7 +89,7 @@ class SavedView
      */
     public static function for_user($user_id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_results(
@@ -107,7 +107,7 @@ class SavedView
      */
     public static function all()
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_results(
@@ -122,7 +122,7 @@ class SavedView
      */
     public static function reorder(array $ordered_ids): void
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         foreach ($ordered_ids as $position => $id) {
@@ -139,7 +139,7 @@ class SavedView
      */
     public static function ensure_table(): void
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $charset_collate = $wpdb->get_charset_collate();
 

@@ -17,7 +17,7 @@ class Auto_Close
         $days = \Escalated\Models\Setting::get_int('auto_close_days', 7);
         $cutoff = gmdate('Y-m-d H:i:s', strtotime("-{$days} days"));
 
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = \Escalated\Escalated::table('tickets');
         $tickets = $wpdb->get_results($wpdb->prepare(
             "SELECT id FROM {$table} WHERE status = 'resolved' AND resolved_at <= %s AND deleted_at IS NULL",

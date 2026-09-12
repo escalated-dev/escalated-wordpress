@@ -25,7 +25,7 @@ class WorkflowLog
      */
     public static function for_workflow($workflowId, $limit = 100)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $logs_table = static::table();
         $workflows_table = Workflow::table();
         $tickets_table = Escalated::table('tickets');

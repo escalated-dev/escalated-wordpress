@@ -100,7 +100,7 @@ class WorkflowRunnerService
 
     protected function find_active_by_trigger(string $trigger_event): array
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = Workflow::table();
 
         return $wpdb->get_results(
@@ -125,7 +125,7 @@ class WorkflowRunnerService
 
     protected function create_log(array $data): int
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = Escalated::table('workflow_logs');
         $wpdb->insert($table, $data);
 
@@ -137,7 +137,7 @@ class WorkflowRunnerService
         if ($log_id <= 0) {
             return;
         }
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = Escalated::table('workflow_logs');
         $wpdb->update($table, $data, ['id' => $log_id]);
     }

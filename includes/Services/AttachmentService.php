@@ -44,7 +44,7 @@ class AttachmentService
             );
         }
 
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
 
         $table = Escalated::table('attachments');
         $now = current_time('mysql');
@@ -130,7 +130,7 @@ class AttachmentService
         }
 
         // Remove the database record.
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = Escalated::table('attachments');
 
         return $wpdb->delete($table, ['id' => $attachment_id]) !== false;
@@ -201,7 +201,7 @@ class AttachmentService
      */
     public function find(int $id): ?object
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
 
         $table = Escalated::table('attachments');
 
@@ -221,7 +221,7 @@ class AttachmentService
      */
     public function get_for(string $attachable_type, int $attachable_id): array
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
 
         $table = Escalated::table('attachments');
 

@@ -954,7 +954,7 @@ class Ticket_Controller extends Base_Controller
      */
     public function toggle_follow(WP_REST_Request $request)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
 
         $user_id = $this->check_token_permission($request, 'tickets:read');
 

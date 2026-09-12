@@ -25,7 +25,7 @@ class Setting
      */
     public static function get($key, $default = null)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         $value = $wpdb->get_var(
@@ -44,7 +44,7 @@ class Setting
      */
     public static function set($key, $value)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $now = current_time('mysql');
 
@@ -104,7 +104,7 @@ class Setting
      */
     public static function delete($key)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->delete($table, ['option_key' => $key]) !== false;
@@ -117,7 +117,7 @@ class Setting
      */
     public static function all()
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         $rows = $wpdb->get_results("SELECT option_key, option_value FROM {$table}");

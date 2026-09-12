@@ -41,7 +41,7 @@ class Newsletter_Template_Controller extends Base_Controller
     public function index(WP_REST_Request $request)
     {
         unset($request);
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $templates = $wpdb->get_results(
             'SELECT * FROM '.NewsletterTemplate::table().' ORDER BY created_at DESC'
         ) ?: [];
@@ -65,7 +65,7 @@ class Newsletter_Template_Controller extends Base_Controller
         if ($err) {
             return $err;
         }
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $now = current_time('mysql');
         $wpdb->insert(NewsletterTemplate::table(), [
             'name' => sanitize_text_field((string) $body['name']),
@@ -107,7 +107,7 @@ class Newsletter_Template_Controller extends Base_Controller
         if ($err) {
             return $err;
         }
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $wpdb->update(NewsletterTemplate::table(), [
             'name' => sanitize_text_field((string) $body['name']),
             'theme' => sanitize_text_field((string) $body['theme']),
@@ -123,7 +123,7 @@ class Newsletter_Template_Controller extends Base_Controller
     public function destroy(WP_REST_Request $request)
     {
         $id = (int) $request->get_param('id');
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $wpdb->delete(NewsletterTemplate::table(), ['id' => $id]);
 
         return $this->redirect_response(rest_url('escalated/v1/admin/newsletters/templates'));

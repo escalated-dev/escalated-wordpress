@@ -34,7 +34,7 @@ class Department
      */
     public static function find($id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_row(
@@ -50,7 +50,7 @@ class Department
      */
     public static function find_by_slug($slug)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_row(
@@ -65,7 +65,7 @@ class Department
      */
     public static function create(array $data)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $now = current_time('mysql');
 
@@ -85,7 +85,7 @@ class Department
      */
     public static function update($id, array $data)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         $data['updated_at'] = current_time('mysql');
@@ -101,7 +101,7 @@ class Department
      */
     public static function delete($id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->delete($table, ['id' => $id]) !== false;
@@ -114,7 +114,7 @@ class Department
      */
     public static function all(array $filters = [])
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $where = ['1=1'];
         $values = [];
@@ -141,7 +141,7 @@ class Department
      */
     public static function active()
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_results(
@@ -157,7 +157,7 @@ class Department
      */
     public static function agents($department_id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $pivot = static::pivot_table();
 
         $results = $wpdb->get_col(
@@ -176,7 +176,7 @@ class Department
      */
     public static function add_agent($department_id, $user_id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $pivot = static::pivot_table();
 
         $result = $wpdb->insert($pivot, [
@@ -196,7 +196,7 @@ class Department
      */
     public static function remove_agent($department_id, $user_id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $pivot = static::pivot_table();
 
         return $wpdb->delete($pivot, [

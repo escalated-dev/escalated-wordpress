@@ -62,7 +62,7 @@ class AutomationRunner
      */
     protected function find_matching_tickets(object $automation): array
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
 
         $table = Ticket::table();
         $conditions = json_decode($automation->conditions, true);
@@ -256,7 +256,7 @@ class AutomationRunner
      */
     protected function add_tag_to_ticket(int $ticket_id, string $tag_name): void
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
 
         $tag_table = Tag::table();
         $pivot_table = Tag::pivot_table();

@@ -73,7 +73,7 @@ class Contact
      */
     public static function find($id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_row(
@@ -87,7 +87,7 @@ class Contact
      */
     public static function find_by_email($email)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $normalized = static::normalize_email($email);
         if ($normalized === '') {
@@ -111,7 +111,7 @@ class Contact
      */
     public static function find_or_create_by_email($email, $name = null)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $normalized = static::normalize_email($email);
 
@@ -156,7 +156,7 @@ class Contact
      */
     public static function link_to_user($contact_id, $user_id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $wpdb->update(
             $table,
@@ -177,7 +177,7 @@ class Contact
      */
     public static function promote_to_user($contact_id, $user_id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $contact = static::link_to_user($contact_id, $user_id);
         $tickets_table = Ticket::table();
         $wpdb->update(

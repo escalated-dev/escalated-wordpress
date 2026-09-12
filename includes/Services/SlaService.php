@@ -19,7 +19,7 @@ class SlaService
      */
     public function attach_default_policy(int $ticket_id): bool
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
 
         $table = Escalated::table('sla_policies');
         $policy = $wpdb->get_row(
@@ -94,7 +94,7 @@ class SlaService
      */
     public function check_breaches(): int
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
 
         $table = Ticket::table();
         $now = current_time('mysql');
@@ -177,7 +177,7 @@ class SlaService
      */
     public function check_warnings(int $warning_minutes = 30): int
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
 
         $table = Ticket::table();
         $now = current_time('mysql');

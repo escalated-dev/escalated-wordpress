@@ -263,7 +263,7 @@ class Widget_Chat_Controller extends Base_Controller
             return $session;
         }
 
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $replies_table = \Escalated\Escalated::table('replies');
         $replies = $wpdb->get_results(
             $wpdb->prepare(

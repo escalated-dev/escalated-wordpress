@@ -386,7 +386,7 @@ class TicketService
             return;
         }
 
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = \Escalated\Escalated::table('ticket_followers');
 
         $exists = (int) $wpdb->get_var(

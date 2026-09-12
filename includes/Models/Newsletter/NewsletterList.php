@@ -17,14 +17,14 @@ class NewsletterList
 
     public static function find(int $id): ?object
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
 
         return $wpdb->get_row($wpdb->prepare('SELECT * FROM '.self::table().' WHERE id = %d', $id)) ?: null;
     }
 
     public static function create(array $attrs): int
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $now = current_time('mysql');
         $wpdb->insert(
             self::table(),

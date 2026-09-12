@@ -19,7 +19,7 @@ class ChatRoutingRule
      */
     public static function find(int $id): ?object
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_row(
@@ -34,7 +34,7 @@ class ChatRoutingRule
      */
     public static function create(array $data)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $now = current_time('mysql');
 
@@ -51,7 +51,7 @@ class ChatRoutingRule
      */
     public static function update(int $id, array $data): bool
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $data['updated_at'] = current_time('mysql');
 
@@ -63,7 +63,7 @@ class ChatRoutingRule
      */
     public static function delete(int $id): bool
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return (bool) $wpdb->delete($table, ['id' => $id]);
@@ -74,7 +74,7 @@ class ChatRoutingRule
      */
     public static function get_active(): array
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_results(

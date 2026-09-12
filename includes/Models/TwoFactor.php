@@ -39,7 +39,7 @@ class TwoFactor
      */
     public static function find($id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_row(
@@ -55,7 +55,7 @@ class TwoFactor
      */
     public static function for_user($user_id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_row(
@@ -71,7 +71,7 @@ class TwoFactor
      */
     public static function pending_for_user($user_id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_row(
@@ -90,7 +90,7 @@ class TwoFactor
      */
     public static function confirmed_for_user($user_id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_row(
@@ -111,7 +111,7 @@ class TwoFactor
      */
     public static function create(array $data)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $now = current_time('mysql');
 
@@ -139,7 +139,7 @@ class TwoFactor
      */
     public static function update($id, array $data)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         if (isset($data['secret'])) {
@@ -163,7 +163,7 @@ class TwoFactor
      */
     public static function confirm($id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $now = current_time('mysql');
 
@@ -182,7 +182,7 @@ class TwoFactor
      */
     public static function delete($id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->delete($table, ['id' => (int) $id]) !== false;
@@ -196,7 +196,7 @@ class TwoFactor
      */
     public static function delete_for_user($user_id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->delete($table, ['user_id' => (int) $user_id]) !== false;
@@ -210,7 +210,7 @@ class TwoFactor
      */
     public static function delete_pending_for_user($user_id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->query(
@@ -273,7 +273,7 @@ class TwoFactor
 
         unset($hashes[$index]);
 
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
 
         $wpdb->update(
             static::table(),

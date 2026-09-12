@@ -46,7 +46,7 @@ class ContactSegmentResolver
      */
     public function count_matches(array $filter): int
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = Contact::table();
         [$where, $params] = $this->build_where($filter);
         $sql = "SELECT COUNT(*) FROM {$table} WHERE 1=1{$where}";
@@ -62,7 +62,7 @@ class ContactSegmentResolver
      */
     private function static_member_ids(int $list_id): array
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = NewsletterListMember::table();
 
         $rows = $wpdb->get_col($wpdb->prepare(
@@ -80,7 +80,7 @@ class ContactSegmentResolver
      */
     private function query_ids(array $filter, ?array $limit_ids = null, bool $sendable_only = false): array
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = Contact::table();
         [$where, $params] = $this->build_where($filter);
         if ($sendable_only) {
