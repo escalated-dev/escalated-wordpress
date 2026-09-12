@@ -23,7 +23,7 @@ class TicketActivity
      */
     public static function create(array $data)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         // Encode properties if passed as an array.
@@ -47,7 +47,7 @@ class TicketActivity
      */
     public static function for_ticket($ticket_id, $limit = 50)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_results(

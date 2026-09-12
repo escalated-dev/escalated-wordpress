@@ -21,7 +21,7 @@ class NewsletterTracker
         if ($d->opened_at !== null) {
             return;
         }
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $now = current_time('mysql');
         $wpdb->update(NewsletterDelivery::table(), ['opened_at' => $now], ['id' => (int) $d->id]);
         $this->increment_summary((int) $d->newsletter_id, 'summary_opened');
@@ -37,7 +37,7 @@ class NewsletterTracker
         if (in_array($d->status, ['bounced', 'complained', 'failed'], true)) {
             return;
         }
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = NewsletterDelivery::table();
         $is_first = ((int) $d->clicks_count) === 0;
         $now = current_time('mysql');
@@ -63,7 +63,7 @@ class NewsletterTracker
         if (! $d || $d->status === 'bounced') {
             return;
         }
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $wpdb->update(NewsletterDelivery::table(), [
             'status' => 'bounced',
             'bounce_reason' => $reason,
@@ -78,7 +78,7 @@ class NewsletterTracker
         if (! $d || $d->status === 'complained') {
             return;
         }
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $wpdb->update(NewsletterDelivery::table(), ['status' => 'complained'], ['id' => (int) $d->id]);
         $this->increment_summary((int) $d->newsletter_id, 'summary_complained');
         $this->bounces->mark_complained((string) $d->email_at_send);
@@ -86,7 +86,7 @@ class NewsletterTracker
 
     private function increment_summary(int $newsletter_id, string $column): void
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = Newsletter::table();
         $allowed = ['summary_opened', 'summary_clicked', 'summary_bounced', 'summary_complained', 'summary_sent'];
         if (! in_array($column, $allowed, true)) {

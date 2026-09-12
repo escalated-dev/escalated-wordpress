@@ -145,7 +145,7 @@ class Api_Token_Controller extends Base_Controller
      */
     public function get_items($request)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
 
         $table = \Escalated\Escalated::table('api_tokens');
         $tokens = $wpdb->get_results("SELECT * FROM {$table} ORDER BY created_at DESC") ?: [];
@@ -273,7 +273,7 @@ class Api_Token_Controller extends Base_Controller
      */
     public function delete_item($request)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
 
         $token_id = absint($request->get_param('id'));
         $table = \Escalated\Escalated::table('api_tokens');

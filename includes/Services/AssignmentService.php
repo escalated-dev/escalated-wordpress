@@ -144,7 +144,7 @@ class AssignmentService
      */
     public function get_agent_workload(int $agent_id): array
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
 
         $table = Ticket::table();
         $open_scope = Ticket::scope_open();

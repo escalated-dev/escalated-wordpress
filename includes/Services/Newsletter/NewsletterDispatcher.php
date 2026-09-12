@@ -51,7 +51,7 @@ class NewsletterDispatcher
      */
     private function claim_pending(int $limit): array
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = NewsletterDelivery::table();
         $now = current_time('mysql');
 
@@ -125,7 +125,7 @@ class NewsletterDispatcher
                 throw new \RuntimeException('wp_mail failed');
             }
 
-            global $wpdb;
+            $wpdb = \Escalated\Escalated::db();
             $now = current_time('mysql');
             $wpdb->update(NewsletterDelivery::table(), [
                 'status' => 'sent',
@@ -142,7 +142,7 @@ class NewsletterDispatcher
             if ($next >= count(self::BACKOFF_MINUTES)) {
                 $this->fail_delivery($delivery, $e->getMessage(), $next);
             } else {
-                global $wpdb;
+                $wpdb = \Escalated\Escalated::db();
                 $backoff = self::BACKOFF_MINUTES[$next - 1];
                 $wpdb->update(NewsletterDelivery::table(), [
                     'status' => 'pending',
@@ -156,7 +156,7 @@ class NewsletterDispatcher
 
     private function fail_delivery(object $delivery, string $reason, ?int $attempts = null): void
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $wpdb->update(NewsletterDelivery::table(), [
             'status' => 'failed',
             'failure_reason' => $reason,
@@ -168,7 +168,7 @@ class NewsletterDispatcher
 
     private function reclaim_stuck_rows(): void
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = NewsletterDelivery::table();
         $minutes = NewsletterConfig::claim_timeout_minutes();
         $cutoff = gmdate('Y-m-d H:i:s', time() - $minutes * 60);
@@ -181,7 +181,7 @@ class NewsletterDispatcher
 
     private function finalize_completed_newsletters(): void
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $newsletters = $wpdb->get_results(
             'SELECT id, sent_at FROM '.Newsletter::table()." WHERE status = 'sending'"
         ) ?: [];
@@ -203,7 +203,7 @@ class NewsletterDispatcher
 
     private function check_auto_pause(): void
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $threshold = NewsletterConfig::auto_pause_threshold();
         $rate = NewsletterConfig::auto_pause_bounce_rate();
         $deliveries = NewsletterDelivery::table();
@@ -231,7 +231,7 @@ class NewsletterDispatcher
 
     private function load_delivery(int $id): ?object
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
 
         return $wpdb->get_row($wpdb->prepare(
             'SELECT * FROM '.NewsletterDelivery::table().' WHERE id = %d',

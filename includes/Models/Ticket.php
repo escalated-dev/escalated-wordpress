@@ -27,7 +27,7 @@ class Ticket
      */
     public static function find($id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_row(
@@ -43,7 +43,7 @@ class Ticket
      */
     public static function find_by_reference($ref)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_row(
@@ -59,7 +59,7 @@ class Ticket
      */
     public static function find_by_guest_token($token)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_row(
@@ -74,7 +74,7 @@ class Ticket
      */
     public static function create(array $data)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $now = current_time('mysql');
 
@@ -94,7 +94,7 @@ class Ticket
      */
     public static function update($id, array $data)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         $data['updated_at'] = current_time('mysql');
@@ -110,7 +110,7 @@ class Ticket
      */
     public static function delete($id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->update(
@@ -128,7 +128,7 @@ class Ticket
      */
     public static function hard_delete($id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->delete($table, ['id' => $id]) !== false;
@@ -165,7 +165,7 @@ class Ticket
      */
     public static function all(array $filters = [])
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $where = ['t.deleted_at IS NULL'];
         $values = [];
@@ -282,7 +282,7 @@ class Ticket
      */
     public static function generate_reference()
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $prefix = Setting::get('ticket_reference_prefix', 'ESC');
 
@@ -320,7 +320,7 @@ class Ticket
      */
     public static function count_by_status()
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         $rows = $wpdb->get_results(
@@ -345,7 +345,7 @@ class Ticket
      */
     public static function count_for_agent($user_id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $scope = static::scope_open();
 
@@ -370,7 +370,7 @@ class Ticket
      */
     public static function enrich(object $ticket): object
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
 
         // requester_name / requester_email.
         $requester_name = null;
@@ -486,7 +486,7 @@ class Ticket
      */
     public static function tag_ids(int $ticket_id): array
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $pivot = Escalated::table('ticket_tag');
         $ids = $wpdb->get_col(
             $wpdb->prepare("SELECT tag_id FROM {$pivot} WHERE ticket_id = %d", $ticket_id)

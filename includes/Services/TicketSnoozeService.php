@@ -136,7 +136,7 @@ class TicketSnoozeService
      */
     public function wake_snoozed_tickets(): void
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $meta_table = $this->ensure_meta_table();
         $now = current_time('mysql');
 
@@ -164,7 +164,7 @@ class TicketSnoozeService
      */
     public static function get_snoozed_ticket_ids(): array
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = Escalated::table('ticket_meta');
 
         // Suppress errors for the query in case table doesn't exist yet.
@@ -186,7 +186,7 @@ class TicketSnoozeService
      */
     private function set_meta(int $ticket_id, string $key, string $value): void
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = $this->ensure_meta_table();
         $now = current_time('mysql');
 
@@ -220,7 +220,7 @@ class TicketSnoozeService
      */
     private function get_meta(int $ticket_id, string $key): ?string
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = $this->ensure_meta_table();
 
         return $wpdb->get_var(
@@ -237,7 +237,7 @@ class TicketSnoozeService
      */
     private function delete_meta(int $ticket_id, string $key): void
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = $this->ensure_meta_table();
 
         $wpdb->delete($table, [
@@ -251,7 +251,7 @@ class TicketSnoozeService
      */
     private function ensure_meta_table(): string
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = Escalated::table('ticket_meta');
         $charset_collate = $wpdb->get_charset_collate();
 

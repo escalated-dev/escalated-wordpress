@@ -57,7 +57,7 @@ class Canned_Response_Controller extends Base_Controller
      */
     public function get_items($request)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
 
         $user_id = $this->check_token_permission($request, 'canned_responses:read');
 

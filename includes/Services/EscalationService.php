@@ -18,7 +18,7 @@ class EscalationService
      */
     public function evaluate_rules(): int
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
 
         $table = Escalated::table('escalation_rules');
         $rules = $wpdb->get_results(
@@ -60,7 +60,7 @@ class EscalationService
      */
     public function find_matching_tickets(object $rule): array
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
 
         $table = Ticket::table();
         $conditions = json_decode($rule->conditions, true);

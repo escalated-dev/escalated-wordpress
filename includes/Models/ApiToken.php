@@ -24,7 +24,7 @@ class ApiToken
      */
     public static function find($id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_row(
@@ -39,7 +39,7 @@ class ApiToken
      */
     public static function create(array $data)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $now = current_time('mysql');
 
@@ -64,7 +64,7 @@ class ApiToken
      */
     public static function update($id, array $data)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         // Encode abilities if passed as an array.
@@ -85,7 +85,7 @@ class ApiToken
      */
     public static function delete($id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->delete($table, ['id' => $id]) !== false;
@@ -98,7 +98,7 @@ class ApiToken
      */
     public static function all(array $filters = [])
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $where = ['1=1'];
         $values = [];
@@ -167,7 +167,7 @@ class ApiToken
      */
     public static function find_by_token($plain_token)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $token_hash = hash('sha256', $plain_token);
 
@@ -225,7 +225,7 @@ class ApiToken
      */
     public static function update_last_used($id, $ip)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->update(
@@ -247,7 +247,7 @@ class ApiToken
      */
     public static function for_user($user_id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_results(
@@ -265,7 +265,7 @@ class ApiToken
      */
     public static function delete_expired()
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $now = current_time('mysql');
 

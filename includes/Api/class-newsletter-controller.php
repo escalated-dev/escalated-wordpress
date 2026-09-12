@@ -68,7 +68,7 @@ class Newsletter_Controller extends Base_Controller
             'sent' => ['sent', 'failed'],
             default => ['draft'],
         };
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = Newsletter::table();
         $lists = NewsletterList::table();
         $placeholders = implode(',', array_fill(0, count($statuses), '%s'));
@@ -137,7 +137,7 @@ class Newsletter_Controller extends Base_Controller
         $list = NewsletterList::find((int) $newsletter->target_list_id);
         $newsletter->target_list = $list;
 
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $dtable = NewsletterDelivery::table();
         $ctable = Contact::table();
         $status_filter = $request->get_param('status');
@@ -221,7 +221,7 @@ class Newsletter_Controller extends Base_Controller
         if ($newsletter->status !== 'draft') {
             return $this->error('escalated_unprocessable', __('Only drafts can be deleted.', 'escalated'), 422);
         }
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $wpdb->delete(Newsletter::table(), ['id' => $id]);
 
         return $this->redirect_response(rest_url('escalated/v1/admin/newsletters'));
@@ -337,7 +337,7 @@ class Newsletter_Controller extends Base_Controller
      */
     private function compose_props(): array
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $lists = $wpdb->get_results(
             'SELECT l.id, l.name, COUNT(m.id) AS member_count
              FROM '.NewsletterList::table().' l

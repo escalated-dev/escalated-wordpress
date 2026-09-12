@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **Configurable database connection.** Define `ESCALATED_DB_NAME` in `wp-config.php` (optionally with `ESCALATED_DB_USER`, `ESCALATED_DB_PASSWORD`, `ESCALATED_DB_HOST` and `ESCALATED_DB_PREFIX`) to keep Escalated's tables outside the WordPress database. Define nothing and the plugin uses the global `$wpdb` — the same instance, so an unconfigured site is unchanged.
+
+  WordPress has no connection registry, so a second database means a second `wpdb`. `Escalated::db()` builds one lazily and reuses it, because `wpdb` connects in its constructor and resolving per query would open a connection per query.
+
+  All 289 `global $wpdb;` bindings across 67 files now resolve through `Escalated::db()`. A test sweeps `includes/` and fails if any file binds the global directly — with a second database configured, a missed one would leave some queries on one connection and some on the other, which reads as data appearing and disappearing.
+
+  WordPress core tables are untouched: the plugin reaches user data through `get_userdata()`, `get_user_by()` and `WP_User_Query`, never raw SQL, and a second test asserts that stays true.
+
+### Added
 - SSO service with JWT and SAML support.
 - Panel theme toggle (Auto/Light/Dark) in admin settings.
 - Ticket type categorization field with filtering.

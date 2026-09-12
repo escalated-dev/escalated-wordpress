@@ -6,6 +6,12 @@ class Escalated
 {
     private static ?self $instance = null;
 
+    /**
+     * Memoized connection for Escalated's tables. Null means "not yet
+     * resolved"; see db().
+     */
+    private static ?\wpdb $db = null;
+
     public static function instance(): self
     {
         if (self::$instance === null) {
@@ -48,11 +54,68 @@ class Escalated
         Cli\AutomationCommand::register();
     }
 
-    public static function table(string $name): string
+    /**
+     * The wpdb instance Escalated's own tables live on.
+     *
+     * Every query in this plugin used the global $wpdb with no way to change
+     * it, which made the plugin unusable on any site that partitions its data:
+     * a schema shared with a legacy system, a separate reporting store, or
+     * simply a site that would rather keep support tables out of the WordPress
+     * database.
+     *
+     * Returns the global $wpdb unless the site defines its own connection, so
+     * an unconfigured site is unchanged -- same instance, same prefix, same
+     * queries.
+     *
+     * WordPress has no connection registry, so a second database means a second
+     * wpdb. It is built once and reused: wpdb connects in its constructor, and
+     * building one per query would open a connection per query.
+     *
+     * Your users table is deliberately not moved. It belongs to WordPress, and
+     * Escalated stores user ids as plain unconstrained columns precisely so the
+     * two can live on different databases -- reach for the global $wpdb, not
+     * this, whenever you are querying WordPress core tables.
+     */
+    public static function db(): \wpdb
     {
         global $wpdb;
 
-        return $wpdb->prefix.'escalated_'.$name;
+        if (self::$db !== null) {
+            return self::$db;
+        }
+
+        if (! defined('ESCALATED_DB_NAME')) {
+            return self::$db = $wpdb;
+        }
+
+        $connection = new \wpdb(
+            defined('ESCALATED_DB_USER') ? ESCALATED_DB_USER : DB_USER,
+            defined('ESCALATED_DB_PASSWORD') ? ESCALATED_DB_PASSWORD : DB_PASSWORD,
+            ESCALATED_DB_NAME,
+            defined('ESCALATED_DB_HOST') ? ESCALATED_DB_HOST : DB_HOST,
+        );
+
+        // Table names are prefixed from the instance, so a dedicated database
+        // can use its own prefix without inheriting the site's.
+        $connection->set_prefix(
+            defined('ESCALATED_DB_PREFIX') ? ESCALATED_DB_PREFIX : $wpdb->prefix
+        );
+
+        return self::$db = $connection;
+    }
+
+    /**
+     * Forget the resolved connection. Only useful in tests, which swap the
+     * global $wpdb between cases.
+     */
+    public static function flush_db(): void
+    {
+        self::$db = null;
+    }
+
+    public static function table(string $name): string
+    {
+        return self::db()->prefix.'escalated_'.$name;
     }
 
     /**

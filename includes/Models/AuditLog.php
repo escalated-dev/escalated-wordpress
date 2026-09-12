@@ -82,7 +82,7 @@ class AuditLog
      */
     public static function create(array $data)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         foreach (['old_values', 'new_values'] as $json_key) {
@@ -112,7 +112,7 @@ class AuditLog
      */
     public static function find($id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_row(
@@ -130,7 +130,7 @@ class AuditLog
      */
     public static function all(array $filters = [], int $limit = 50, int $offset = 0)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         [$where, $values] = static::build_where($filters);
@@ -152,7 +152,7 @@ class AuditLog
      */
     public static function count(array $filters = []): int
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         [$where, $values] = static::build_where($filters);
@@ -173,7 +173,7 @@ class AuditLog
      */
     public static function distinct_actions(): array
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_col("SELECT DISTINCT action FROM {$table} ORDER BY action ASC") ?: [];
@@ -186,7 +186,7 @@ class AuditLog
      */
     public static function distinct_types(): array
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_col(

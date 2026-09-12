@@ -35,7 +35,7 @@ class DeferredWorkflowJob
      */
     public static function find($id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_row(
@@ -51,7 +51,7 @@ class DeferredWorkflowJob
      */
     public static function create(array $data)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $now = current_time('mysql');
 
@@ -72,7 +72,7 @@ class DeferredWorkflowJob
      */
     public static function update($id, array $data)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         $data['updated_at'] = current_time('mysql');
@@ -91,7 +91,7 @@ class DeferredWorkflowJob
      */
     public static function pending(): array
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $now_gmt = current_time('mysql', true);
 

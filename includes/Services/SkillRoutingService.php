@@ -18,7 +18,7 @@ class SkillRoutingService
      */
     public function required_skill_ids(object $ticket): array
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
 
         $tag_ids = Ticket::tag_ids((int) $ticket->id);
         $dept_id = ! empty($ticket->department_id) ? (int) $ticket->department_id : 0;
@@ -63,7 +63,7 @@ class SkillRoutingService
             return $this->all_agents_by_load();
         }
 
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $as = Escalated::table('agent_skills');
         $n = count($required);
         $placeholders = implode(',', array_fill(0, $n, '%d'));

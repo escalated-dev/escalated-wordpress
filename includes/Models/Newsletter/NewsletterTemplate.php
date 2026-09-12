@@ -13,7 +13,7 @@ class NewsletterTemplate
 
     public static function find(int $id): ?object
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
 
         return $wpdb->get_row($wpdb->prepare('SELECT * FROM '.self::table().' WHERE id = %d', $id)) ?: null;
     }

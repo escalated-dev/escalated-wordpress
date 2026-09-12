@@ -19,7 +19,7 @@ class ChatSession
      */
     public static function find(int $id): ?object
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_row(
@@ -32,7 +32,7 @@ class ChatSession
      */
     public static function find_by_ticket_id(int $ticket_id): ?object
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_row(
@@ -47,7 +47,7 @@ class ChatSession
      */
     public static function create(array $data)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $now = current_time('mysql');
 
@@ -65,7 +65,7 @@ class ChatSession
      */
     public static function update(int $id, array $data): bool
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $data['updated_at'] = current_time('mysql');
 
@@ -77,7 +77,7 @@ class ChatSession
      */
     public static function get_waiting(): array
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_results(
@@ -90,7 +90,7 @@ class ChatSession
      */
     public static function get_active_for_agent(int $agent_id): array
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_results(
@@ -106,7 +106,7 @@ class ChatSession
      */
     public static function get_idle(string $cutoff): array
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_results(
@@ -122,7 +122,7 @@ class ChatSession
      */
     public static function count_waiting(?int $department_id = null): int
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         if ($department_id) {

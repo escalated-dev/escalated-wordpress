@@ -387,7 +387,7 @@ class NotificationService
      */
     protected function get_ticket_followers(int $ticket_id): array
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
 
         $table = \Escalated\Escalated::table('ticket_followers');
 

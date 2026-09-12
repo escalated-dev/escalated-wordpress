@@ -83,7 +83,7 @@ class Activator
      */
     private static function create_tables(): void
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
 
         $charset_collate = $wpdb->get_charset_collate();
         $prefix = $wpdb->prefix.'escalated_';
@@ -920,7 +920,7 @@ class Activator
      */
     private static function seed_permissions(): void
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
 
         $perm_table = $wpdb->prefix.'escalated_permissions';
         $role_table = $wpdb->prefix.'escalated_roles';
@@ -1039,7 +1039,7 @@ class Activator
      */
     private static function insert_default_settings(): void
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
 
         $table = $wpdb->prefix.'escalated_settings';
         $now = current_time('mysql');
@@ -1086,7 +1086,7 @@ class Activator
      */
     public static function create_newsletter_tables(): void
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         require_once ABSPATH.'wp-admin/includes/upgrade.php';
         $prefix = $wpdb->prefix.'escalated_';
         $charset_collate = $wpdb->get_charset_collate();

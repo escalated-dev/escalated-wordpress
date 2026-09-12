@@ -24,7 +24,7 @@ class InboundEmail
      */
     public static function find($id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->get_row(
@@ -39,7 +39,7 @@ class InboundEmail
      */
     public static function create(array $data)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $now = current_time('mysql');
 
@@ -59,7 +59,7 @@ class InboundEmail
      */
     public static function update($id, array $data)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         $data['updated_at'] = current_time('mysql');
@@ -75,7 +75,7 @@ class InboundEmail
      */
     public static function delete($id)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         return $wpdb->delete($table, ['id' => $id]) !== false;
@@ -88,7 +88,7 @@ class InboundEmail
      */
     public static function all(array $filters = [])
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $where = ['1=1'];
         $values = [];
@@ -118,7 +118,7 @@ class InboundEmail
      */
     public static function mark_processed($id, $ticket_id = null, $reply_id = null)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $now = current_time('mysql');
 
@@ -148,7 +148,7 @@ class InboundEmail
      */
     public static function mark_failed($id, $error_message)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
         $now = current_time('mysql');
 
@@ -173,7 +173,7 @@ class InboundEmail
      */
     public static function is_duplicate($message_id, $exclude_id = null)
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
         $sql = "SELECT COUNT(*) FROM {$table} WHERE message_id = %s AND status = 'processed'";

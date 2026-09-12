@@ -24,7 +24,7 @@ class InboundEmailService
      */
     public function process(array $message, string $adapter): ?object
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
 
         $inbound_table = Escalated::table('inbound_emails');
         $now = current_time('mysql');
@@ -150,7 +150,7 @@ class InboundEmailService
      */
     public function find_ticket_by_email(array $message): ?object
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
 
         $subject = $message['subject'] ?? '';
 
@@ -388,7 +388,7 @@ class InboundEmailService
      */
     public function store_inbound_attachments(string $attachable_type, int $attachable_id, array $attachments): array
     {
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
 
         $results = [];
         $now = current_time('mysql');

@@ -14,7 +14,7 @@ class Activity_Purge
         $days = \Escalated\Models\Setting::get_int('activity_purge_days', 90);
         $cutoff = gmdate('Y-m-d H:i:s', strtotime("-{$days} days"));
 
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = \Escalated\Escalated::table('ticket_activities');
         $wpdb->query($wpdb->prepare(
             "DELETE FROM {$table} WHERE created_at <= %s",

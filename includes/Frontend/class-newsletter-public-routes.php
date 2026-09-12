@@ -122,7 +122,7 @@ class Newsletter_Public_Routes
         if ($delivery) {
             $contact = Contact::find((int) $delivery->contact_id);
             if ($contact) {
-                global $wpdb;
+                $wpdb = \Escalated\Escalated::db();
                 $wpdb->update(Contact::table(), [
                     'marketing_opt_out_at' => current_time('mysql'),
                     'updated_at' => current_time('mysql'),

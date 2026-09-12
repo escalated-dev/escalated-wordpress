@@ -62,7 +62,7 @@ class Newsletter_List_Controller extends Base_Controller
     public function index(WP_REST_Request $request)
     {
         unset($request);
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $lists = $wpdb->get_results(
             'SELECT l.*, COUNT(m.id) AS member_count
              FROM '.NewsletterList::table().' l
@@ -118,7 +118,7 @@ class Newsletter_List_Controller extends Base_Controller
         if (! $list) {
             return $this->error('escalated_list_not_found', __('List not found.', 'escalated'), 404);
         }
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $members = $wpdb->get_results($wpdb->prepare(
             'SELECT lm.*, c.id AS contact_id, c.name, c.email
              FROM '.NewsletterListMember::table().' lm
@@ -171,7 +171,7 @@ class Newsletter_List_Controller extends Base_Controller
             $attrs['filter_json'] = wp_json_encode($body['filter_json']);
         }
         if ($attrs !== []) {
-            global $wpdb;
+            $wpdb = \Escalated\Escalated::db();
             $attrs['updated_at'] = current_time('mysql');
             $wpdb->update(NewsletterList::table(), $attrs, ['id' => $id]);
         }
@@ -182,7 +182,7 @@ class Newsletter_List_Controller extends Base_Controller
     public function destroy(WP_REST_Request $request)
     {
         $id = (int) $request->get_param('id');
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $wpdb->delete(NewsletterList::table(), ['id' => $id]);
 
         return $this->redirect_response(rest_url('escalated/v1/admin/newsletters/lists'));
@@ -202,7 +202,7 @@ class Newsletter_List_Controller extends Base_Controller
         if ($contact_id <= 0 || ! Contact::find($contact_id)) {
             return $this->error('escalated_validation', __('Contact is required.', 'escalated'), 400);
         }
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = NewsletterListMember::table();
         $exists = $wpdb->get_var($wpdb->prepare(
             "SELECT id FROM {$table} WHERE list_id = %d AND contact_id = %d",
@@ -231,7 +231,7 @@ class Newsletter_List_Controller extends Base_Controller
         if ($list->kind !== NewsletterList::KIND_STATIC) {
             return $this->error('escalated_unprocessable', __('Dynamic lists are filter-driven.', 'escalated'), 422);
         }
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $wpdb->delete(NewsletterListMember::table(), [
             'list_id' => $id,
             'contact_id' => (int) $request->get_param('contact_id'),
@@ -259,7 +259,7 @@ class Newsletter_List_Controller extends Base_Controller
             return $this->error('escalated_validation', __('Could not read CSV file.', 'escalated'), 400);
         }
         $imported = 0;
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $table = NewsletterListMember::table();
         while (($row = fgetcsv($handle)) !== false) {
             $email = filter_var(trim($row[0] ?? ''), FILTER_VALIDATE_EMAIL);

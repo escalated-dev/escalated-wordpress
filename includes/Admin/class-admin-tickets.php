@@ -120,7 +120,7 @@ class Admin_Tickets
         ]);
 
         // Get followers.
-        global $wpdb;
+        $wpdb = \Escalated\Escalated::db();
         $followers_table = \Escalated\Escalated::table('ticket_followers');
         $follower_ids = $wpdb->get_col(
             $wpdb->prepare("SELECT user_id FROM {$followers_table} WHERE ticket_id = %d", $ticket_id)
