@@ -41,6 +41,9 @@ class WorkflowListener
         add_action('escalated_tag_added', [$this, 'on_tag_changed'], 50, 2);
         add_action('escalated_tag_removed', [$this, 'on_tag_changed'], 50, 2);
         add_action('escalated_department_changed', [$this, 'on_department_changed'], 50, 4);
+        add_action('escalated_ticket_priority_changed', [$this, 'on_ticket_priority_changed'], 50, 4);
+        add_action('escalated_sla_warning', [$this, 'on_sla_warning'], 50, 3);
+        add_action('escalated_sla_breached', [$this, 'on_sla_breached'], 50, 2);
     }
 
     public function on_ticket_created($ticket): void
@@ -63,6 +66,11 @@ class WorkflowListener
         $this->run_if_ticket('ticket.assigned', $ticket);
     }
 
+    public function on_ticket_priority_changed($ticket, $old_priority = null, $new_priority = null, $causer_id = null): void
+    {
+        $this->run_if_ticket('ticket.priority_changed', $ticket);
+    }
+
     public function on_ticket_reopened($ticket, $causer_id = null): void
     {
         $this->run_if_ticket('ticket.reopened', $ticket);
@@ -74,6 +82,52 @@ class WorkflowListener
             $ticket = Ticket::find((int) $reply->ticket_id);
         }
         $this->run_if_ticket('reply.created', $ticket);
+
+        if ($this->is_agent_reply($reply, $ticket)) {
+            $this->run_if_ticket('reply.agent_reply', $ticket);
+        }
+    }
+
+    /**
+     * SlaService::check_warnings() runs every minute and fires the warning
+     * again on every run while the ticket is inside the warning window. Run
+     * the workflows once per ticket, SLA target and due time.
+     */
+    public function on_sla_warning($ticket, $sla_type = null, $due_at = null): void
+    {
+        if (! is_object($ticket) || empty($ticket->id)) {
+            return;
+        }
+
+        $key = 'escalated_wf_sla_warning_'.md5($ticket->id.'|'.$sla_type.'|'.$due_at);
+        if (get_transient($key)) {
+            return;
+        }
+        set_transient($key, 1, WEEK_IN_SECONDS);
+
+        $this->run_if_ticket('sla.warning', $ticket);
+    }
+
+    public function on_sla_breached($ticket, $sla_type = null): void
+    {
+        $this->run_if_ticket('sla.breached', $ticket);
+    }
+
+    /**
+     * A public reply by someone other than the requester, the same test
+     * TicketService::reply() uses to record the first response. Internal
+     * notes and replies without an author (guest email, workflow replies)
+     * do not count.
+     */
+    protected function is_agent_reply($reply, $ticket): bool
+    {
+        if (! is_object($reply) || ! is_object($ticket) || ! empty($reply->is_internal_note)) {
+            return false;
+        }
+
+        $author_id = (int) ($reply->author_id ?? 0);
+
+        return $author_id > 0 && $author_id !== (int) ($ticket->requester_id ?? 0);
     }
 
     public function on_tag_changed($ticket_id, $tag_id = null): void
