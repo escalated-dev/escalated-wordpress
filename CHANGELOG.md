@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file.
 - **Inbound Message-IDs were logged empty.** `sanitize_text_field()` removes `<id@host>` as if it were an HTML tag. Replies could not be matched to an earlier inbound email, a redelivered email opened a second ticket, and later emails could not be logged at all, because the UNIQUE `message_id` index already held an empty value. Message-IDs are now stored as sent, less any whitespace, and a redelivered email is recognised before it is logged.
 - **An SES subscription confirmation opened a ticket.** It is now confirmed and answered without being processed as email.
 - **Inbound attachments were stored as `unnamed`, and Mailgun attachments were dropped.** The service read `filename`, `contentType` and `content`, but the adapters send `name`, `type` and, for Mailgun, an uploaded file. Every adapter now hands over the attachment bytes under the same keys.
+- **SES inbound refused SNS topics that sign with SignatureVersion 2.** Every SNS signature was checked with SHA1, so a topic set to SignatureVersion 2 (SHA256) failed verification and its email got a 403. The algorithm now follows the message's `SignatureVersion`: SHA1 for `1`, SHA256 for `2`. A missing or unknown version is rejected before the signing certificate is fetched.
 
 ## [1.5.1] - 2026-09-13
 
