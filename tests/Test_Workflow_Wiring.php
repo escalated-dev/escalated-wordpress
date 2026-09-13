@@ -135,6 +135,19 @@ class Test_Workflow_Wiring extends WP_UnitTestCase
         $this->assertSame(0, $this->log_count($workflow_id));
     }
 
+    public function test_removing_a_tag_does_not_run_tagged_workflows(): void
+    {
+        $ticket_id = (int) $this->make_ticket()->id;
+        $tag_id = $this->make_tag();
+        $workflow_id = $this->create_workflow('ticket.tagged', [['type' => 'add_note', 'value' => 'tagged']]);
+
+        $this->tickets->add_tags($ticket_id, [$tag_id]);
+        $this->assertSame(1, $this->log_count($workflow_id), 'Adding a tag did not run the ticket.tagged workflow.');
+
+        $this->tickets->remove_tags($ticket_id, [$tag_id]);
+        $this->assertSame(1, $this->log_count($workflow_id), 'Removing a tag ran the ticket.tagged workflow.');
+    }
+
     public function test_requester_reply_does_not_run_agent_reply_workflows(): void
     {
         $ticket = $this->make_ticket();
