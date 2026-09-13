@@ -81,23 +81,24 @@ class WorkflowExecutorService
 
     /**
      * Persist remaining actions to the deferred-jobs queue with
-     * run_at = now + $seconds. Logs a warning + skips when the value
-     * isn't a positive integer. Mirrors NestJS scheduleDelay.
+     * run_at = now + $value minutes. The workflow admin contract defines
+     * the delay value as minutes. Logs a warning + skips when the value
+     * isn't a positive integer.
      *
      * @param  array<int,array<string,mixed>>  $remaining
      */
     protected function schedule_delay(object $ticket, string $value, array $remaining): void
     {
-        $seconds = (int) $value;
-        if (! ctype_digit($value) || $seconds <= 0) {
+        $minutes = (int) $value;
+        if (! ctype_digit($value) || $minutes <= 0) {
             $this->log_debug(sprintf(
-                'delay: invalid seconds value "%s", skipping remaining actions',
+                'delay: invalid minutes value "%s", skipping remaining actions',
                 $value
             ));
 
             return;
         }
-        $run_at = gmdate('Y-m-d H:i:s', time() + $seconds);
+        $run_at = gmdate('Y-m-d H:i:s', time() + $minutes * MINUTE_IN_SECONDS);
         DeferredWorkflowJob::create([
             'ticket_id' => (int) $ticket->id,
             'remaining_actions' => wp_json_encode($remaining),

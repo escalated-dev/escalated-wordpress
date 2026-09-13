@@ -20,6 +20,9 @@ All notable changes to this project will be documented in this file.
 - **An SES subscription confirmation opened a ticket.** It is now confirmed and answered without being processed as email.
 - **Inbound attachments were stored as `unnamed`, and Mailgun attachments were dropped.** The service read `filename`, `contentType` and `content`, but the adapters send `name`, `type` and, for Mailgun, an uploaded file. Every adapter now hands over the attachment bytes under the same keys.
 - **SES inbound refused SNS topics that sign with SignatureVersion 2.** Every SNS signature was checked with SHA1, so a topic set to SignatureVersion 2 (SHA256) failed verification and its email got a 403. The algorithm now follows the message's `SignatureVersion`: SHA1 for `1`, SHA256 for `2`. A missing or unknown version is rejected before the signing certificate is fetched.
+- **The workflow `delay` action waited seconds, not minutes.** The workflow admin contract defines the `delay` value as minutes, and the admin builder labels the field "Wait (minutes)", but the executor added it to the clock as seconds. A "Wait 15 minutes" step resumed after 15 seconds. The value is now read as minutes.
+  - **Existing workflows:** a `delay` value that was entered as seconds now waits 60 times as long.
+  - **Queued jobs:** runs already paused keep the resume time they were given.
 
 ## [1.5.1] - 2026-09-13
 
