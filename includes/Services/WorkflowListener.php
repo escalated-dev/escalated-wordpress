@@ -38,8 +38,9 @@ class WorkflowListener
         add_action('escalated_ticket_assigned', [$this, 'on_ticket_assigned'], 50, 4);
         add_action('escalated_ticket_reopened', [$this, 'on_ticket_reopened'], 50, 2);
         add_action('escalated_reply_created', [$this, 'on_reply_created'], 50, 2);
+        // ticket.tagged means a tag was added. Removing one fires
+        // escalated_tag_removed, which has no workflow trigger.
         add_action('escalated_tag_added', [$this, 'on_tag_changed'], 50, 2);
-        add_action('escalated_tag_removed', [$this, 'on_tag_changed'], 50, 2);
         add_action('escalated_department_changed', [$this, 'on_department_changed'], 50, 4);
         add_action('escalated_ticket_priority_changed', [$this, 'on_ticket_priority_changed'], 50, 4);
         add_action('escalated_sla_warning', [$this, 'on_sla_warning'], 50, 3);

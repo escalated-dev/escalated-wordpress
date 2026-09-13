@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 - **The workflow `delay` action waited seconds, not minutes.** The workflow admin contract defines the `delay` value as minutes, and the admin builder labels the field "Wait (minutes)", but the executor added it to the clock as seconds. A "Wait 15 minutes" step resumed after 15 seconds. The value is now read as minutes.
   - **Existing workflows:** a `delay` value that was entered as seconds now waits 60 times as long.
   - **Queued jobs:** runs already paused keep the resume time they were given.
+- **Removing a tag ran `ticket.tagged` workflows.** `WorkflowListener` ran the `ticket.tagged` trigger on both `escalated_tag_added` and `escalated_tag_removed`. It now runs only when a tag is added.
 
 ## [1.5.1] - 2026-09-13
 
