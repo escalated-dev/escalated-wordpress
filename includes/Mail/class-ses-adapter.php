@@ -12,6 +12,15 @@ class Ses_Adapter
     private const SNS_HOST_PATTERN = '/^sns\.[a-z0-9-]+\.amazonaws\.com(\.cn)?$/';
 
     /**
+     * The hash each SNS SignatureVersion signs with: SHA1 for version 1 and
+     * SHA256 for version 2.
+     */
+    private const SIGNATURE_ALGORITHMS = [
+        '1' => OPENSSL_ALGO_SHA1,
+        '2' => OPENSSL_ALGO_SHA256,
+    ];
+
+    /**
      * Verify the AWS SNS request.
      *
      * The inbound route is public, so this is its only authentication:
@@ -194,6 +203,14 @@ class Ses_Adapter
      */
     private function verify_sns_signature(array $json): bool
     {
+        // SignatureVersion is not part of the string to sign. Changing it can
+        // only choose which of the two algorithms the signature has to verify
+        // under, so any other value is rejected before anything is fetched.
+        $version = $json['SignatureVersion'] ?? null;
+        if (! is_string($version) || ! isset(self::SIGNATURE_ALGORITHMS[$version])) {
+            return false;
+        }
+
         $signing_cert_url = $json['SigningCertURL'] ?? ($json['SigningCertUrl'] ?? '');
 
         if (! is_string($signing_cert_url) || ! self::is_valid_signing_cert_url($signing_cert_url)) {
@@ -222,7 +239,7 @@ class Ses_Adapter
             return false;
         }
 
-        $result = openssl_verify($string_to_sign, $signature, $public_key, OPENSSL_ALGO_SHA1);
+        $result = openssl_verify($string_to_sign, $signature, $public_key, self::SIGNATURE_ALGORITHMS[$version]);
 
         return $result === 1;
     }

@@ -268,8 +268,92 @@ class Test_Ses_Inbound_Security extends WP_UnitTestCase
     }
 
     // =========================================================================
+    // Signature versions
+    // =========================================================================
+
+    public function test_signature_version_2_notification_is_verified(): void
+    {
+        $payload = $this->notification(['SignatureVersion' => '2']);
+
+        $this->assertTrue((new Ses_Adapter)->verify_request($this->make_request($payload)));
+        $this->assertSame([self::CERT_URL], $this->fetched_urls());
+    }
+
+    public function test_signature_version_2_subscription_confirmation_is_confirmed(): void
+    {
+        $payload = $this->subscription_confirmation(['SignatureVersion' => '2']);
+
+        $this->assertTrue((new Ses_Adapter)->verify_request($this->make_request($payload)));
+        $this->assertSame([self::CERT_URL, $payload['SubscribeURL']], $this->fetched_urls());
+    }
+
+    /**
+     * A message has to be signed with the algorithm its SignatureVersion names.
+     *
+     * @dataProvider mismatched_signature_algorithms
+     */
+    public function test_signature_made_with_another_versions_algorithm_is_rejected(string $version, int $algorithm): void
+    {
+        $payload = $this->notification(['SignatureVersion' => $version], $algorithm);
+
+        $this->assertFalse((new Ses_Adapter)->verify_request($this->make_request($payload)));
+    }
+
+    public static function mismatched_signature_algorithms(): array
+    {
+        return [
+            'version 1 signed with SHA256' => ['1', OPENSSL_ALGO_SHA256],
+            'version 2 signed with SHA1' => ['2', OPENSSL_ALGO_SHA1],
+        ];
+    }
+
+    /**
+     * @dataProvider unsupported_signature_versions
+     */
+    public function test_unsupported_signature_version_is_rejected_before_any_fetch(?string $version): void
+    {
+        // Signed with SHA1, so only the version check can reject it.
+        $payload = $this->notification(['SignatureVersion' => $version], OPENSSL_ALGO_SHA1);
+
+        $response = $this->post($payload);
+
+        $this->assertSame(403, $response->get_status());
+        $this->assertSame([], $this->fetched_urls());
+    }
+
+    public static function unsupported_signature_versions(): array
+    {
+        return [
+            'missing' => [null],
+            'empty' => [''],
+            'version 0' => ['0'],
+            'version 3' => ['3'],
+            'algorithm name' => ['SHA256'],
+        ];
+    }
+
+    // =========================================================================
     // Helpers
     // =========================================================================
+
+    /**
+     * A signed Notification. An override of null leaves that field out.
+     */
+    private function notification(array $overrides = [], ?int $algorithm = null): array
+    {
+        $message = array_merge([
+            'Type' => 'Notification',
+            'MessageId' => '22b80b92-fdea-4c2c-8f9d-bdfb0c7bf324',
+            'TopicArn' => self::TOPIC_ARN,
+            'Subject' => 'Amazon SES Email Receipt Notification',
+            'Message' => '{}',
+            'Timestamp' => gmdate('Y-m-d\TH:i:s.000\Z'),
+            'SignatureVersion' => '1',
+            'SigningCertURL' => self::CERT_URL,
+        ], $overrides);
+
+        return $this->sign(array_filter($message, fn ($value) => $value !== null), $algorithm);
+    }
 
     private function confirm_url(string $topic_arn): string
     {
@@ -294,11 +378,12 @@ class Test_Ses_Inbound_Security extends WP_UnitTestCase
     }
 
     /**
-     * Sign the way SNS does (SignatureVersion 1) with the test key. Anyone can
-     * do the same with a key of their own, which is why the certificate's
+     * Sign the way SNS does with the test key: SHA1 for SignatureVersion 1,
+     * SHA256 for SignatureVersion 2, or the algorithm a test asks for. Anyone
+     * can do the same with a key of their own, which is why the certificate's
      * location is the thing that has to be trusted.
      */
-    private function sign(array $message): array
+    private function sign(array $message, ?int $algorithm = null): array
     {
         $fields = ($message['Type'] ?? '') === 'Notification'
             ? ['Message', 'MessageId', 'Subject', 'Timestamp', 'TopicArn', 'Type']
@@ -311,7 +396,9 @@ class Test_Ses_Inbound_Security extends WP_UnitTestCase
             }
         }
 
-        openssl_sign($string_to_sign, $signature, self::$private_key, OPENSSL_ALGO_SHA1);
+        $algorithm ??= ($message['SignatureVersion'] ?? null) === '2' ? OPENSSL_ALGO_SHA256 : OPENSSL_ALGO_SHA1;
+
+        openssl_sign($string_to_sign, $signature, self::$private_key, $algorithm);
         $message['Signature'] = base64_encode($signature);
 
         return $message;
