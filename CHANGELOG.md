@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-09-13
+
+### Security
+- **The SES inbound webhook could be made to fetch any URL.**
+  - **The hole:** the route is public, and its signing-certificate check accepted any host ending in `.amazonaws.com`, including an attacker's S3 bucket. A forged `SubscriptionConfirmation` then made the site request an arbitrary `SubscribeURL`.
+  - **The fix:**
+    - The certificate URL and `SubscribeURL` must be https to an Amazon SNS host (`sns.<region>.amazonaws.com`), with no user-info or port.
+    - `SubscribeURL` must be a `ConfirmSubscription` call for the configured topic.
+    - The unsigned message-type header must agree with the signed `Type`.
+    - Both fetches use `wp_safe_remote_get` without redirects.
+  - **Sites using SES inbound must set `ses_topic_arn`.** Requests are now rejected when no topic is configured (#79).
+
+### Fixed
+- **Assigning an unassigned ticket could fatal when broadcasting was enabled.** `BroadcastService` registered for the `escalated_ticket_assigned` hook with its arguments in the wrong order, so a first assignment passed `null` into an `int` parameter (`TypeError`), and other assignments broadcast the old and new agent swapped. A new test checks every `escalated_*` hook registration against the arguments its `do_action` passes (#80).
+- **No notification email or global webhook was ever sent.** `NotificationService` was never registered, so nothing listened for ticket and reply events.
+  - **Emails:** new-ticket and reply emails now follow the `notification_new_ticket` and `notification_ticket_reply` settings and the notification sender name and address.
+  - **Global `webhook_url`:** it receives ticket created, updated, status changed, assigned, unassigned and department changed, `reply.created` and `sla.breached`. Internal notes are never posted.
+  - **Safety:** failures no longer break the ticket operation, and requests use `wp_safe_remote_post` (#81).
+- **Several advertised workflow triggers and actions did nothing.**
+  - **Triggers:** `ticket.priority_changed`, `reply.agent_reply`, `sla.warning` and `sla.breached` now run their workflows. `sla.warning` runs once per warning even though the SLA check repeats every minute.
+  - **Actions:** `set_type` and `send_webhook` are implemented, with `send_webhook` using `wp_safe_remote_post` without redirects. `insert_canned_reply` is now listed, and `send_notification`, which had no implementation, is no longer offered (#82).
+
 ## [1.5.0] - 2026-09-12
 
 ### Added
