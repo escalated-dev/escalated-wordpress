@@ -143,23 +143,17 @@ class Ses_Adapter
      * Handles both the SNS notification wrapper and the raw MIME content inside.
      *
      * @param  \WP_REST_Request  $request  The incoming webhook request.
-     * @return Inbound_Message The parsed inbound message.
+     * @return Inbound_Message|null The parsed inbound message, or null for an SNS
+     *                              message that carries no email.
      */
-    public function parse_request(\WP_REST_Request $request): Inbound_Message
+    public function parse_request(\WP_REST_Request $request): ?Inbound_Message
     {
         $json = $request->get_json_params();
-        $message_type = $request->get_header('x-amz-sns-message-type');
 
-        // For subscription confirmation, return a minimal message.
-        if ($message_type === 'SubscriptionConfirmation') {
-            return new Inbound_Message(
-                fromEmail: '',
-                fromName: null,
-                toEmail: '',
-                subject: 'SNS Subscription Confirmation',
-                bodyText: 'Subscription confirmed.',
-                bodyHtml: null,
-            );
+        // Only a Notification carries an email. A SubscriptionConfirmation or
+        // UnsubscribeConfirmation is handled entirely by verify_request().
+        if (($json['Type'] ?? '') !== 'Notification') {
+            return null;
         }
 
         // The actual email content is in the Message field (JSON-encoded or raw).

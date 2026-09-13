@@ -140,11 +140,18 @@ class Mailgun_Adapter
                 continue;
             }
             if (! empty($file['tmp_name']) && is_uploaded_file($file['tmp_name'])) {
+                // Read the upload now, so every adapter hands the service
+                // attachment bytes in the same shape.
+                $content = file_get_contents($file['tmp_name']);
+                if ($content === false) {
+                    continue;
+                }
+
                 $attachments[] = [
                     'name' => $file['name'] ?? 'attachment',
                     'type' => $file['type'] ?? 'application/octet-stream',
-                    'tmp_name' => $file['tmp_name'],
-                    'size' => $file['size'] ?? 0,
+                    'content' => $content,
+                    'size' => strlen($content),
                 ];
             }
         }
