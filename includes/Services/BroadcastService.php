@@ -34,7 +34,7 @@ class BroadcastService
         add_action('escalated_ticket_updated', [$this, 'on_ticket_updated'], 20, 1);
         add_action('escalated_ticket_status_changed', [$this, 'on_ticket_status_changed'], 20, 4);
         add_action('escalated_reply_created', [$this, 'on_reply_created'], 20, 2);
-        add_action('escalated_ticket_assigned', [$this, 'on_ticket_assigned'], 20, 3);
+        add_action('escalated_ticket_assigned', [$this, 'on_ticket_assigned'], 20, 4);
     }
 
     /**
@@ -111,14 +111,19 @@ class BroadcastService
 
     /**
      * Handle ticket assigned event.
+     *
+     * Takes the arguments in the order AssignmentService::assign() fires
+     * escalated_ticket_assigned: the ticket, the new agent, the previous agent
+     * (null when the ticket was unassigned), and the user who made the change.
      */
-    public function on_ticket_assigned(object $ticket, ?int $old_agent_id, int $new_agent_id): void
+    public function on_ticket_assigned(object $ticket, int $new_agent_id, ?int $old_agent_id = null, ?int $causer_id = null): void
     {
         $this->push_event('ticket.assigned', [
             'ticket_id' => (int) $ticket->id,
             'reference' => $ticket->reference,
             'old_agent_id' => $old_agent_id,
             'new_agent_id' => $new_agent_id,
+            'causer_id' => $causer_id,
         ]);
     }
 

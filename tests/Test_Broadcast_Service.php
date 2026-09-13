@@ -8,6 +8,7 @@
  */
 
 use Escalated\Models\Setting;
+use Escalated\Services\AssignmentService;
 use Escalated\Services\BroadcastService;
 use Escalated\Services\TicketService;
 
@@ -273,7 +274,9 @@ class Test_Broadcast_Service extends WP_UnitTestCase
             'reference' => 'ESC-00001',
         ];
 
-        $this->broadcast->on_ticket_assigned($ticket, null, $this->agent_id);
+        // Same order AssignmentService fires escalated_ticket_assigned in:
+        // ticket, new agent, previous agent, causer.
+        $this->broadcast->on_ticket_assigned($ticket, $this->agent_id, null);
 
         $events = BroadcastService::get_events_buffer();
         $assigned_events = array_filter($events, fn ($e) => $e['type'] === 'ticket.assigned');
@@ -282,5 +285,52 @@ class Test_Broadcast_Service extends WP_UnitTestCase
         $event = array_values($assigned_events)[0];
         $this->assertNull($event['payload']['old_agent_id']);
         $this->assertEquals($this->agent_id, $event['payload']['new_agent_id']);
+    }
+
+    public function test_assigning_an_unassigned_ticket_broadcasts_the_assignee(): void
+    {
+        $broadcast = new BroadcastService;
+        $broadcast->register();
+
+        $ticket = $this->create_ticket();
+        BroadcastService::clear_events();
+
+        (new AssignmentService)->assign((int) $ticket->id, $this->agent_id);
+
+        $assigned = $this->events_of_type('ticket.assigned');
+        $this->assertCount(1, $assigned);
+        $this->assertSame($this->agent_id, $assigned[0]['payload']['new_agent_id']);
+        $this->assertNull($assigned[0]['payload']['old_agent_id']);
+    }
+
+    public function test_reassigning_a_ticket_broadcasts_the_new_and_previous_agent(): void
+    {
+        $other_agent_id = $this->factory->user->create(['role' => 'escalated_agent']);
+
+        $broadcast = new BroadcastService;
+        $broadcast->register();
+
+        $ticket = $this->create_ticket();
+        $assignment = new AssignmentService;
+        $assignment->assign((int) $ticket->id, $this->agent_id);
+        BroadcastService::clear_events();
+
+        $assignment->assign((int) $ticket->id, $other_agent_id, $this->agent_id);
+
+        $assigned = $this->events_of_type('ticket.assigned');
+        $this->assertCount(1, $assigned);
+        $this->assertSame($other_agent_id, $assigned[0]['payload']['new_agent_id']);
+        $this->assertSame($this->agent_id, $assigned[0]['payload']['old_agent_id']);
+    }
+
+    /**
+     * @return array<int, array> Buffered events of one type, oldest first.
+     */
+    private function events_of_type(string $type): array
+    {
+        return array_values(array_filter(
+            BroadcastService::get_events_buffer(),
+            fn ($e) => $e['type'] === $type
+        ));
     }
 }
