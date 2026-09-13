@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **Inbound email never created a ticket.** The inbound controller passed the parsed `Inbound_Message` to `InboundEmailService::process()`, which only accepted an array. The `TypeError` was caught, so every Mailgun, Postmark and SES webhook got a 500 and nothing was created. The service now takes `Inbound_Message`.
+  - **Hooks:** `escalated_inbound_email_processed` and `escalated_inbound_email_failed` pass the `Inbound_Message` instead of an array.
+  - **Response:** a handled email answers `{"status": "ok", "ticket_id": …}`.
+- **Most replies could not find their ticket.** Replies now follow the documented resolution chain, first match wins:
+  1. a `<ticket-{id}@domain>` Message-ID in `In-Reply-To`
+  2. the same in `References`
+  3. a signed `reply+{id}.{hmac8}@domain` recipient
+  4. a `[ESC-00001]` subject reference
+  5. an earlier inbound email's Message-ID
+
+  Before, only the last two were checked, and the subject reference came first.
+- **Inbound Message-IDs were logged empty.** `sanitize_text_field()` removes `<id@host>` as if it were an HTML tag. Replies could not be matched to an earlier inbound email, a redelivered email opened a second ticket, and later emails could not be logged at all, because the UNIQUE `message_id` index already held an empty value. Message-IDs are now stored as sent, less any whitespace, and a redelivered email is recognised before it is logged.
+- **An SES subscription confirmation opened a ticket.** It is now confirmed and answered without being processed as email.
+- **Inbound attachments were stored as `unnamed`, and Mailgun attachments were dropped.** The service read `filename`, `contentType` and `content`, but the adapters send `name`, `type` and, for Mailgun, an uploaded file. Every adapter now hands over the attachment bytes under the same keys.
+
 ## [1.5.1] - 2026-09-13
 
 ### Security

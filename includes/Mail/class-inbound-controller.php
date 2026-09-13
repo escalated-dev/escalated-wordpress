@@ -42,10 +42,19 @@ class Inbound_Controller
 
         try {
             $message = $adapter->parse_request($request);
-            $service = new \Escalated\Services\InboundEmailService;
-            $inbound_email = $service->process($message, $adapter_name);
 
-            return new \WP_REST_Response(['status' => 'ok', 'id' => $inbound_email->id]);
+            // An SNS subscription or unsubscribe confirmation carries no email.
+            // verify_request() has already handled it.
+            if ($message === null) {
+                return new \WP_REST_Response(['status' => 'ok', 'ticket_id' => null]);
+            }
+
+            $ticket = (new \Escalated\Services\InboundEmailService)->process($message, $adapter_name);
+
+            // A null ticket is a redelivered email, or a failure already
+            // recorded on its inbound_emails row. Either way the provider
+            // should not retry.
+            return new \WP_REST_Response(['status' => 'ok', 'ticket_id' => $ticket ? (int) $ticket->id : null]);
         } catch (\Throwable $e) {
             return new \WP_REST_Response(['error' => 'Processing failed.'], 500);
         }

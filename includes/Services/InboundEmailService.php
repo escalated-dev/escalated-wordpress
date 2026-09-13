@@ -4,6 +4,9 @@ namespace Escalated\Services;
 
 use Escalated\Escalated;
 use Escalated\Helpers\Enums;
+use Escalated\Mail\Email_Threading;
+use Escalated\Mail\Inbound_Message;
+use Escalated\Mail\Message_Id_Util;
 use Escalated\Models\Setting;
 use Escalated\Models\Ticket;
 
@@ -12,73 +15,59 @@ class InboundEmailService
     /**
      * Process an inbound email message.
      *
-     * Logs the raw inbound email, checks for duplicates, attempts to find an existing
-     * ticket (by reference or email headers), finds or identifies the sender, and either
-     * adds a reply to an existing ticket or creates a new one.
+     * Skips an email that was already processed (providers redeliver), logs the
+     * email, finds the ticket it replies to, and either adds a reply to that
+     * ticket or creates a new one.
      *
-     * @param  array  $message  Inbound email data with keys: fromEmail, fromName, toEmail,
-     *                          subject, bodyText, bodyHtml, messageId, inReplyTo, references,
-     *                          headers, attachments.
-     * @param  string  $adapter  The inbound email adapter name (e.g., 'sendgrid', 'mailgun', 'postmark').
-     * @return object|null The ticket that was created or replied to, or null on failure.
+     * @param  Inbound_Message  $message  The email, as parsed by an inbound adapter.
+     * @param  string  $adapter  The inbound email adapter name (mailgun, postmark or ses).
+     * @return object|null The ticket that was created or replied to, or null for a
+     *                     redelivered email or a failure.
      */
-    public function process(array $message, string $adapter): ?object
+    public function process(Inbound_Message $message, string $adapter): ?object
     {
         $wpdb = \Escalated\Escalated::db();
 
         $inbound_table = Escalated::table('inbound_emails');
         $now = current_time('mysql');
+        $message_id = $this->message_ids_in($message->messageId)[0] ?? null;
+
+        // message_id is a UNIQUE column, so a redelivered email cannot be
+        // logged a second time. Look for it before inserting.
+        if ($message_id !== null) {
+            $seen = (int) $wpdb->get_var(
+                $wpdb->prepare("SELECT COUNT(*) FROM {$inbound_table} WHERE message_id = %s", $message_id)
+            );
+
+            if ($seen > 0) {
+                return null;
+            }
+        }
 
         // Log the inbound email.
         $inbound_data = [
-            'message_id' => sanitize_text_field($message['messageId'] ?? ''),
-            'from_email' => sanitize_email($message['fromEmail'] ?? ''),
-            'from_name' => sanitize_text_field($message['fromName'] ?? ''),
-            'to_email' => sanitize_email($message['toEmail'] ?? ''),
-            'subject' => sanitize_text_field($message['subject'] ?? ''),
-            'body_text' => wp_kses_post($message['bodyText'] ?? ''),
-            'body_html' => wp_kses_post($message['bodyHtml'] ?? ''),
-            'raw_headers' => wp_kses_post(wp_json_encode($message['headers'] ?? [])),
+            'message_id' => $message_id,
+            'from_email' => sanitize_email($message->fromEmail),
+            'from_name' => sanitize_text_field($message->fromName ?? ''),
+            'to_email' => sanitize_email($message->toEmail),
+            'subject' => sanitize_text_field($message->subject),
+            'body_text' => wp_kses_post($message->bodyText ?? ''),
+            'body_html' => wp_kses_post($message->bodyHtml ?? ''),
+            'raw_headers' => wp_kses_post(wp_json_encode($message->headers)),
             'status' => 'pending',
             'adapter' => sanitize_text_field($adapter),
             'created_at' => $now,
         ];
 
-        $wpdb->insert($inbound_table, $inbound_data);
-        $inbound_id = $wpdb->insert_id;
-
-        // Check for duplicate message ID.
-        if (! empty($message['messageId'])) {
-            $duplicate_count = (int) $wpdb->get_var(
-                $wpdb->prepare(
-                    "SELECT COUNT(*) FROM {$inbound_table} WHERE message_id = %s AND id != %d",
-                    $message['messageId'],
-                    $inbound_id
-                )
-            );
-
-            if ($duplicate_count > 0) {
-                $wpdb->update(
-                    $inbound_table,
-                    [
-                        'status' => 'duplicate',
-                        'error_message' => 'Duplicate message ID detected.',
-                        'processed_at' => $now,
-                    ],
-                    ['id' => $inbound_id]
-                );
-
-                return null;
-            }
-        }
+        $inbound_id = $wpdb->insert($inbound_table, $inbound_data) ? (int) $wpdb->insert_id : 0;
 
         try {
             // Try to find an existing ticket this email belongs to.
             $ticket = $this->find_ticket_by_email($message);
 
             // Find the WordPress user by email.
-            $from_email = sanitize_email($message['fromEmail'] ?? '');
-            $user = $this->find_user_by_email($from_email);
+            $user = $this->find_user_by_email(sanitize_email($message->fromEmail));
+            $reply = null;
 
             if ($ticket) {
                 // Add reply to existing ticket.
@@ -110,11 +99,11 @@ class InboundEmailService
             }
 
             // Process attachments if present.
-            if (! empty($message['attachments']) && $ticket) {
-                $attachable_type = isset($reply) ? 'reply' : 'ticket';
-                $attachable_id = isset($reply) ? (int) $reply->id : (int) $ticket->id;
+            if (! empty($message->attachments) && $ticket) {
+                $attachable_type = $reply ? 'reply' : 'ticket';
+                $attachable_id = $reply ? (int) $reply->id : (int) $ticket->id;
 
-                $this->store_inbound_attachments($attachable_type, $attachable_id, $message['attachments']);
+                $this->store_inbound_attachments($attachable_type, $attachable_id, $message->attachments);
             }
 
             do_action('escalated_inbound_email_processed', $ticket, $message, $adapter);
@@ -139,74 +128,71 @@ class InboundEmailService
     }
 
     /**
-     * Find an existing ticket by parsing email subject and headers.
+     * Find the ticket an inbound email replies to.
      *
-     * Checks the subject line for a ticket reference pattern (e.g., [ESC-00001]),
-     * and checks the In-Reply-To and References headers for matching message IDs
-     * stored in previous inbound email records.
+     * Follows the inbound resolution chain from the email-threading domain
+     * model. The first match wins:
      *
-     * @param  array  $message  Inbound email data.
+     *   1. In-Reply-To holds a Message-ID we issued (<ticket-{id}@domain>).
+     *   2. References holds one.
+     *   3. The recipient is a signed reply+{id}.{hmac8}@domain address.
+     *   4. The subject holds a ticket reference such as [ESC-00001].
+     *   5. In-Reply-To or References matches the Message-ID of an earlier
+     *      inbound email, which covers Message-IDs from before the canonical
+     *      format.
+     *
+     * @param  Inbound_Message  $message  Inbound email.
      * @return object|null The matching ticket, or null if not found.
      */
-    public function find_ticket_by_email(array $message): ?object
+    public function find_ticket_by_email(Inbound_Message $message): ?object
     {
         $wpdb = \Escalated\Escalated::db();
 
-        $subject = $message['subject'] ?? '';
+        // In-Reply-To first, then References, for priorities 1, 2 and 5.
+        $thread_message_ids = array_merge(
+            $this->message_ids_in($message->inReplyTo),
+            $this->message_ids_in($message->references)
+        );
 
-        // Check subject for ticket reference pattern like [ESC-00001].
-        if (preg_match('/\[([A-Z]+-\d{5,})\]/', $subject, $matches)) {
-            $reference = $matches[1];
-            $ticket = Ticket::find_by_reference($reference);
+        // 1 and 2: a Message-ID we issued.
+        foreach ($thread_message_ids as $thread_message_id) {
+            $ticket = $this->find_ticket(Message_Id_Util::parse_ticket_id_from_message_id($thread_message_id));
             if ($ticket) {
                 return $ticket;
             }
         }
 
-        // Check In-Reply-To header.
-        $inbound_table = Escalated::table('inbound_emails');
-
-        if (! empty($message['inReplyTo'])) {
-            $related = $wpdb->get_row(
-                $wpdb->prepare(
-                    "SELECT ticket_id FROM {$inbound_table} WHERE message_id = %s AND ticket_id IS NOT NULL LIMIT 1",
-                    $message['inReplyTo']
-                )
-            );
-
-            if ($related && ! empty($related->ticket_id)) {
-                $ticket = Ticket::find((int) $related->ticket_id);
-                if ($ticket) {
-                    return $ticket;
-                }
+        // 3: a signed Reply-To address.
+        $secret = Email_Threading::get_inbound_secret();
+        if ($secret !== '') {
+            $ticket = $this->find_ticket(Message_Id_Util::verify_reply_to($message->toEmail, $secret));
+            if ($ticket) {
+                return $ticket;
             }
         }
 
-        // Check References header (may contain multiple message IDs).
-        if (! empty($message['references'])) {
-            $references = is_array($message['references'])
-                ? $message['references']
-                : preg_split('/\s+/', $message['references']);
+        // 4: a ticket reference in the subject, like [ESC-00001].
+        if (preg_match('/\[([A-Z]+-\d{5,})\]/', $message->subject, $matches)) {
+            $ticket = Ticket::find_by_reference($matches[1]);
+            if ($ticket) {
+                return $ticket;
+            }
+        }
 
-            foreach ($references as $ref_message_id) {
-                $ref_message_id = trim($ref_message_id);
-                if (empty($ref_message_id)) {
-                    continue;
-                }
+        // 5: the Message-ID of an earlier inbound email.
+        $inbound_table = Escalated::table('inbound_emails');
 
-                $related = $wpdb->get_row(
-                    $wpdb->prepare(
-                        "SELECT ticket_id FROM {$inbound_table} WHERE message_id = %s AND ticket_id IS NOT NULL LIMIT 1",
-                        $ref_message_id
-                    )
-                );
+        foreach ($thread_message_ids as $thread_message_id) {
+            $ticket_id = $wpdb->get_var(
+                $wpdb->prepare(
+                    "SELECT ticket_id FROM {$inbound_table} WHERE message_id = %s AND ticket_id IS NOT NULL LIMIT 1",
+                    $thread_message_id
+                )
+            );
 
-                if ($related && ! empty($related->ticket_id)) {
-                    $ticket = Ticket::find((int) $related->ticket_id);
-                    if ($ticket) {
-                        return $ticket;
-                    }
-                }
+            $ticket = $this->find_ticket($ticket_id === null ? null : (int) $ticket_id);
+            if ($ticket) {
+                return $ticket;
             }
         }
 
@@ -236,11 +222,11 @@ class InboundEmailService
      * If the ticket is resolved or closed, it will be reopened before adding the reply.
      *
      * @param  object  $ticket  The existing ticket object.
-     * @param  array  $message  Inbound email data.
+     * @param  Inbound_Message  $message  Inbound email.
      * @param  \WP_User|null  $user  The WordPress user who sent the email, or null for guest.
      * @return object|null The created reply, or null on failure.
      */
-    public function add_reply_to_ticket(object $ticket, array $message, ?\WP_User $user): ?object
+    public function add_reply_to_ticket(object $ticket, Inbound_Message $message, ?\WP_User $user): ?object
     {
         $ticket_service = new TicketService;
         $body = $this->get_sanitized_body($message);
@@ -267,8 +253,8 @@ class InboundEmailService
             'is_internal_note' => 0,
             'type' => 'reply',
             'metadata' => wp_json_encode([
-                'guest_email' => sanitize_email($message['fromEmail'] ?? ''),
-                'guest_name' => sanitize_text_field($message['fromName'] ?? ''),
+                'guest_email' => sanitize_email($message->fromEmail),
+                'guest_name' => sanitize_text_field($message->fromName ?? ''),
                 'channel' => 'email',
             ]),
             'created_at' => $now,
@@ -291,15 +277,15 @@ class InboundEmailService
      * If a WordPress user is found for the sender, creates an authenticated ticket.
      * Otherwise, creates a guest ticket with the sender's email and name.
      *
-     * @param  array  $message  Inbound email data.
+     * @param  Inbound_Message  $message  Inbound email.
      * @param  \WP_User|null  $user  The WordPress user who sent the email, or null for guest.
      * @return object|null The created ticket, or null on failure.
      */
-    public function create_new_ticket(array $message, ?\WP_User $user): ?object
+    public function create_new_ticket(Inbound_Message $message, ?\WP_User $user): ?object
     {
         $ticket_service = new TicketService;
         $body = $this->get_sanitized_body($message);
-        $subject = $this->sanitize_subject($message['subject'] ?? '');
+        $subject = $this->sanitize_subject($message->subject);
 
         if (empty($subject)) {
             $subject = __('(No Subject)', 'escalated');
@@ -310,8 +296,8 @@ class InboundEmailService
             'description' => $body,
             'channel' => 'email',
             'metadata' => [
-                'from_email' => sanitize_email($message['fromEmail'] ?? ''),
-                'message_id' => sanitize_text_field($message['messageId'] ?? ''),
+                'from_email' => sanitize_email($message->fromEmail),
+                'message_id' => $this->message_ids_in($message->messageId)[0] ?? '',
                 'source' => 'inbound_email',
             ],
         ];
@@ -321,8 +307,8 @@ class InboundEmailService
         }
 
         // Guest ticket.
-        $ticket_data['guest_name'] = sanitize_text_field($message['fromName'] ?? '');
-        $ticket_data['guest_email'] = sanitize_email($message['fromEmail'] ?? '');
+        $ticket_data['guest_name'] = sanitize_text_field($message->fromName ?? '');
+        $ticket_data['guest_email'] = sanitize_email($message->fromEmail);
 
         return $ticket_service->create_guest($ticket_data);
     }
@@ -351,14 +337,14 @@ class InboundEmailService
      *
      * Falls back to HTML body with tags stripped if plain text is not available.
      *
-     * @param  array  $message  Inbound email data with bodyText and bodyHtml keys.
+     * @param  Inbound_Message  $message  Inbound email.
      * @return string The sanitized email body content.
      */
-    public function get_sanitized_body(array $message): string
+    public function get_sanitized_body(Inbound_Message $message): string
     {
         // Prefer plain text body.
-        if (! empty($message['bodyText'])) {
-            $body = trim($message['bodyText']);
+        if (! empty($message->bodyText)) {
+            $body = trim($message->bodyText);
             if (! empty($body)) {
                 // Convert plain text line breaks to HTML paragraphs.
                 return wpautop(esc_html($body));
@@ -366,8 +352,8 @@ class InboundEmailService
         }
 
         // Fall back to HTML body.
-        if (! empty($message['bodyHtml'])) {
-            return wp_kses_post($message['bodyHtml']);
+        if (! empty($message->bodyHtml)) {
+            return wp_kses_post($message->bodyHtml);
         }
 
         return '';
@@ -377,13 +363,12 @@ class InboundEmailService
      * Store raw inbound email attachments to the WordPress uploads directory.
      *
      * Unlike the AttachmentService::store() method which handles $_FILES uploads,
-     * this method processes raw attachment data from inbound email parsers
-     * (base64-encoded content or raw binary content).
+     * this method processes attachment data from the inbound email adapters.
      *
      * @param  string  $attachable_type  The parent type (e.g., 'reply', 'ticket').
      * @param  int  $attachable_id  The parent record ID.
-     * @param  array  $attachments  Array of attachment data arrays, each with keys:
-     *                              filename, content (raw or base64), contentType, size.
+     * @param  array  $attachments  Attachments as the inbound adapters produce them, each
+     *                              with keys: name, type, content (raw bytes), size.
      * @return array Array of created attachment records (false entries for failures).
      */
     public function store_inbound_attachments(string $attachable_type, int $attachable_id, array $attachments): array
@@ -411,7 +396,7 @@ class InboundEmailService
                 break;
             }
 
-            $filename = sanitize_file_name($attachment['filename'] ?? 'unnamed');
+            $filename = sanitize_file_name($attachment['name'] ?? 'unnamed');
             $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
 
             // Check blocked extensions.
@@ -423,20 +408,10 @@ class InboundEmailService
 
             // Get the content.
             $content = $attachment['content'] ?? '';
-            if (empty($content)) {
+            if (! is_string($content) || $content === '') {
                 $results[] = false;
 
                 continue;
-            }
-
-            // Decode base64 if the content appears to be encoded.
-            if (! empty($attachment['encoding']) && strtolower($attachment['encoding']) === 'base64') {
-                $content = base64_decode($content, true);
-                if ($content === false) {
-                    $results[] = false;
-
-                    continue;
-                }
             }
 
             // Check file size.
@@ -463,7 +438,7 @@ class InboundEmailService
             chmod($file_path, 0644);
 
             // Determine MIME type.
-            $mime_type = $attachment['contentType'] ?? '';
+            $mime_type = $attachment['type'] ?? '';
             if (empty($mime_type)) {
                 $finfo = finfo_open(FILEINFO_MIME_TYPE);
                 $mime_type = finfo_file($finfo, $file_path);
@@ -500,5 +475,46 @@ class InboundEmailService
         }
 
         return $results;
+    }
+
+    /**
+     * The Message-IDs in a Message-ID, In-Reply-To or References header: each
+     * <...> token, or the whitespace-separated values when there are none.
+     *
+     * sanitize_text_field() is not used on these: it removes "<id@host>"
+     * entirely, as if it were an HTML tag. They are stored and compared as
+     * printable ASCII without whitespace, at most 255 characters.
+     *
+     * @return array<int, string>
+     */
+    private function message_ids_in(?string $header): array
+    {
+        $header = (string) $header;
+
+        $tokens = preg_match_all('/<[^<>]+>/', $header, $matches)
+            ? $matches[0]
+            : preg_split('/\s+/', trim($header), -1, PREG_SPLIT_NO_EMPTY);
+
+        $message_ids = [];
+        foreach ($tokens as $token) {
+            $token = substr((string) preg_replace('/[^\x21-\x7E]/', '', $token), 0, 255);
+            if ($token !== '') {
+                $message_ids[] = $token;
+            }
+        }
+
+        return $message_ids;
+    }
+
+    /**
+     * A ticket by id, or null for no id or no such ticket.
+     */
+    private function find_ticket(?int $ticket_id): ?object
+    {
+        if ($ticket_id === null || $ticket_id <= 0) {
+            return null;
+        }
+
+        return Ticket::find($ticket_id) ?: null;
     }
 }
