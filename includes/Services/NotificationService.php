@@ -8,6 +8,204 @@ use Escalated\Models\Ticket;
 class NotificationService
 {
     /**
+     * Hook ticket and reply emails and the global webhook into the ticket
+     * lifecycle. Called once from Escalated::boot().
+     *
+     * Priority 100 runs after the product-side handlers (10-20) and workflows
+     * (50), and after Email_Threading (5) has set the threading context for
+     * the emails sent here.
+     */
+    public function register(): void
+    {
+        add_action('escalated_ticket_created', [$this, 'on_ticket_created'], 100, 1);
+        add_action('escalated_ticket_updated', [$this, 'on_ticket_updated'], 100, 1);
+        add_action('escalated_ticket_status_changed', [$this, 'on_ticket_status_changed'], 100, 4);
+        add_action('escalated_ticket_assigned', [$this, 'on_ticket_assigned'], 100, 4);
+        add_action('escalated_ticket_unassigned', [$this, 'on_ticket_unassigned'], 100, 3);
+        add_action('escalated_department_changed', [$this, 'on_department_changed'], 100, 4);
+        add_action('escalated_reply_created', [$this, 'on_reply_created'], 100, 2);
+        add_action('escalated_sla_breached', [$this, 'on_sla_breached'], 100, 2);
+    }
+
+    public function on_ticket_created($ticket): void
+    {
+        if (! $this->is_ticket($ticket)) {
+            return;
+        }
+
+        if (Setting::get_bool('notification_new_ticket', true)) {
+            $this->safely('ticket.created email', fn () => $this->notify_ticket_created($ticket));
+        }
+
+        $this->dispatch_webhook('ticket.created', ['ticket' => $this->ticket_payload($ticket)]);
+    }
+
+    public function on_ticket_updated($ticket): void
+    {
+        if ($this->is_ticket($ticket)) {
+            $this->dispatch_webhook('ticket.updated', ['ticket' => $this->ticket_payload($ticket)]);
+        }
+    }
+
+    public function on_ticket_status_changed($ticket, $old_status = null, $new_status = null, $causer_id = null): void
+    {
+        if ($this->is_ticket($ticket)) {
+            $this->dispatch_webhook('ticket.status_changed', [
+                'ticket' => $this->ticket_payload($ticket),
+                'old_status' => $old_status,
+                'new_status' => $new_status,
+                'causer_id' => self::nullable_int($causer_id),
+            ]);
+        }
+    }
+
+    public function on_ticket_assigned($ticket, $new_agent_id = null, $old_agent_id = null, $causer_id = null): void
+    {
+        if ($this->is_ticket($ticket)) {
+            $this->dispatch_webhook('ticket.assigned', [
+                'ticket' => $this->ticket_payload($ticket),
+                'new_agent_id' => self::nullable_int($new_agent_id),
+                'old_agent_id' => self::nullable_int($old_agent_id),
+                'causer_id' => self::nullable_int($causer_id),
+            ]);
+        }
+    }
+
+    public function on_ticket_unassigned($ticket, $old_agent_id = null, $causer_id = null): void
+    {
+        if ($this->is_ticket($ticket)) {
+            $this->dispatch_webhook('ticket.unassigned', [
+                'ticket' => $this->ticket_payload($ticket),
+                'old_agent_id' => self::nullable_int($old_agent_id),
+                'causer_id' => self::nullable_int($causer_id),
+            ]);
+        }
+    }
+
+    public function on_department_changed($ticket, $old_department_id = null, $new_department_id = null, $causer_id = null): void
+    {
+        if ($this->is_ticket($ticket)) {
+            $this->dispatch_webhook('ticket.department_changed', [
+                'ticket' => $this->ticket_payload($ticket),
+                'old_department_id' => self::nullable_int($old_department_id),
+                'new_department_id' => self::nullable_int($new_department_id),
+                'causer_id' => self::nullable_int($causer_id),
+            ]);
+        }
+    }
+
+    public function on_reply_created($reply, $ticket = null): void
+    {
+        if (! is_object($reply) || empty($reply->id)) {
+            return;
+        }
+        if (! $this->is_ticket($ticket) && ! empty($reply->ticket_id)) {
+            $ticket = Ticket::find((int) $reply->ticket_id);
+        }
+        if (! $this->is_ticket($ticket)) {
+            return;
+        }
+
+        if (Setting::get_bool('notification_ticket_reply', true)) {
+            $this->safely('reply.created email', fn () => $this->notify_reply_created($reply, $ticket));
+        }
+
+        // Internal notes never leave the site.
+        if (! empty($reply->is_internal_note)) {
+            return;
+        }
+
+        $this->dispatch_webhook('reply.created', [
+            'ticket' => $this->ticket_payload($ticket),
+            'reply' => [
+                'id' => (int) $reply->id,
+                'author_id' => self::nullable_int($reply->author_id ?? null),
+                'body' => $reply->body ?? '',
+                'created_at' => $reply->created_at ?? null,
+            ],
+        ]);
+    }
+
+    public function on_sla_breached($ticket, $breach_type = null): void
+    {
+        if ($this->is_ticket($ticket)) {
+            $this->dispatch_webhook('sla.breached', [
+                'ticket' => $this->ticket_payload($ticket),
+                'breach_type' => $breach_type,
+            ]);
+        }
+    }
+
+    /**
+     * Send the global webhook. A failure is reported through
+     * escalated_webhook_failed and never escapes into the operation that
+     * fired the hook.
+     */
+    protected function dispatch_webhook(string $event, array $payload): void
+    {
+        $this->safely($event.' webhook', fn () => $this->send_webhook($event, $payload));
+    }
+
+    protected function safely(string $what, callable $callback): void
+    {
+        try {
+            $callback();
+        } catch (\Throwable $e) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log(sprintf('[Escalated\\NotificationService] %s failed: %s', $what, $e->getMessage()));
+            }
+        }
+    }
+
+    protected function is_ticket($ticket): bool
+    {
+        return is_object($ticket) && ! empty($ticket->id);
+    }
+
+    /**
+     * The ticket fields a webhook receiver gets. Guest tokens and contact
+     * details are left out.
+     */
+    protected function ticket_payload(object $ticket): array
+    {
+        return [
+            'id' => (int) $ticket->id,
+            'reference' => $ticket->reference ?? null,
+            'subject' => $ticket->subject ?? null,
+            'status' => $ticket->status ?? null,
+            'priority' => $ticket->priority ?? null,
+            'ticket_type' => $ticket->ticket_type ?? null,
+            'channel' => $ticket->channel ?? null,
+            'department_id' => self::nullable_int($ticket->department_id ?? null),
+            'assigned_to' => self::nullable_int($ticket->assigned_to ?? null),
+            'requester_id' => self::nullable_int($ticket->requester_id ?? null),
+            'created_at' => $ticket->created_at ?? null,
+            'updated_at' => $ticket->updated_at ?? null,
+        ];
+    }
+
+    private static function nullable_int($value): ?int
+    {
+        return $value === null || $value === '' ? null : (int) $value;
+    }
+
+    /**
+     * The From header for notification emails: the notification sender
+     * settings, falling back to the site name and admin email.
+     */
+    protected function from_header(): string
+    {
+        $name = trim((string) Setting::get('notification_from_name', ''));
+        $email = (string) Setting::get('notification_from_email', '');
+
+        return sprintf(
+            'From: %s <%s>',
+            $name !== '' ? $name : get_bloginfo('name'),
+            is_email($email) ? $email : get_option('admin_email')
+        );
+    }
+
+    /**
      * Send a webhook notification for an event.
      *
      * POSTs a JSON payload to the configured webhook URL. The request includes an
@@ -58,7 +256,9 @@ class NotificationService
             'sslverify' => true,
         ], $event, $payload);
 
-        $response = wp_remote_post($webhook_url, $args);
+        // wp_safe_remote_post refuses loopback, private and link-local hosts
+        // (cloud metadata included), and keeps refusing them on redirects.
+        $response = wp_safe_remote_post($webhook_url, $args);
 
         if (is_wp_error($response)) {
             do_action('escalated_webhook_failed', $event, $payload, $response->get_error_message());
@@ -191,7 +391,7 @@ class NotificationService
 
         $headers = [
             'Content-Type: text/plain; charset=UTF-8',
-            sprintf('From: %s <%s>', $site_name, $admin_email),
+            $this->from_header(),
         ];
 
         foreach ($recipients as $recipient_email) {
@@ -340,7 +540,7 @@ class NotificationService
 
         $headers = [
             'Content-Type: text/plain; charset=UTF-8',
-            sprintf('From: %s <%s>', $site_name, $admin_email),
+            $this->from_header(),
             sprintf('References: <%s@%s>', $ticket->reference, wp_parse_url(home_url(), PHP_URL_HOST)),
         ];
 

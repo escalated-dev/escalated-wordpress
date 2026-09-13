@@ -44,6 +44,7 @@ class Escalated
         (new Cron\Activity_Purge)->register();
         (new Services\BroadcastService)->register();
         (new Services\WorkflowListener)->register();
+        (new Services\NotificationService)->register();
         (new Services\Custom_Action_Listener)->register();
         (new Cron\Snooze_Check)->register();
         (new Cron\Chat_Cleanup)->register();
