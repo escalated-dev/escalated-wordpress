@@ -370,7 +370,37 @@ class Test_Workflow_Executor_Service extends WP_UnitTestCase
         $remaining = json_decode($row->remaining_actions, true);
         $this->assertCount(1, $remaining);
         $this->assertEquals('add_note', $remaining[0]['type']);
-        $this->assertGreaterThanOrEqual($before + 59, strtotime($row->run_at.' UTC'));
+        // 60 minutes, not 60 seconds.
+        $this->assertGreaterThanOrEqual($before + HOUR_IN_SECONDS, strtotime($row->run_at.' UTC'));
+    }
+
+    /**
+     * The workflow admin contract defines the delay value as minutes, and
+     * the shared builder labels the field "Wait (minutes)".
+     */
+    public function test_execute_delay_value_is_minutes(): void
+    {
+        global $wpdb;
+        $ticket = $this->make_ticket();
+        $before = time();
+
+        $this->executor->execute(
+            $ticket,
+            wp_json_encode([
+                ['type' => 'delay', 'value' => 15],
+                ['type' => 'add_note', 'value' => 'after wait'],
+            ])
+        );
+
+        $after = time();
+        $run_at = $wpdb->get_var(
+            $wpdb->prepare('SELECT run_at FROM '.DeferredWorkflowJob::table().' WHERE ticket_id = %d', $ticket->id)
+        );
+
+        $this->assertNotNull($run_at, 'No deferred job was scheduled.');
+        $run_at = strtotime($run_at.' UTC');
+        $this->assertGreaterThanOrEqual($before + 15 * MINUTE_IN_SECONDS, $run_at, 'The delay was shorter than 15 minutes.');
+        $this->assertLessThanOrEqual($after + 15 * MINUTE_IN_SECONDS, $run_at, 'The delay was longer than 15 minutes.');
     }
 
     public function test_execute_delay_invalid_value_skips_remaining(): void
