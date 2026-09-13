@@ -5,12 +5,24 @@ namespace Escalated\Mail;
 class Ses_Adapter
 {
     /**
+     * Amazon SNS endpoint hosts: sns.<region>.amazonaws.com, plus the
+     * .amazonaws.com.cn partition. Matching on ".amazonaws.com" alone is not
+     * enough, because anyone can serve files from <bucket>.s3.amazonaws.com.
+     */
+    private const SNS_HOST_PATTERN = '/^sns\.[a-z0-9-]+\.amazonaws\.com(\.cn)?$/';
+
+    /**
      * Verify the AWS SNS request.
      *
-     * Validates the TopicArn against the configured value and verifies the SNS message
-     * signature using the signing certificate.
+     * The inbound route is public, so this is its only authentication:
      *
-     * Also handles SNS SubscriptionConfirmation messages by visiting the SubscribeURL.
+     *   - The TopicArn must match the configured `ses_topic_arn`. With no topic
+     *     configured every request is rejected, the same way the Mailgun and
+     *     Postmark adapters reject requests when their secret is unset.
+     *   - The signing certificate must come from an SNS host, and the message
+     *     must verify against it.
+     *   - A SubscriptionConfirmation is confirmed only through an SNS
+     *     ConfirmSubscription URL for the configured topic.
      *
      * @param  \WP_REST_Request  $request  The incoming webhook request.
      * @return bool True if the request is valid, false otherwise.
@@ -19,33 +31,110 @@ class Ses_Adapter
     {
         $json = $request->get_json_params();
 
-        if (empty($json)) {
+        if (empty($json) || ! is_array($json)) {
             return false;
         }
 
-        // Validate TopicArn if configured.
-        $expected_topic_arn = \Escalated\Models\Setting::get('ses_topic_arn', '');
-        if (! empty($expected_topic_arn)) {
-            $topic_arn = $json['TopicArn'] ?? '';
-            if ($topic_arn !== $expected_topic_arn) {
-                return false;
-            }
+        $expected_topic_arn = (string) \Escalated\Models\Setting::get('ses_topic_arn', '');
+        $topic_arn = $json['TopicArn'] ?? '';
+        if ($expected_topic_arn === '' || ! is_string($topic_arn) || ! hash_equals($expected_topic_arn, $topic_arn)) {
+            return false;
         }
 
-        // Verify the SNS message signature.
+        // The header is not signed; the Type field is. They must agree, or an
+        // unsigned header could make a Notification (whose signature does not
+        // cover SubscribeURL) be handled as a SubscriptionConfirmation.
+        $message_type = $json['Type'] ?? '';
+        $header_type = $request->get_header('x-amz-sns-message-type');
+        if (! is_string($message_type) || ($header_type !== null && $header_type !== $message_type)) {
+            return false;
+        }
+
         if (! $this->verify_sns_signature($json)) {
             return false;
         }
 
-        // Handle SubscriptionConfirmation.
-        $message_type = $request->get_header('x-amz-sns-message-type');
         if ($message_type === 'SubscriptionConfirmation') {
-            $this->confirm_subscription($json);
-
-            return true;
+            return $this->confirm_subscription($json, $expected_topic_arn);
         }
 
         return true;
+    }
+
+    /**
+     * Whether a SigningCertURL points at an Amazon SNS certificate.
+     */
+    public static function is_valid_signing_cert_url(string $url): bool
+    {
+        $parts = self::parse_sns_url($url);
+
+        return $parts !== null && str_ends_with($parts['path'] ?? '', '.pem');
+    }
+
+    /**
+     * Whether a SubscribeURL is an Amazon SNS ConfirmSubscription call for the
+     * given topic.
+     */
+    public static function is_valid_subscribe_url(string $url, string $topic_arn): bool
+    {
+        $parts = self::parse_sns_url($url);
+        if ($parts === null || $topic_arn === '') {
+            return false;
+        }
+
+        parse_str($parts['query'] ?? '', $query);
+
+        return ($query['Action'] ?? null) === 'ConfirmSubscription'
+            && ($query['TopicArn'] ?? null) === $topic_arn;
+    }
+
+    /**
+     * Parse a URL and accept it only if it is plain https to an SNS host: no
+     * user-info, no explicit port, nothing that could make the host a client
+     * connects to differ from the host that was checked.
+     *
+     * @return array<string, string>|null The parsed URL, or null if rejected.
+     */
+    private static function parse_sns_url(string $url): ?array
+    {
+        if ($url === '' || preg_match('/[\s\\\\]/', $url)) {
+            return null;
+        }
+
+        $parts = wp_parse_url($url);
+        if (! is_array($parts)) {
+            return null;
+        }
+
+        if (strtolower($parts['scheme'] ?? '') !== 'https') {
+            return null;
+        }
+
+        if (isset($parts['user']) || isset($parts['pass']) || isset($parts['port'])) {
+            return null;
+        }
+
+        if (! preg_match(self::SNS_HOST_PATTERN, strtolower($parts['host'] ?? ''))) {
+            return null;
+        }
+
+        return $parts;
+    }
+
+    /**
+     * Fetch an already-validated SNS URL. wp_safe_remote_get refuses private
+     * and loopback addresses, and with redirects off the response cannot come
+     * from anywhere but the host that was checked.
+     *
+     * @return array|\WP_Error
+     */
+    private function fetch_sns_url(string $url)
+    {
+        return wp_safe_remote_get($url, [
+            'timeout' => 10,
+            'redirection' => 0,
+            'sslverify' => true,
+        ]);
     }
 
     /**
@@ -113,26 +202,13 @@ class Ses_Adapter
     {
         $signing_cert_url = $json['SigningCertURL'] ?? ($json['SigningCertUrl'] ?? '');
 
-        if (empty($signing_cert_url)) {
+        if (! is_string($signing_cert_url) || ! self::is_valid_signing_cert_url($signing_cert_url)) {
             return false;
         }
 
-        // Validate that the certificate URL is from AWS.
-        $parsed = wp_parse_url($signing_cert_url);
-        if (empty($parsed['host']) || ! preg_match('/\.amazonaws\.com$/', $parsed['host'])) {
-            return false;
-        }
-        if (($parsed['scheme'] ?? '') !== 'https') {
-            return false;
-        }
+        $response = $this->fetch_sns_url($signing_cert_url);
 
-        // Fetch the signing certificate.
-        $response = wp_remote_get($signing_cert_url, [
-            'timeout' => 10,
-            'sslverify' => true,
-        ]);
-
-        if (is_wp_error($response)) {
+        if (is_wp_error($response) || (int) wp_remote_retrieve_response_code($response) !== 200) {
             return false;
         }
 
@@ -188,19 +264,23 @@ class Ses_Adapter
     /**
      * Confirm an SNS subscription by visiting the SubscribeURL.
      *
+     * The URL is signed, but it is only fetched if it is an SNS
+     * ConfirmSubscription call for the configured topic.
+     *
      * @param  array  $json  The SNS SubscriptionConfirmation payload.
+     * @param  string  $topic_arn  The configured topic.
+     * @return bool False if the SubscribeURL is not a genuine SNS confirmation.
      */
-    private function confirm_subscription(array $json): void
+    private function confirm_subscription(array $json, string $topic_arn): bool
     {
         $subscribe_url = $json['SubscribeURL'] ?? '';
-        if (empty($subscribe_url)) {
-            return;
+        if (! is_string($subscribe_url) || ! self::is_valid_subscribe_url($subscribe_url, $topic_arn)) {
+            return false;
         }
 
-        wp_remote_get($subscribe_url, [
-            'timeout' => 10,
-            'sslverify' => true,
-        ]);
+        $this->fetch_sns_url($subscribe_url);
+
+        return true;
     }
 
     /**
