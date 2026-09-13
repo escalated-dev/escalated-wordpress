@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.5.2] - 2026-09-13
+
 ### Fixed
 - **Inbound email never created a ticket.** The inbound controller passed the parsed `Inbound_Message` to `InboundEmailService::process()`, which only accepted an array. The `TypeError` was caught, so every Mailgun, Postmark and SES webhook got a 500 and nothing was created. The service now takes `Inbound_Message`.
   - **Hooks:** `escalated_inbound_email_processed` and `escalated_inbound_email_failed` pass the `Inbound_Message` instead of an array.
