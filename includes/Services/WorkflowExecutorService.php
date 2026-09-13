@@ -16,8 +16,10 @@ use Escalated\Models\Ticket;
  *
  * Action catalog: change_priority, change_status, assign_agent,
  * set_department, add_tag, remove_tag, add_note, insert_canned_reply,
- * delay. Mirrors the NestJS reference impl in
+ * add_follower, delay, send_webhook, set_type. Mirrors the NestJS
+ * reference impl in
  * escalated-nestjs/src/services/workflow-executor.service.ts.
+ * WorkflowEngine::ACTION_TYPES must list exactly these.
  *
  * `delay` splits a run into two halves: everything before the delay
  * runs inline, everything after is persisted as a DeferredWorkflowJob
@@ -29,6 +31,11 @@ use Escalated\Models\Ticket;
  */
 class WorkflowExecutorService
 {
+    /**
+     * The ticket types TicketService accepts.
+     */
+    private const TICKET_TYPES = ['question', 'problem', 'incident', 'task'];
+
     protected TicketService $ticket_service;
 
     protected AssignmentService $assignment_service;
@@ -192,8 +199,72 @@ class WorkflowExecutorService
                 $this->add_follower($ticket_id, $value);
                 break;
 
+            case 'set_type':
+                $this->set_type($ticket_id, $value);
+                break;
+
+            case 'send_webhook':
+                $this->send_webhook($ticket, $value);
+                break;
+
             default:
                 $this->log_debug(sprintf('unknown action type: %s', $type));
+        }
+    }
+
+    /**
+     * Set the ticket type. Values outside TicketService's four types are
+     * skipped.
+     */
+    protected function set_type(int $ticket_id, string $value): void
+    {
+        if (! in_array($value, self::TICKET_TYPES, true)) {
+            if ($value !== '') {
+                $this->log_debug(sprintf('set_type: unknown ticket type "%s"', $value));
+            }
+
+            return;
+        }
+        $this->ticket_service->update_ticket($ticket_id, ['ticket_type' => $value]);
+    }
+
+    /**
+     * POST the ticket to the URL in the action's value.
+     *
+     * wp_safe_remote_post refuses loopback, private and link-local hosts
+     * (cloud metadata included). Redirects are not followed, so the request
+     * cannot be bounced to one of them either.
+     */
+    protected function send_webhook(object $ticket, string $url): void
+    {
+        $url = trim($url);
+        $scheme = strtolower((string) wp_parse_url($url, PHP_URL_SCHEME));
+        if (! in_array($scheme, ['http', 'https'], true) || (string) wp_parse_url($url, PHP_URL_HOST) === '') {
+            $this->log_debug(sprintf('send_webhook: "%s" is not an http(s) URL', $url));
+
+            return;
+        }
+
+        // Earlier actions in the same run may have changed the ticket.
+        $current = Ticket::find((int) $ticket->id) ?: $ticket;
+
+        $response = wp_safe_remote_post($url, [
+            'headers' => ['Content-Type' => 'application/json'],
+            'body' => wp_json_encode([
+                'ticket' => [
+                    'id' => (int) $current->id,
+                    'reference' => $current->reference ?? null,
+                    'subject' => $current->subject ?? null,
+                    'status' => $current->status ?? null,
+                    'priority' => $current->priority ?? null,
+                ],
+            ]),
+            'timeout' => 10,
+            'redirection' => 0,
+        ]);
+
+        if (is_wp_error($response)) {
+            $this->log_debug(sprintf('send_webhook: request to %s failed: %s', $url, $response->get_error_message()));
         }
     }
 

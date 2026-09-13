@@ -337,6 +337,12 @@ class TicketService
         $ticket = Ticket::find($ticket_id);
         do_action('escalated_ticket_updated', $ticket);
 
+        // Only a real change: a workflow that sets the priority it was
+        // triggered by must not trigger itself again.
+        if ((string) $old_priority !== $new_priority) {
+            do_action('escalated_ticket_priority_changed', $ticket, $old_priority, $new_priority, $causer_id);
+        }
+
         return $ticket;
     }
 
