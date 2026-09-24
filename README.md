@@ -23,6 +23,7 @@
 [![PHP Version](https://img.shields.io/badge/php-%3E%3D8.1-8892BF)](https://www.php.net/)
 [![WordPress](https://img.shields.io/badge/wordpress-%3E%3D6.0-21759B)](https://wordpress.org/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Views](https://hits.sh/github.com/escalated-dev/escalated-wordpress.svg?style=flat&label=views&color=007ec6)](https://hits.sh/github.com/escalated-dev/escalated-wordpress/)
 
 A full-featured helpdesk and ticketing system for WordPress with multi-role support, SLA tracking, escalation rules, inbound email processing, macros, and a REST API. No external services required.
 
