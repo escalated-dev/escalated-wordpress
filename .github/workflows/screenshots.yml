@@ -100,6 +100,17 @@ jobs:
             --allow-root 2>&1 || true
           wp user add-role 1 administrator --allow-root 2>&1 || true
 
+          # WP-Cron spawns on page loads, so the seeded automations run
+          # while Playwright is walking the admin and rewrite the very data
+          # being photographed. The first run with real data moved two
+          # tickets from in_progress to escalated and pushed nine to high
+          # priority, so the ticket list and the Reports page disagreed with
+          # each other in the same pass.
+          #
+          # The rules stay active so the Automations screenshot shows a
+          # working ruleset; cron is what gets switched off.
+          wp config set DISABLE_WP_CRON true --raw --allow-root
+
           # Seed demo data for the screenshots.
           #
           # This used to be ~100 lines of PHP inside this YAML string, which
