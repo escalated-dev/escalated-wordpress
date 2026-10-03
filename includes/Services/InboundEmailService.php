@@ -19,6 +19,11 @@ class InboundEmailService
      * email, finds the ticket it replies to, and either adds a reply to that
      * ticket or creates a new one.
      *
+     * A thread match alone is not enough to post on a ticket: the sender must
+     * also be the ticket's requester, and the reply is posted as that
+     * requester, never as a user named by the unauthenticated From header.
+     * Anything else becomes a new ticket, so no mail is lost.
+     *
      * @param  Inbound_Message  $message  The email, as parsed by an inbound adapter.
      * @param  string  $adapter  The inbound email adapter name (mailgun, postmark or ses).
      * @return object|null The ticket that was created or replied to, or null for a
@@ -64,14 +69,12 @@ class InboundEmailService
         try {
             // Try to find an existing ticket this email belongs to.
             $ticket = $this->find_ticket_by_email($message);
-
-            // Find the WordPress user by email.
-            $user = $this->find_user_by_email(sanitize_email($message->fromEmail));
+            $author = $ticket ? $this->resolve_reply_author($ticket, $message) : false;
             $reply = null;
 
-            if ($ticket) {
-                // Add reply to existing ticket.
-                $reply = $this->add_reply_to_ticket($ticket, $message, $user);
+            if ($ticket && $author !== false) {
+                // Add reply to existing ticket as its requester.
+                $reply = $this->add_reply_to_ticket($ticket, $message, $author);
 
                 $wpdb->update(
                     $inbound_table,
@@ -84,7 +87,8 @@ class InboundEmailService
                     ['id' => $inbound_id]
                 );
             } else {
-                // Create a new ticket.
+                // Create a new ticket, as the sender if they are a registered user.
+                $user = $this->find_user_by_email(sanitize_email($message->fromEmail));
                 $ticket = $this->create_new_ticket($message, $user);
 
                 $wpdb->update(
@@ -131,15 +135,23 @@ class InboundEmailService
      * Find the ticket an inbound email replies to.
      *
      * Follows the inbound resolution chain from the email-threading domain
-     * model. The first match wins:
+     * model. Message-IDs and ticket references are guessable, so once an
+     * inbound secret is configured (and outbound mail therefore carries the
+     * signed Reply-To) only path 3 is used:
+     *
+     *   3. The recipient is a signed reply+{id}.{hmac8}@domain address.
+     *
+     * Without a secret, the first match wins:
      *
      *   1. In-Reply-To holds a Message-ID we issued (<ticket-{id}@domain>).
      *   2. References holds one.
-     *   3. The recipient is a signed reply+{id}.{hmac8}@domain address.
      *   4. The subject holds a ticket reference such as [ESC-00001].
      *   5. In-Reply-To or References matches the Message-ID of an earlier
      *      inbound email, which covers Message-IDs from before the canonical
      *      format.
+     *
+     * Either way, process() only accepts the email as a reply when it comes
+     * from the ticket's requester.
      *
      * @param  Inbound_Message  $message  Inbound email.
      * @return object|null The matching ticket, or null if not found.
@@ -147,6 +159,12 @@ class InboundEmailService
     public function find_ticket_by_email(Inbound_Message $message): ?object
     {
         $wpdb = \Escalated\Escalated::db();
+
+        // 3: with a secret, only a signed Reply-To address identifies a ticket.
+        $secret = Email_Threading::get_inbound_secret();
+        if ($secret !== '') {
+            return $this->find_ticket(Message_Id_Util::verify_reply_to(trim($message->toEmail), $secret));
+        }
 
         // In-Reply-To first, then References, for priorities 1, 2 and 5.
         $thread_message_ids = array_merge(
@@ -157,15 +175,6 @@ class InboundEmailService
         // 1 and 2: a Message-ID we issued.
         foreach ($thread_message_ids as $thread_message_id) {
             $ticket = $this->find_ticket(Message_Id_Util::parse_ticket_id_from_message_id($thread_message_id));
-            if ($ticket) {
-                return $ticket;
-            }
-        }
-
-        // 3: a signed Reply-To address.
-        $secret = Email_Threading::get_inbound_secret();
-        if ($secret !== '') {
-            $ticket = $this->find_ticket(Message_Id_Util::verify_reply_to($message->toEmail, $secret));
             if ($ticket) {
                 return $ticket;
             }
@@ -200,6 +209,45 @@ class InboundEmailService
     }
 
     /**
+     * Decide who a threaded inbound email may post as.
+     *
+     * Returns null (a guest reply) when the From address is the ticket's guest
+     * email, the requester's WP_User when it is the requester's email, and
+     * false for anyone else. Staff identity is never derived from the From
+     * header: an agent replying by email is not the requester, so the message
+     * becomes a new ticket instead.
+     *
+     * @param  object  $ticket  The matched ticket.
+     * @param  Inbound_Message  $message  Inbound email.
+     * @return \WP_User|null|false
+     */
+    public function resolve_reply_author(object $ticket, Inbound_Message $message)
+    {
+        $sender = $this->normalize_email($message->fromEmail);
+        if ($sender === '') {
+            return false;
+        }
+
+        if (! empty($ticket->guest_email) && $this->normalize_email($ticket->guest_email) === $sender) {
+            return null;
+        }
+
+        if (! empty($ticket->requester_id)) {
+            $requester = get_user_by('id', (int) $ticket->requester_id);
+            if ($requester instanceof \WP_User && $this->normalize_email($requester->user_email) === $sender) {
+                return $requester;
+            }
+        }
+
+        return false;
+    }
+
+    private function normalize_email(?string $email): string
+    {
+        return strtolower(trim((string) $email));
+    }
+
+    /**
      * Find a WordPress user by email address.
      *
      * @param  string  $email  Email address to look up.
@@ -223,7 +271,8 @@ class InboundEmailService
      *
      * @param  object  $ticket  The existing ticket object.
      * @param  Inbound_Message  $message  Inbound email.
-     * @param  \WP_User|null  $user  The WordPress user who sent the email, or null for guest.
+     * @param  \WP_User|null  $user  The ticket's requester, or null for a guest reply. Callers
+     *                               must pass the requester, never a user found by From.
      * @return object|null The created reply, or null on failure.
      */
     public function add_reply_to_ticket(object $ticket, Inbound_Message $message, ?\WP_User $user): ?object
