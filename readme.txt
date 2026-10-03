@@ -70,7 +70,7 @@ Yes. Generate API tokens from the Escalated admin panel. Authenticate requests u
 
 = How do I set up inbound email? =
 
-Configure your email provider (Mailgun, Postmark, or Amazon SES) in the Escalated settings. Point the provider's webhook URL to your site's webhook endpoint. Incoming emails will automatically create new tickets or be appended as replies to existing ones.
+Configure your email provider (Mailgun, Postmark, or Amazon SES) in the Escalated settings. Point the provider's webhook URL to your site's webhook endpoint. Incoming emails will automatically create new tickets or be appended as replies to existing ones. A reply is accepted only from the ticket's requester and is posted as that requester; mail from anyone else opens a new ticket. Set an inbound secret so replies are matched by the signed Reply-To address rather than guessable Message-IDs or subject references.
 
 = Can I customize the frontend portal styles? =
 

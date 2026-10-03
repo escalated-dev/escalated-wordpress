@@ -7,17 +7,19 @@
  * public REST route, has to create a ticket, or add a reply when the email
  * belongs to an existing ticket.
  *
- * Replies are matched to tickets by the resolution chain in
- * escalated-developer-context/domain-model/email-threading.md. The first
- * match wins:
+ * Replies are matched to tickets as described in
+ * escalated-developer-context/domain-model/email-threading.md. With an
+ * inbound secret set, only the signed reply+{id}.{hmac8}@domain address
+ * identifies a ticket. Without one, the first match wins:
  *
  *   1. In-Reply-To holds a Message-ID we issued (<ticket-{id}@domain>).
  *   2. References holds one.
- *   3. The recipient is a signed reply+{id}.{hmac8}@domain address.
  *   4. The subject holds a [PREFIX-00001] ticket reference.
  *   5. In-Reply-To or References matches an earlier inbound email.
  *
- * Anything else opens a new ticket.
+ * A matched email is a reply only when it comes from the ticket's
+ * requester, and it is posted as that requester. Anything else opens a
+ * new ticket.
  */
 
 use Escalated\Escalated;
@@ -200,6 +202,7 @@ class Test_Inbound_Email_Routes extends WP_UnitTestCase
 
     public function test_reply_is_threaded_by_in_reply_to(): void
     {
+        $this->without_reply_secret();
         $ticket = $this->existing_ticket();
 
         $response = $this->mailgun([
@@ -212,6 +215,7 @@ class Test_Inbound_Email_Routes extends WP_UnitTestCase
 
     public function test_reply_is_threaded_by_references(): void
     {
+        $this->without_reply_secret();
         $ticket = $this->existing_ticket();
 
         $response = $this->mailgun([
@@ -250,6 +254,7 @@ class Test_Inbound_Email_Routes extends WP_UnitTestCase
 
     public function test_reply_is_threaded_by_subject_reference(): void
     {
+        $this->without_reply_secret();
         $ticket = $this->existing_ticket();
 
         $response = $this->mailgun([
@@ -261,6 +266,7 @@ class Test_Inbound_Email_Routes extends WP_UnitTestCase
 
     public function test_reply_is_threaded_by_an_earlier_inbound_message_id(): void
     {
+        $this->without_reply_secret();
         $first = $this->mailgun(['Message-Id' => '<first-message@mail.customer.example>']);
         $this->assertSame(200, $first->get_status(), wp_json_encode($first->get_data()));
         $ticket = $this->latest_ticket();
@@ -276,6 +282,7 @@ class Test_Inbound_Email_Routes extends WP_UnitTestCase
 
     public function test_in_reply_to_outranks_a_subject_reference(): void
     {
+        $this->without_reply_secret();
         $replied_to = $this->existing_ticket();
         $mentioned = $this->existing_ticket();
 
@@ -286,6 +293,108 @@ class Test_Inbound_Email_Routes extends WP_UnitTestCase
 
         $this->assert_reply_added($response, $replied_to);
         $this->assertSame(0, $this->reply_count($mentioned));
+    }
+
+    // =========================================================================
+    // Only the requester may reply
+    // =========================================================================
+
+    public function test_stranger_quoting_a_subject_reference_opens_their_own_ticket(): void
+    {
+        $this->without_reply_secret();
+        $ticket = $this->existing_ticket();
+        $before = $this->ticket_count();
+
+        $response = $this->mailgun([
+            'from' => 'Stranger <stranger@elsewhere.example>',
+            'subject' => 'Re: ['.$ticket->reference.'] Printer is on fire',
+        ]);
+
+        $this->assertSame(200, $response->get_status(), wp_json_encode($response->get_data()));
+        $this->assertSame($before + 1, $this->ticket_count());
+        $this->assertSame(0, $this->reply_count($ticket));
+        $this->assertSame('stranger@elsewhere.example', $this->latest_ticket()->guest_email);
+    }
+
+    public function test_stranger_threading_onto_a_closed_ticket_does_not_reopen_it(): void
+    {
+        $this->without_reply_secret();
+        $ticket = $this->existing_ticket();
+        $this->set_status($ticket, 'closed');
+
+        $response = $this->mailgun([
+            'from' => 'Stranger <stranger@elsewhere.example>',
+            'subject' => 'Re: ['.$ticket->reference.'] Printer is on fire',
+            'In-Reply-To' => Message_Id_Util::build_message_id((int) $ticket->id, null, self::DOMAIN),
+        ]);
+
+        $this->assertSame(200, $response->get_status(), wp_json_encode($response->get_data()));
+        $this->assertSame(0, $this->reply_count($ticket));
+        $this->assertSame('closed', Ticket::find((int) $ticket->id)->status);
+        $this->assertNotSame((int) $ticket->id, (int) $response->get_data()['ticket_id']);
+    }
+
+    public function test_email_naming_an_agent_is_not_posted_as_that_agent(): void
+    {
+        $agent_id = $this->factory->user->create(['user_email' => 'agent@support.example.org', 'role' => 'administrator']);
+        $ticket = $this->existing_ticket();
+        $before = $this->ticket_count();
+
+        $response = $this->mailgun([
+            'from' => 'Agent <agent@support.example.org>',
+            'recipient' => Message_Id_Util::build_reply_to((int) $ticket->id, self::REPLY_SECRET, self::DOMAIN),
+            'subject' => 'Re: ['.$ticket->reference.'] Printer is on fire',
+        ]);
+
+        $this->assertSame(200, $response->get_status(), wp_json_encode($response->get_data()));
+        $this->assertSame($before + 1, $this->ticket_count());
+        $this->assertSame(0, $this->reply_count($ticket));
+        $this->assertSame(0, (int) Escalated::db()->get_var(Escalated::db()->prepare(
+            'SELECT COUNT(*) FROM '.Reply::table().' WHERE author_id = %d',
+            $agent_id
+        )));
+    }
+
+    public function test_with_a_reply_secret_only_the_signed_address_threads(): void
+    {
+        $ticket = $this->existing_ticket();
+        $before = $this->ticket_count();
+
+        $response = $this->mailgun([
+            'subject' => 'Re: ['.$ticket->reference.'] Printer is on fire',
+            'In-Reply-To' => Message_Id_Util::build_message_id((int) $ticket->id, null, self::DOMAIN),
+        ]);
+
+        $this->assertSame(200, $response->get_status(), wp_json_encode($response->get_data()));
+        $this->assertSame($before + 1, $this->ticket_count());
+        $this->assertSame(0, $this->reply_count($ticket));
+    }
+
+    public function test_requester_reply_is_posted_as_the_requester_and_reopens_the_ticket(): void
+    {
+        $requester_id = $this->factory->user->create(['user_email' => 'member@customer.example']);
+        $ticket = (new TicketService)->create($requester_id, [
+            'subject' => 'Printer is on fire',
+            'description' => 'Smoke everywhere.',
+            'channel' => 'web',
+        ]);
+        $this->set_status($ticket, 'resolved');
+
+        $response = $this->mailgun([
+            'from' => 'Member <Member@Customer.Example>',
+            'recipient' => Message_Id_Util::build_reply_to((int) $ticket->id, self::REPLY_SECRET, self::DOMAIN),
+            'subject' => 'Re: Printer is on fire',
+        ]);
+
+        $this->assertSame(200, $response->get_status(), wp_json_encode($response->get_data()));
+        $this->assertSame((int) $ticket->id, (int) $response->get_data()['ticket_id']);
+        $this->assertSame(1, $this->reply_count($ticket));
+        $reply = Escalated::db()->get_row(Escalated::db()->prepare(
+            'SELECT * FROM '.Reply::table().' WHERE ticket_id = %d',
+            $ticket->id
+        ));
+        $this->assertSame($requester_id, (int) $reply->author_id);
+        $this->assertSame('reopened', Ticket::find((int) $ticket->id)->status);
     }
 
     public function test_redelivered_email_opens_only_one_ticket(): void
@@ -459,15 +568,31 @@ class Test_Inbound_Email_Routes extends WP_UnitTestCase
     // Helpers
     // =========================================================================
 
+    /**
+     * A guest ticket opened by the sender, so the sender's replies are accepted.
+     */
     private function existing_ticket(): object
     {
-        $requester_id = $this->factory->user->create();
-
-        return (new TicketService)->create($requester_id, [
+        return (new TicketService)->create_guest([
             'subject' => 'Printer is on fire',
             'description' => 'Smoke everywhere.',
             'channel' => 'web',
+            'guest_name' => 'Jane Customer',
+            'guest_email' => self::SENDER,
         ]);
+    }
+
+    /**
+     * Without a secret, the unsigned Message-ID and subject paths are used.
+     */
+    private function without_reply_secret(): void
+    {
+        delete_option('escalated_email_inbound_secret');
+    }
+
+    private function set_status(object $ticket, string $status): void
+    {
+        Escalated::db()->update(Ticket::table(), ['status' => $status], ['id' => (int) $ticket->id]);
     }
 
     private function ticket_count(): int
