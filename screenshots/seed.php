@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Demo data for the README screenshots.
  *
@@ -24,7 +25,7 @@ use Escalated\Models\SlaPolicy;
 
 global $wpdb;
 
-$p = $wpdb->prefix . 'escalated_';
+$p = $wpdb->prefix.'escalated_';
 $now = current_time('timestamp');
 
 /** Format a timestamp N hours ago as MySQL datetime. */
@@ -58,7 +59,7 @@ foreach ([
     'Onboarding',
     'Enterprise',
 ] as $name) {
-    $wpdb->insert($p . 'departments', [
+    $wpdb->insert($p.'departments', [
         'name' => $name,
         // slug is NOT NULL with no default; leaving it out only works while
         // MySQL is not in strict mode.
@@ -108,7 +109,7 @@ foreach ([
     ['performance', '#1abc9c'],
     ['security', '#c0392b'],
 ] as [$name, $colour]) {
-    $wpdb->insert($p . 'tags', [
+    $wpdb->insert($p.'tags', [
         'name' => $name,
         'slug' => sanitize_title($name),
         'color' => $colour,
@@ -133,7 +134,7 @@ foreach ([
     ['Omar Haddad', 'omar@logistics.net'],
     ['Grace Mwangi', 'grace@fintech.africa'],
 ] as [$name, $email]) {
-    $wpdb->insert($p . 'contacts', [
+    $wpdb->insert($p.'contacts', [
         'email' => $email,
         'name' => $name,
         'created_at' => $ago(24 * 60),
@@ -189,10 +190,10 @@ foreach ($rows as [$subject, $status, $priority, $dept, $channel, $age, $fr, $re
         ? null
         : $all_agents[$i % count($all_agents)];
 
-    $wpdb->insert($p . 'tickets', [
+    $wpdb->insert($p.'tickets', [
         'reference' => sprintf('ESC-%05d', $i + 1),
         'subject' => $subject,
-        'description' => $subject . '. Reported by ' . $contact['name'] . '.',
+        'description' => $subject.'. Reported by '.$contact['name'].'.',
         'status' => $status,
         'priority' => $priority,
         'requester_id' => $admin,
@@ -216,7 +217,7 @@ foreach ($rows as [$subject, $status, $priority, $dept, $channel, $age, $fr, $re
 
     foreach ($row_tags as $t) {
         if (isset($tags[$t])) {
-            $wpdb->insert($p . 'ticket_tag', ['ticket_id' => $tid, 'tag_id' => $tags[$t]]);
+            $wpdb->insert($p.'ticket_tag', ['ticket_id' => $tid, 'tag_id' => $tags[$t]]);
         }
     }
 
@@ -233,7 +234,7 @@ foreach ($rows as [$subject, $status, $priority, $dept, $channel, $age, $fr, $re
     }
 
     foreach ($thread as [$author, $body, $internal, $type, $at]) {
-        $wpdb->insert($p . 'replies', [
+        $wpdb->insert($p.'replies', [
             'ticket_id' => $tid,
             'author_id' => $author,
             'body' => $body,
