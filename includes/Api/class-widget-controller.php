@@ -13,6 +13,7 @@ use Escalated\Models\Article;
 use Escalated\Models\ArticleCategory;
 use Escalated\Models\Setting;
 use Escalated\Models\Ticket;
+use Escalated\Services\GuestRateLimiter;
 use Escalated\Services\KnowledgeBaseService;
 use Escalated\Services\TicketService;
 use WP_REST_Request;
@@ -326,6 +327,22 @@ class Widget_Controller extends Base_Controller
      */
     public function create_ticket(WP_REST_Request $request)
     {
+        // Per-IP guest ticket limit, on top of the widget-wide limit in
+        // widget_enabled_check(). See GuestRateLimiter for configuration and
+        // the reverse-proxy caveat.
+        $retry_after = GuestRateLimiter::attempt('ticket');
+        if ($retry_after !== null) {
+            $rejection = GuestRateLimiter::rejection($retry_after);
+            $response = rest_convert_error_to_response(new \WP_Error(
+                $rejection['code'],
+                $rejection['message'],
+                ['status' => 429, 'retry_after' => $retry_after]
+            ));
+            $response->header('Retry-After', (string) $retry_after);
+
+            return $response;
+        }
+
         $service = new TicketService;
 
         try {

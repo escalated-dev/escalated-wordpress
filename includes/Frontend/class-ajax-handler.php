@@ -145,6 +145,7 @@ class Ajax_Handler
 
     public function guest_create(): void
     {
+        $this->throttle_guest('ticket');
         check_ajax_referer('escalated_frontend', 'nonce');
 
         if (! \Escalated\Models\Setting::get_bool('guest_tickets_enabled', true)) {
@@ -188,6 +189,9 @@ class Ajax_Handler
 
     public function guest_reply(): void
     {
+        // Throttle before the guest token is looked up, so requests carrying a
+        // wrong token are counted too and tokens cannot be guessed at speed.
+        $this->throttle_guest('reply');
         check_ajax_referer('escalated_frontend', 'nonce');
 
         $guest_token = sanitize_text_field($_POST['guest_token'] ?? '');
@@ -214,5 +218,24 @@ class Ajax_Handler
         ]);
 
         wp_send_json_success(['message' => __('Reply sent.', 'escalated')]);
+    }
+
+    /**
+     * End the request with 429 and Retry-After when the client IP is over the
+     * guest limit for this scope. See GuestRateLimiter for configuration and
+     * the reverse-proxy caveat.
+     */
+    private function throttle_guest(string $scope): void
+    {
+        $retry_after = \Escalated\Services\GuestRateLimiter::attempt($scope);
+        if ($retry_after === null) {
+            return;
+        }
+
+        if (! headers_sent()) {
+            header('Retry-After: '.$retry_after);
+        }
+
+        wp_send_json_error(\Escalated\Services\GuestRateLimiter::rejection($retry_after), 429);
     }
 }
