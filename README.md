@@ -98,6 +98,14 @@ Use these shortcodes on WordPress pages:
   - Guests: expects `?guest_token=<token>`
 - `[escalated_guest_create]` - Guest ticket creation form (if enabled in settings).
 
+### Guest rate limits
+
+Guest ticket creation (widget `POST /widget/tickets` and the guest form) is limited to 5 per client IP per minute, and guest replies to 10. Over the limit the request gets `429` with `Retry-After`; a reply is counted before its guest token is checked.
+
+- Settings: `guest_rate_limit_enabled` (default `1`), `guest_rate_limit_tickets_per_minute` (`5`), `guest_rate_limit_replies_per_minute` (`10`), or the `escalated_guest_rate_limit` filter.
+- Counters are transients, so a persistent object cache (Redis, Memcached) shares them across servers.
+- The client IP is `REMOTE_ADDR`. Behind a proxy or CDN, rewrite it from the trusted proxy's forwarded header, or every guest shares one IP.
+
 ## REST API
 
 - Namespace: `/wp-json/escalated/v1`

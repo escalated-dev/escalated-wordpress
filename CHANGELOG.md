@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- **Per-IP rate limit on guest tickets and replies.** Guest ticket creation (widget REST endpoint and the guest form) is capped at 5 per client IP per minute and guest replies at 10, each with its own counter. Over the limit the request gets `429` with `Retry-After`. Replies are counted before the guest token is checked, so wrong-token guesses count too. Configure with the `guest_rate_limit_enabled`, `guest_rate_limit_tickets_per_minute` and `guest_rate_limit_replies_per_minute` settings or the `escalated_guest_rate_limit` filter. Sites behind a proxy must rewrite `REMOTE_ADDR` from the trusted proxy's forwarded header, or every guest shares one IP.
+
 ### Fixed
 - **Inbound replies come only from the ticket's requester.** With an inbound secret set, only the signed Reply-To address links mail to a ticket. A matched email is a reply only when `From` is the ticket's guest email or requester email, and it is posted as the requester; any other sender gets a new ticket, and only an accepted reply reopens a resolved or closed ticket.
 
