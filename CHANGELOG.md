@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-10-08
+
+This release changes how inbound email is matched to tickets. Read
+**Upgrading** before deploying.
+
+### Upgrading
+- **Inbound replies are accepted only from the ticket's requester.** A matched
+  email becomes a reply only when `From` is the ticket's guest email or the
+  requester's email, and it is posted as the requester. Any other sender,
+  including an agent answering a notification by email, gets a new ticket
+  instead, and that email no longer reopens a resolved or closed ticket. Agents
+  should reply in wp-admin.
+- **With an inbound secret set** (`escalated_email_inbound_secret`), only the
+  signed Reply-To address links mail to a ticket. Header and subject matching
+  are used only when no secret is configured.
+- **Guest tickets and replies are rate-limited per client IP** (5 tickets and
+  10 replies per minute by default). Adjust or disable with the
+  `guest_rate_limit_enabled`, `guest_rate_limit_tickets_per_minute` and
+  `guest_rate_limit_replies_per_minute` settings or the
+  `escalated_guest_rate_limit` filter. Sites behind a proxy must rewrite
+  `REMOTE_ADDR` from the trusted proxy's forwarded header, or every guest shares
+  one budget.
+
 ### Added
 - **Per-IP rate limit on guest tickets and replies.** Guest ticket creation (widget REST endpoint and the guest form) is capped at 5 per client IP per minute and guest replies at 10, each with its own counter. Over the limit the request gets `429` with `Retry-After`. Replies are counted before the guest token is checked, so wrong-token guesses count too. Configure with the `guest_rate_limit_enabled`, `guest_rate_limit_tickets_per_minute` and `guest_rate_limit_replies_per_minute` settings or the `escalated_guest_rate_limit` filter. Sites behind a proxy must rewrite `REMOTE_ADDR` from the trusted proxy's forwarded header, or every guest shares one IP.
 
