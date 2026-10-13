@@ -142,19 +142,20 @@ class Test_Skills_Admin_Api extends WP_UnitTestCase
 
         $did = Department::create([
             'name' => 'Support',
-            'slug' => 'support',
+            'slug' => 'support-'.wp_generate_uuid4(),
             'description' => '',
             'is_active' => 1,
         ]);
         $this->assertNotFalse($did);
 
         $sid = SkillService::create([
-            'name' => 'Billing',
+            'name' => 'Billing '.wp_generate_uuid4(),
             'routing_tag_ids' => [],
             'routing_department_ids' => [(int) $did],
             'agents' => [],
         ]);
 
+        $this->assertIsInt($sid);
         $request = new WP_REST_Request('GET', '/escalated/v1/admin/skills/'.$sid.'/edit');
         $response = $this->server->dispatch($request);
         $this->assertEquals(200, $response->get_status());

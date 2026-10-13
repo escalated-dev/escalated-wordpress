@@ -10,7 +10,7 @@ class WorkflowEngine
      * The actions WorkflowExecutorService handles: the contract's core
      * catalog plus add_follower, delay, send_webhook and set_type.
      */
-    public const ACTION_TYPES = ['change_status', 'assign_agent', 'change_priority', 'add_tag', 'remove_tag', 'set_department', 'add_note', 'insert_canned_reply', 'send_webhook', 'set_type', 'delay', 'add_follower'];
+    public const ACTION_TYPES = ['change_status', 'assign_agent', 'change_priority', 'add_tag', 'remove_tag', 'set_department', 'change_department', 'add_note', 'insert_canned_reply', 'send_webhook', 'set_type', 'delay', 'add_follower'];
 
     public const TRIGGER_EVENTS = ['ticket.created', 'ticket.updated', 'ticket.status_changed', 'ticket.assigned', 'ticket.priority_changed', 'ticket.tagged', 'ticket.department_changed', 'reply.created', 'reply.agent_reply', 'sla.warning', 'sla.breached', 'ticket.reopened'];
 
@@ -52,7 +52,23 @@ class WorkflowEngine
         $field = $condition['field'] ?? '';
         $operator = $condition['operator'] ?? 'equals';
         $expected = $condition['value'] ?? '';
+        if ($field === 'account') {
+            $account = TicketAccounts::identity($expected);
+            if ($account === null || ! in_array($operator, ['equals', 'not_equals', '=', '!=', '<>'], true)) {
+                return false;
+            }
+            $actual_account = TicketAccounts::identity(['type' => $ticket['account_type'] ?? null, 'id' => $ticket['account_id'] ?? null]);
+            if ($actual_account === null) {
+                return false;
+            }
+            $matches = $account === $actual_account;
+
+            return in_array($operator, ['not_equals', '!=', '<>'], true) ? ! $matches : $matches;
+        }
         $actual = $ticket[$field] ?? '';
+        if (! is_scalar($actual) || ! is_scalar($expected)) {
+            return false;
+        }
 
         return self::applyOperator($operator, (string) $actual, (string) $expected);
     }

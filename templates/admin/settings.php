@@ -27,6 +27,25 @@ $s = function ($key, $default = '') use ($settings) {
         <input type="hidden" name="escalated_settings_action" value="save">
         <?php wp_nonce_field('escalated_settings_save', '_escalated_nonce'); ?>
 
+        <h2 class="title"><?php esc_html_e('Ticket access and routing', 'escalated'); ?></h2>
+        <table class="form-table" role="presentation">
+            <tr><th><label for="visibility"><?php esc_html_e('Agent visibility', 'escalated'); ?></label></th><td>
+                <select id="visibility" name="visibility">
+                    <option value="all" <?php selected($s('visibility', 'all'), 'all'); ?>><?php esc_html_e('All tickets', 'escalated'); ?></option>
+                    <option value="department" <?php selected($s('visibility', 'all'), 'department'); ?>><?php esc_html_e('Agent departments', 'escalated'); ?></option>
+                </select>
+                <p class="description"><?php esc_html_e('Department visibility hides unassigned departments from agents. Administrators retain full access.', 'escalated'); ?></p>
+            </td></tr>
+            <?php foreach (['accounts_enabled' => __('Enable ticket accounts', 'escalated'), 'accounts_scope_agents' => __('Restrict agents to their account', 'escalated'), 'targeted_slas' => __('Select SLAs by department and ticket type', 'escalated')] as $key => $label) { ?>
+                <tr><th><?php echo esc_html($label); ?></th><td><label>
+                    <input type="hidden" name="<?php echo esc_attr($key); ?>" value="0">
+                    <input type="checkbox" name="<?php echo esc_attr($key); ?>" value="1" <?php checked($s($key, '0'), '1'); ?>>
+                    <?php esc_html_e('Enabled', 'escalated'); ?>
+                </label></td></tr>
+            <?php } ?>
+        </table>
+        <p class="description"><?php esc_html_e('Account resolution must be configured by your site integration before restricting agents by account.', 'escalated'); ?></p>
+
         <!-- General Settings -->
         <h2 class="title"><?php esc_html_e('General', 'escalated'); ?></h2>
         <table class="form-table" role="presentation">

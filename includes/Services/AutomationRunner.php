@@ -81,6 +81,12 @@ class AutomationRunner
             $value = $condition['value'] ?? '';
 
             switch ($field) {
+                case 'ticket_type':
+                case 'account':
+                case 'account_type':
+                case 'account_id':
+                    $where[] = TicketRoutingConditions::sql($condition);
+                    break;
                 case 'hours_since_created':
                     $threshold = gmdate('Y-m-d H:i:s', strtotime($now) - (absint($value) * 3600));
                     $sql_op = $this->resolve_operator($operator);
@@ -121,9 +127,9 @@ class AutomationRunner
                     }
                     break;
 
-                case 'ticket_type':
-                    $where[] = 't.ticket_type = %s';
-                    $values[] = sanitize_text_field($value);
+                case 'department_id':
+                    $where[] = 't.department_id = %d';
+                    $values[] = absint($value);
                     break;
 
                 case 'subject_contains':

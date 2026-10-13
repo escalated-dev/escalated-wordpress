@@ -87,11 +87,14 @@ class TicketSubjectService
             );
         }
 
+        TicketAccess::require_ticket($ticket_id);
         $link = TicketSubjectLink::upsert($ticket_id, $type, $id, $role, $position);
 
         if ($link === null) {
             throw new \RuntimeException('Failed to attach ticket subject.');
         }
+
+        TicketAccounts::from_subject($ticket_id, $type, $id);
 
         return $link;
     }

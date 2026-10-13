@@ -95,6 +95,14 @@ class Agent_Controller extends Base_Controller
 
         $agents = array_values($agents_map);
 
+        if ($request->has_param('ticket_id')) {
+            $ticket_id = absint($request->get_param('ticket_id'));
+            if (! \Escalated\Models\Ticket::find($ticket_id)) {
+                return $this->error('escalated_not_found', __('Ticket not found.', 'escalated'), 404);
+            }
+            $agents = array_values(array_filter($agents, static fn ($agent) => \Escalated\Services\TicketAccess::can_receive($ticket_id, (int) $agent['id'])));
+        }
+
         // Optional search filter (client-side filter for simplicity).
         if ($request->has_param('search')) {
             $search = strtolower(sanitize_text_field($request->get_param('search')));

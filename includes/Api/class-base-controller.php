@@ -66,7 +66,13 @@ abstract class Base_Controller extends WP_REST_Controller
         $ip = $request->get_header('X-Forwarded-For') ?? ($_SERVER['REMOTE_ADDR'] ?? '');
         ApiToken::update_last_used($token_record->id, $ip);
 
-        return (int) $token_record->user_id;
+        $user_id = (int) $token_record->user_id;
+        if (\Escalated\Services\TicketAccess::enabled() && ! \Escalated\Services\TicketAccess::is_staff($user_id)) {
+            return null;
+        }
+        \Escalated\Services\TicketAccess::token_actor($request, $user_id);
+
+        return $user_id;
     }
 
     /**

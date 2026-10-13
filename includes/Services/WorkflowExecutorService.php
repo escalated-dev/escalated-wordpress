@@ -176,6 +176,7 @@ class WorkflowExecutorService
                 $this->assign_agent($ticket_id, $value);
                 break;
 
+            case 'change_department':
             case 'set_department':
                 $this->set_department($ticket_id, $value);
                 break;

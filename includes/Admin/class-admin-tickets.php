@@ -120,6 +120,7 @@ class Admin_Tickets
         ]);
 
         // Get followers.
+        $agents = array_values(array_filter($agents, static fn ($agent) => \Escalated\Services\TicketAccess::can_receive($ticket_id, (int) $agent->ID)));
         $wpdb = \Escalated\Escalated::db();
         $followers_table = \Escalated\Escalated::table('ticket_followers');
         $follower_ids = $wpdb->get_col(

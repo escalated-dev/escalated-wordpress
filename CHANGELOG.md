@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- Opt-in department visibility and account restrictions across ticket queries, child records, REST tokens, reports, widget lookups, assignment and notifications. Administrators retain access; existing installations default to unrestricted staff visibility.
+- Nullable indexed ticket account identities with host requester/subject and agent resolver hooks. Escalation rules, workflows and automations support exact account and ticket-type conditions.
+- Optional department/type SLA targets and settings controls. Department moves preserve SLA deadlines; explicit reselection uses the original creation time.
+
+### Fixed
+- Install ticket links before their first API read and run schema updates on the configured package database. Upgrades preserve existing rows and support custom prefixes.
+- Invoke the assignment service correctly from the token API and report ineligible assignees as validation errors.
+
 ## [1.6.0] - 2026-10-08
 
 This release changes how inbound email is matched to tickets. Read

@@ -45,6 +45,8 @@ class TicketSplitService
             'description' => $reply->body,
             'status' => 'open',
             'priority' => $source_ticket->priority,
+            'account_type' => $source_ticket->account_type ?? null,
+            'account_id' => $source_ticket->account_id ?? null,
             'ticket_type' => $source_ticket->ticket_type ?? 'question',
             'channel' => $source_ticket->channel ?? 'web',
             'department_id' => $source_ticket->department_id,
@@ -112,7 +114,6 @@ class TicketSplitService
         $table = Escalated::table('ticket_links');
 
         // Create the links table if it doesn't exist.
-        $this->ensure_links_table();
 
         $now = current_time('mysql');
 
@@ -152,30 +153,5 @@ class TicketSplitService
                 $ticket_id
             )
         ) ?: [];
-    }
-
-    /**
-     * Ensure the ticket_links table exists.
-     */
-    private function ensure_links_table(): void
-    {
-        $wpdb = \Escalated\Escalated::db();
-        $table = Escalated::table('ticket_links');
-        $charset_collate = $wpdb->get_charset_collate();
-
-        require_once ABSPATH.'wp-admin/includes/upgrade.php';
-
-        $sql = "CREATE TABLE {$table} (
-            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-            ticket_id BIGINT UNSIGNED NOT NULL,
-            linked_ticket_id BIGINT UNSIGNED NOT NULL,
-            link_type VARCHAR(50) DEFAULT 'split',
-            created_at DATETIME,
-            PRIMARY KEY  (id),
-            KEY ticket_id (ticket_id),
-            KEY linked_ticket_id (linked_ticket_id)
-        ) $charset_collate;";
-
-        dbDelta($sql);
     }
 }

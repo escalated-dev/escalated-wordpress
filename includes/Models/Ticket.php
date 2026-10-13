@@ -78,12 +78,21 @@ class Ticket
         $table = static::table();
         $now = current_time('mysql');
 
+        $data = \Escalated\Services\TicketAccounts::for_requester($data);
+        if (! empty($data['assigned_to']) && ! \Escalated\Services\TicketAccess::allows($data, (int) $data['assigned_to'])) {
+            throw new \InvalidArgumentException('Agent cannot access this ticket.');
+        }
         $data['created_at'] = $now;
         $data['updated_at'] = $now;
 
         $result = $wpdb->insert($table, $data);
 
-        return $result !== false ? $wpdb->insert_id : false;
+        $id = $result !== false ? $wpdb->insert_id : false;
+        if ($id && Setting::get_bool('targeted_slas')) {
+            (new \Escalated\Services\SlaService)->attach_default_policy((int) $id);
+        }
+
+        return $id;
     }
 
     /**
@@ -97,7 +106,23 @@ class Ticket
         $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
+        if (! \Escalated\Services\TicketAccess::enabled()) {
+            $data['updated_at'] = current_time('mysql');
+
+            return $wpdb->update($table, $data, ['id' => $id]) !== false;
+        }
+        $ticket = \Escalated\Services\TicketAccess::require_ticket((int) $id);
+        $prospective = array_merge((array) $ticket, $data);
+        if (! empty($prospective['assigned_to']) && ! \Escalated\Services\TicketAccess::allows($prospective, (int) $prospective['assigned_to'])) {
+            if (array_key_exists('assigned_to', $data) && $data['assigned_to'] !== null) {
+                throw new \InvalidArgumentException('Agent cannot access this ticket.');
+            }
+            $data['assigned_to'] = null;
+        }
         $data['updated_at'] = current_time('mysql');
+        if (array_key_exists('assigned_to', $data)) {
+            return \Escalated\Services\TicketAccess::without_restriction(static fn () => $wpdb->update($table, $data, ['id' => $id]) !== false);
+        }
 
         return $wpdb->update($table, $data, ['id' => $id]) !== false;
     }
@@ -171,6 +196,12 @@ class Ticket
         $values = [];
         $join = '';
         $group_by = '';
+
+        if (array_key_exists('account_type', $filters) || array_key_exists('account_id', $filters)) {
+            $where[] = \Escalated\Services\TicketRoutingConditions::sql([
+                'field' => 'account', 'value' => ['type' => $filters['account_type'] ?? null, 'id' => $filters['account_id'] ?? null],
+            ]);
+        }
 
         // Status filter.
         if (! empty($filters['status'])) {

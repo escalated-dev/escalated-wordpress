@@ -291,6 +291,12 @@ class NotificationService
      */
     public function notify_ticket_created(object $ticket): void
     {
+        if (TicketAccess::enabled()) {
+            $ticket = TicketAccess::without_restriction(static fn () => \Escalated\Models\Ticket::find((int) $ticket->id));
+            if (! $ticket) {
+                return;
+            }
+        }
         $site_name = get_bloginfo('name');
         $admin_email = get_option('admin_email');
 
@@ -388,6 +394,7 @@ class NotificationService
          * @param  object  $ticket  The ticket object.
          */
         $recipients = apply_filters('escalated_notify_ticket_created_recipients', $recipients, $ticket);
+        $recipients = $this->authorized_recipients($recipients, $ticket);
 
         $headers = [
             'Content-Type: text/plain; charset=UTF-8',
@@ -415,6 +422,12 @@ class NotificationService
      */
     public function notify_reply_created(object $reply, object $ticket): void
     {
+        if (TicketAccess::enabled()) {
+            $ticket = TicketAccess::without_restriction(static fn () => \Escalated\Models\Ticket::find((int) $ticket->id));
+            if (! $ticket) {
+                return;
+            }
+        }
         // Do not send external notifications for internal notes.
         $is_internal = ! empty($reply->is_internal_note);
 
@@ -537,6 +550,7 @@ class NotificationService
          * @param  object  $ticket  The ticket object.
          */
         $recipients = apply_filters('escalated_notify_reply_created_recipients', $recipients, $reply, $ticket);
+        $recipients = $this->authorized_recipients($recipients, $ticket, ! $is_internal);
 
         $headers = [
             'Content-Type: text/plain; charset=UTF-8',
@@ -559,6 +573,24 @@ class NotificationService
      * @param  object  $ticket  The ticket object.
      * @return string The requester's display name, or guest name/email.
      */
+    private function authorized_recipients(array $recipients, object $ticket, bool $public_reply = false): array
+    {
+        if (! TicketAccess::enabled()) {
+            return $recipients;
+        }
+        $requester = ! empty($ticket->requester_id) ? get_userdata((int) $ticket->requester_id) : null;
+        $requester_email = $requester ? $requester->user_email : ($ticket->guest_email ?? null);
+
+        return array_values(array_filter($recipients, static function ($email) use ($ticket, $public_reply, $requester_email) {
+            $user = get_user_by('email', $email);
+            if ($user && TicketAccess::is_staff((int) $user->ID)) {
+                return TicketAccess::can_receive((int) $ticket->id, (int) $user->ID);
+            }
+
+            return $public_reply && $requester_email && strcasecmp($email, $requester_email) === 0;
+        }));
+    }
+
     protected function get_requester_name(object $ticket): string
     {
         if (! empty($ticket->requester_id)) {

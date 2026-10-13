@@ -106,4 +106,8 @@ jobs:
           echo "WordPress test suite installed successfully"
 
       - name: Run PHPUnit
-        run: vendor/bin/phpunit
+        env:
+          ESCALATED_ACCESS_TEST_DB: wordpress_access_separate
+        run: |
+          mysql -h 127.0.0.1 -u root -proot -e 'CREATE DATABASE IF NOT EXISTS wordpress_access_separate'
+          vendor/bin/phpunit
