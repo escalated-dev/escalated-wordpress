@@ -58,6 +58,9 @@ A full-featured helpdesk and ticketing system for WordPress with multi-role supp
 
 ## Features
 
+Configure opt-in department/account access and targeted SLAs using the
+[ticket access and routing guide](docs/ticket-access-and-routing.md).
+
 - Ticket management with threaded conversations, internal notes, and activity timeline.
 - Custom support roles: `escalated_admin` and `escalated_agent`.
 - Department-based routing and assignment workflows.

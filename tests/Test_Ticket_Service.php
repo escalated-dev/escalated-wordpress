@@ -547,16 +547,18 @@ class Test_Ticket_Service extends WP_UnitTestCase
         $dept_table = \Escalated\Escalated::table('departments');
 
         $wpdb->insert($dept_table, [
-            'name' => 'Sales', 'slug' => 'sales', 'is_active' => 1,
+            'name' => 'Sales', 'slug' => 'sales-'.wp_generate_uuid4(), 'is_active' => 1,
             'created_at' => current_time('mysql'), 'updated_at' => current_time('mysql'),
         ]);
         $sales_id = $wpdb->insert_id;
+        $this->assertGreaterThan(0, $sales_id);
 
         $wpdb->insert($dept_table, [
-            'name' => 'Support', 'slug' => 'support', 'is_active' => 1,
+            'name' => 'Support', 'slug' => 'support-'.wp_generate_uuid4(), 'is_active' => 1,
             'created_at' => current_time('mysql'), 'updated_at' => current_time('mysql'),
         ]);
         $support_id = $wpdb->insert_id;
+        $this->assertGreaterThan(0, $support_id);
 
         $ticket = $this->create_ticket(['department_id' => $sales_id]);
         $updated = $this->service->change_department((int) $ticket->id, $support_id, $this->agent_id);

@@ -4,6 +4,8 @@ namespace Escalated;
 
 class Activator
 {
+    public const SCHEMA_VERSION = 'ticket-access-1';
+
     /**
      * Run on plugin activation.
      *
@@ -22,6 +24,7 @@ class Activator
         self::schedule_cron_events();
 
         update_option('escalated_version', ESCALATED_VERSION);
+        update_option('escalated_schema_version', self::SCHEMA_VERSION);
         flush_rewrite_rules();
     }
 
@@ -53,7 +56,7 @@ class Activator
      */
     public static function maybe_upgrade(): void
     {
-        if (get_option('escalated_version') === ESCALATED_VERSION) {
+        if (get_option('escalated_version') === ESCALATED_VERSION && get_option('escalated_schema_version') === self::SCHEMA_VERSION) {
             return;
         }
 
@@ -66,6 +69,7 @@ class Activator
         self::schedule_cron_events();
 
         update_option('escalated_version', ESCALATED_VERSION);
+        update_option('escalated_schema_version', self::SCHEMA_VERSION);
     }
 
     /**
@@ -102,7 +106,7 @@ class Activator
             PRIMARY KEY  (id),
             UNIQUE KEY slug (slug)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // 2. escalated_department_agent
         $sql = "CREATE TABLE {$prefix}department_agent (
@@ -110,7 +114,7 @@ class Activator
             user_id BIGINT UNSIGNED NOT NULL,
             PRIMARY KEY  (department_id, user_id)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // 3. escalated_sla_policies
         $sql = "CREATE TABLE {$prefix}sla_policies (
@@ -118,6 +122,8 @@ class Activator
             name VARCHAR(255),
             description TEXT,
             is_default TINYINT(1) DEFAULT 0,
+            department_id BIGINT UNSIGNED NULL,
+            ticket_type VARCHAR(50) NULL,
             first_response_hours TEXT,
             resolution_hours TEXT,
             business_hours_only TINYINT(1) DEFAULT 0,
@@ -126,7 +132,7 @@ class Activator
             updated_at DATETIME,
             PRIMARY KEY  (id)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // 4. escalated_tickets
         $sql = "CREATE TABLE {$prefix}tickets (
@@ -139,6 +145,8 @@ class Activator
             status VARCHAR(50) DEFAULT 'open',
             priority VARCHAR(50) DEFAULT 'medium',
             ticket_type VARCHAR(50) DEFAULT 'question',
+            account_type VARCHAR(191) NULL,
+            account_id VARCHAR(191) NULL,
             channel VARCHAR(50) DEFAULT 'web',
             department_id BIGINT UNSIGNED NULL,
             sla_policy_id BIGINT UNSIGNED NULL,
@@ -160,9 +168,22 @@ class Activator
             PRIMARY KEY  (id),
             UNIQUE KEY reference (reference),
             UNIQUE KEY guest_token (guest_token),
-            KEY contact_id (contact_id)
+            KEY contact_id (contact_id),
+            KEY account (account_type, account_id)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
+
+        $sql = "CREATE TABLE {$prefix}ticket_links (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            ticket_id BIGINT UNSIGNED NOT NULL,
+            linked_ticket_id BIGINT UNSIGNED NOT NULL,
+            link_type VARCHAR(50) DEFAULT 'split',
+            created_at DATETIME,
+            PRIMARY KEY  (id),
+            KEY ticket_id (ticket_id),
+            KEY linked_ticket_id (linked_ticket_id)
+        ) $charset_collate;";
+        Escalated::schema_delta($sql);
 
         // 4b. escalated_contacts (Pattern B convergence — first-class
         // identity for guest requesters, deduped by email).
@@ -178,7 +199,7 @@ class Activator
             UNIQUE KEY email (email),
             KEY user_id (user_id)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // 5. escalated_replies
         $sql = "CREATE TABLE {$prefix}replies (
@@ -196,7 +217,7 @@ class Activator
             PRIMARY KEY  (id),
             KEY ticket_id (ticket_id)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // 6. escalated_attachments
         $sql = "CREATE TABLE {$prefix}attachments (
@@ -212,7 +233,7 @@ class Activator
             PRIMARY KEY  (id),
             KEY attachable (attachable_type, attachable_id)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // 7. escalated_tags
         $sql = "CREATE TABLE {$prefix}tags (
@@ -225,7 +246,7 @@ class Activator
             PRIMARY KEY  (id),
             UNIQUE KEY slug (slug)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // 8. escalated_ticket_tag
         $sql = "CREATE TABLE {$prefix}ticket_tag (
@@ -233,7 +254,7 @@ class Activator
             tag_id BIGINT UNSIGNED NOT NULL,
             PRIMARY KEY  (ticket_id, tag_id)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // 9. escalated_ticket_activities
         $sql = "CREATE TABLE {$prefix}ticket_activities (
@@ -246,7 +267,7 @@ class Activator
             PRIMARY KEY  (id),
             KEY ticket_id (ticket_id)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // 10. escalated_escalation_rules
         $sql = "CREATE TABLE {$prefix}escalation_rules (
@@ -262,7 +283,7 @@ class Activator
             updated_at DATETIME,
             PRIMARY KEY  (id)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // 11. escalated_canned_responses
         $sql = "CREATE TABLE {$prefix}canned_responses (
@@ -276,7 +297,7 @@ class Activator
             updated_at DATETIME,
             PRIMARY KEY  (id)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // 12. escalated_macros
         $sql = "CREATE TABLE {$prefix}macros (
@@ -291,7 +312,7 @@ class Activator
             updated_at DATETIME,
             PRIMARY KEY  (id)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // 13. escalated_inbound_emails
         $sql = "CREATE TABLE {$prefix}inbound_emails (
@@ -314,7 +335,7 @@ class Activator
             PRIMARY KEY  (id),
             UNIQUE KEY message_id (message_id)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // 14. escalated_ticket_followers
         $sql = "CREATE TABLE {$prefix}ticket_followers (
@@ -323,7 +344,7 @@ class Activator
             created_at DATETIME,
             PRIMARY KEY  (ticket_id, user_id)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // 15. escalated_satisfaction_ratings
         $sql = "CREATE TABLE {$prefix}satisfaction_ratings (
@@ -336,7 +357,7 @@ class Activator
             PRIMARY KEY  (id),
             UNIQUE KEY ticket_id (ticket_id)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // 16. escalated_settings
         $sql = "CREATE TABLE {$prefix}settings (
@@ -348,7 +369,7 @@ class Activator
             PRIMARY KEY  (id),
             UNIQUE KEY option_key (option_key)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // 17. escalated_api_tokens
         $sql = "CREATE TABLE {$prefix}api_tokens (
@@ -365,7 +386,7 @@ class Activator
             PRIMARY KEY  (id),
             UNIQUE KEY token (token)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // 18. escalated_permissions
         $sql = "CREATE TABLE {$prefix}permissions (
@@ -379,7 +400,7 @@ class Activator
             PRIMARY KEY  (id),
             UNIQUE KEY slug (slug)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // 19. escalated_roles
         $sql = "CREATE TABLE {$prefix}roles (
@@ -393,7 +414,7 @@ class Activator
             PRIMARY KEY  (id),
             UNIQUE KEY slug (slug)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // 20. escalated_role_permissions (pivot)
         $sql = "CREATE TABLE {$prefix}role_permissions (
@@ -401,7 +422,7 @@ class Activator
             permission_id BIGINT UNSIGNED NOT NULL,
             PRIMARY KEY  (role_id, permission_id)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // 21. escalated_role_users (pivot)
         $sql = "CREATE TABLE {$prefix}role_users (
@@ -409,7 +430,7 @@ class Activator
             user_id BIGINT UNSIGNED NOT NULL,
             PRIMARY KEY  (role_id, user_id)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // 22. escalated_automations
         $sql = "CREATE TABLE {$prefix}automations (
@@ -425,7 +446,7 @@ class Activator
             PRIMARY KEY  (id),
             KEY active (active)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // escalated_workflows — event-driven workflow rows fired by
         // WorkflowRunnerService. Distinct from automations (time-based
@@ -445,7 +466,7 @@ class Activator
             KEY trigger_active (trigger_event, is_active),
             KEY position (position)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // escalated_workflow_logs — one row per workflow firing attempt.
         $sql = "CREATE TABLE {$prefix}workflow_logs (
@@ -463,7 +484,7 @@ class Activator
             KEY workflow_id (workflow_id),
             KEY ticket_id (ticket_id)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // escalated_chat_sessions
         $sql = "CREATE TABLE {$prefix}chat_sessions (
@@ -484,7 +505,7 @@ class Activator
             KEY status (status),
             KEY agent_id (agent_id)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // escalated_chat_routing_rules
         $sql = "CREATE TABLE {$prefix}chat_routing_rules (
@@ -500,7 +521,7 @@ class Activator
             PRIMARY KEY  (id),
             KEY priority (priority)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // escalated_deferred_workflow_jobs — queue row for the `delay`
         // workflow action. Cron\Deferred_Workflow_Jobs_Check polls for
@@ -517,7 +538,7 @@ class Activator
             PRIMARY KEY  (id),
             KEY status_runat (status, run_at)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // escalated_skills — admin-managed capabilities for routing + agent proficiency.
         $sql = "CREATE TABLE {$prefix}skills (
@@ -531,7 +552,7 @@ class Activator
             UNIQUE KEY slug (slug),
             UNIQUE KEY name (name)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // escalated_skill_routing_tags — explicit tag → skill routing (ADR 2026-05-13).
         $sql = "CREATE TABLE {$prefix}skill_routing_tags (
@@ -542,7 +563,7 @@ class Activator
             UNIQUE KEY skill_tag (skill_id, tag_id),
             KEY tag_id (tag_id)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // escalated_skill_routing_departments — explicit department → skill routing.
         $sql = "CREATE TABLE {$prefix}skill_routing_departments (
@@ -553,7 +574,7 @@ class Activator
             UNIQUE KEY skill_department (skill_id, department_id),
             KEY department_id (department_id)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // escalated_agent_skills — user_id + proficiency junction (portable pattern).
         $sql = "CREATE TABLE {$prefix}agent_skills (
@@ -567,7 +588,7 @@ class Activator
             UNIQUE KEY user_skill (user_id, skill_id),
             KEY skill_id (skill_id)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // escalated_ticket_subjects — host entities a ticket is *about* (polymorphic).
         $sql = "CREATE TABLE {$prefix}ticket_subjects (
@@ -584,7 +605,7 @@ class Activator
             UNIQUE KEY ticket_subject_unique (ticket_id, subject_type, subject_id),
             KEY subject_lookup (subject_type, subject_id)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // 31. escalated_agent_capacity
         $sql = "CREATE TABLE {$prefix}agent_capacity (
@@ -598,7 +619,7 @@ class Activator
             PRIMARY KEY  (id),
             UNIQUE KEY user_channel (user_id, channel)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // 32. escalated_side_conversations
         $sql = "CREATE TABLE {$prefix}side_conversations (
@@ -613,7 +634,7 @@ class Activator
             PRIMARY KEY  (id),
             KEY ticket_id (ticket_id)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // 33. escalated_side_conversation_replies
         $sql = "CREATE TABLE {$prefix}side_conversation_replies (
@@ -626,7 +647,7 @@ class Activator
             PRIMARY KEY  (id),
             KEY side_conversation_id (side_conversation_id)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // 34. escalated_two_factors — per-user TOTP secret + single-use
         // recovery codes. One row per user. `secret` is encrypted at rest;
@@ -644,7 +665,7 @@ class Activator
             PRIMARY KEY  (id),
             UNIQUE KEY user_id (user_id)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // 35. escalated_article_categories — knowledge base category tree.
         // Self-referencing parent_id, ordered by position then name. Mirrors
@@ -662,7 +683,7 @@ class Activator
             UNIQUE KEY slug (slug),
             KEY parent_id (parent_id)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // 36. escalated_articles — knowledge base articles. draft/published
         // status with published_at, a unique slug, optional category + author,
@@ -687,7 +708,7 @@ class Activator
             KEY category_id (category_id),
             KEY status (status)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // 37. escalated_audit_logs — system-wide audit trail for admin /
         // configuration / security / user actions that happen outside a single
@@ -712,7 +733,7 @@ class Activator
             KEY action (action),
             KEY created_at (created_at)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
     }
 
     /**
@@ -1104,7 +1125,7 @@ class Activator
             KEY kind (kind),
             KEY created_by (created_by)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         $sql = "CREATE TABLE {$prefix}newsletter_list_members (
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -1116,7 +1137,7 @@ class Activator
             UNIQUE KEY list_contact (list_id, contact_id),
             KEY contact_id (contact_id)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         $sql = "CREATE TABLE {$prefix}newsletter_templates (
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -1132,7 +1153,7 @@ class Activator
             KEY theme (theme),
             KEY created_by (created_by)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         $sql = "CREATE TABLE {$prefix}newsletters (
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -1163,7 +1184,7 @@ class Activator
             KEY status_sched (status, scheduled_at),
             KEY created_by (created_by)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         $sql = "CREATE TABLE {$prefix}newsletter_deliveries (
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -1189,7 +1210,7 @@ class Activator
             KEY contact_id (contact_id),
             KEY status_claimed (status, claimed_at)
         ) $charset_collate;";
-        dbDelta($sql);
+        Escalated::schema_delta($sql);
 
         // Add marketing_opt_out_at column to contacts if it doesn't exist.
         $contacts_table = $prefix.'contacts';

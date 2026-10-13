@@ -23,6 +23,7 @@ class Escalated
 
     public function boot(): void
     {
+        Services\TicketAccess::register();
         $this->load_translations();
 
         // Register custom cron intervals.
@@ -112,6 +113,19 @@ class Escalated
     public static function flush_db(): void
     {
         self::$db = null;
+    }
+
+    /** dbDelta uses WordPress's global connection internally. Restore it even on failure. */
+    public static function schema_delta(string $sql): array
+    {
+        global $wpdb;
+        $original = $wpdb;
+        $wpdb = self::db();
+        try {
+            return Services\TicketAccess::without_restriction(static fn () => dbDelta($sql));
+        } finally {
+            $wpdb = $original;
+        }
     }
 
     public static function table(string $name): string

@@ -22,9 +22,24 @@ class SlaService
         $wpdb = \Escalated\Escalated::db();
 
         $table = Escalated::table('sla_policies');
-        $policy = $wpdb->get_row(
-            "SELECT * FROM {$table} WHERE is_default = 1 AND is_active = 1 LIMIT 1"
-        );
+        $ticket = Ticket::find($ticket_id);
+        if (! $ticket) {
+            return false;
+        }
+        if (\Escalated\Models\Setting::get_bool('targeted_slas')) {
+            $policy = $wpdb->get_row($wpdb->prepare(
+                "SELECT * FROM {$table} WHERE is_active = 1
+                 AND (department_id IS NULL OR department_id = %d)
+                 AND (ticket_type IS NULL OR CAST(ticket_type AS BINARY) = CAST(%s AS BINARY))
+                 AND (department_id IS NOT NULL OR ticket_type IS NOT NULL OR is_default = 1)
+                 ORDER BY ((department_id IS NOT NULL) * 2 + (ticket_type IS NOT NULL)) DESC, id ASC LIMIT 1",
+                $ticket->department_id ?? 0, $ticket->ticket_type ?? 'question'
+            ));
+        } else {
+            $policy = $wpdb->get_row(
+                "SELECT * FROM {$table} WHERE is_default = 1 AND is_active = 1 LIMIT 1"
+            );
+        }
 
         if (! $policy) {
             return false;
@@ -72,6 +87,11 @@ class SlaService
         $update = [
             'sla_policy_id' => $policy->id,
         ];
+
+        if (\Escalated\Models\Setting::get_bool('targeted_slas')) {
+            $update['first_response_due_at'] = null;
+            $update['resolution_due_at'] = null;
+        }
 
         if ($fr_hours !== null) {
             $update['first_response_due_at'] = $this->calculate_due_date($now, $fr_hours, $business_hours_only);

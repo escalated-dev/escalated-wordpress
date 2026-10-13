@@ -148,6 +148,7 @@ class TicketService
      */
     public function update_ticket(int $ticket_id, array $data): object
     {
+        TicketAccess::require_ticket($ticket_id);
         $allowed = ['subject', 'description', 'metadata', 'ticket_type'];
         $update = [];
         foreach ($allowed as $key) {
@@ -425,20 +426,23 @@ class TicketService
      */
     public function change_department(int $ticket_id, int $department_id, ?int $causer_id = null): object
     {
-        $ticket = Ticket::find($ticket_id);
-        $old_department_id = $ticket->department_id;
+        $ticket = TicketAccess::require_ticket($ticket_id);
 
-        Ticket::update($ticket_id, ['department_id' => $department_id]);
+        return TicketAccess::without_restriction(function () use ($ticket_id, $department_id, $causer_id, $ticket) {
+            $old_department_id = $ticket->department_id;
 
-        $this->log_activity($ticket_id, $causer_id, 'department_changed', [
-            'old_department_id' => $old_department_id,
-            'new_department_id' => $department_id,
-        ]);
+            Ticket::update($ticket_id, ['department_id' => $department_id]);
 
-        $ticket = Ticket::find($ticket_id);
-        do_action('escalated_department_changed', $ticket, $old_department_id, $department_id, $causer_id);
+            $this->log_activity($ticket_id, $causer_id, 'department_changed', [
+                'old_department_id' => $old_department_id,
+                'new_department_id' => $department_id,
+            ]);
 
-        return $ticket;
+            $ticket = Ticket::find($ticket_id);
+            do_action('escalated_department_changed', $ticket, $old_department_id, $department_id, $causer_id);
+
+            return $ticket;
+        });
     }
 
     /**

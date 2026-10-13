@@ -115,6 +115,9 @@ class AssignmentService
         $lowest_count = PHP_INT_MAX;
 
         foreach ($agent_ids as $agent_id) {
+            if (! TicketAccess::can_receive($ticket_id, (int) $agent_id)) {
+                continue;
+            }
             $count = Ticket::count_for_agent((int) $agent_id);
             if ($count < $lowest_count) {
                 $lowest_count = $count;

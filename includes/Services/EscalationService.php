@@ -82,6 +82,12 @@ class EscalationService
             $value = $condition['value'] ?? '';
 
             switch ($field) {
+                case 'ticket_type':
+                case 'account':
+                case 'account_type':
+                case 'account_id':
+                    $where[] = TicketRoutingConditions::sql($condition);
+                    break;
                 case 'status':
                     $where[] = 't.status = %s';
                     $values[] = sanitize_text_field($value);

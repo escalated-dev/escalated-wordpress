@@ -60,7 +60,7 @@ class SkillRoutingService
         $required = $this->required_skill_ids($ticket);
 
         if ($required === []) {
-            return $this->all_agents_by_load();
+            return array_values(array_filter($this->all_agents_by_load(), static fn ($agent) => TicketAccess::can_receive((int) $ticket->id, (int) $agent['id'])));
         }
 
         $wpdb = \Escalated\Escalated::db();
@@ -81,7 +81,7 @@ class SkillRoutingService
         $candidates = [];
         foreach ($rows as $row) {
             $user = get_userdata((int) $row->user_id);
-            if (! $user || ! Admin_Users::user_is_agent($user)) {
+            if (! $user || ! Admin_Users::user_is_agent($user) || ! TicketAccess::can_receive((int) $ticket->id, (int) $user->ID)) {
                 continue;
             }
             $candidates[] = [

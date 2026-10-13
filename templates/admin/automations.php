@@ -25,6 +25,10 @@ $condition_fields = [
     'priority' => __('Priority', 'escalated'),
     'assigned' => __('Assigned / Unassigned', 'escalated'),
     'ticket_type' => __('Ticket Type', 'escalated'),
+    'department_id' => __('Department', 'escalated'),
+    'account' => __('Account identity', 'escalated'),
+    'account_type' => __('Account type', 'escalated'),
+    'account_id' => __('Account ID', 'escalated'),
     'subject_contains' => __('Subject Contains', 'escalated'),
 ];
 

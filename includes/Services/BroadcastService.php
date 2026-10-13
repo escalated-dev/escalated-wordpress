@@ -135,7 +135,8 @@ class BroadcastService
      */
     public function push_event(string $type, array $payload): void
     {
-        $events = self::get_events_buffer();
+        $events = get_transient(self::TRANSIENT_KEY);
+        $events = is_array($events) ? $events : [];
 
         $event = [
             'id' => wp_generate_uuid4(),
@@ -177,7 +178,12 @@ class BroadcastService
     {
         $events = get_transient(self::TRANSIENT_KEY);
 
-        return is_array($events) ? $events : [];
+        $events = is_array($events) ? $events : [];
+        if (TicketAccess::restricted()) {
+            $events = array_values(array_filter($events, static fn (array $event) => ! empty($event['payload']['ticket_id']) && TicketAccess::can_receive((int) $event['payload']['ticket_id'], TicketAccess::actor())));
+        }
+
+        return $events;
     }
 
     /**

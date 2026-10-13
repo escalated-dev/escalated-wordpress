@@ -25,6 +25,11 @@ class ChatSessionService
      */
     public function start(string $visitor_name, ?string $visitor_email = null, ?string $initial_message = null, ?int $department_id = null): object
     {
+        $route = null;
+        if (TicketAccess::enabled() || \Escalated\Models\Setting::get_bool('targeted_slas')) {
+            $route = $this->routing->resolve($department_id);
+            $department_id = $route['department_id'] ?? $department_id;
+        }
         $ticket = $this->ticket_service->create_guest([
             'subject' => sprintf('Chat with %s', $visitor_name),
             'description' => $initial_message ?? '',
@@ -34,7 +39,10 @@ class ChatSessionService
             'department_id' => $department_id,
         ]);
 
-        $route = $this->routing->resolve($department_id);
+        $route ??= $this->routing->resolve($department_id);
+        if (! empty($route['agent_id']) && ! TicketAccess::can_receive((int) $ticket->id, (int) $route['agent_id'])) {
+            $route['agent_id'] = null;
+        }
 
         $session_data = [
             'ticket_id' => $ticket->id,
@@ -72,6 +80,10 @@ class ChatSessionService
 
         if ($session->status !== 'waiting') {
             throw new \InvalidArgumentException('Chat session is not in a waiting state.');
+        }
+
+        if (! TicketAccess::can_receive((int) $session->ticket_id, $agent_id)) {
+            throw new \InvalidArgumentException('Agent cannot access this ticket.');
         }
 
         ChatSession::update($session_id, [

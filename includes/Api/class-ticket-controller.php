@@ -423,6 +423,11 @@ class Ticket_Controller extends Base_Controller
             $filters['page'] = max(1, absint($request->get_param('page')));
         }
 
+        foreach (['account_type', 'account_id'] as $field) {
+            if ($request->has_param($field)) {
+                $filters[$field] = $request->get_param($field);
+            }
+        }
         $result = Ticket::all($filters);
 
         return $this->success([
@@ -481,7 +486,18 @@ class Ticket_Controller extends Base_Controller
             $data['assigned_to'] = absint($request->get_param('assigned_to'));
         }
 
-        $ticket_id = Ticket::create($data);
+        if ($request->has_param('ticket_type')) {
+            $type = $request->get_param('ticket_type');
+            if (! in_array($type, ['question', 'incident', 'problem', 'task'], true)) {
+                return $this->error('escalated_invalid_type', __('Invalid ticket type.', 'escalated'), 422);
+            }
+            $data['ticket_type'] = $type;
+        }
+        try {
+            $ticket_id = Ticket::create($data);
+        } catch (\InvalidArgumentException $e) {
+            return $this->error('escalated_ticket_access', $e->getMessage(), 403);
+        }
 
         if ($ticket_id === false) {
             return $this->error('escalated_create_failed', __('Failed to create ticket.', 'escalated'), 500);
@@ -864,8 +880,11 @@ class Ticket_Controller extends Base_Controller
             return $this->error('escalated_invalid_agent_role', __('User is not an agent.', 'escalated'), 422);
         }
 
-        $old_assigned = $ticket->assigned_to;
-        AssignmentService::assign($ticket->id, $agent_id, $user_id);
+        try {
+            (new AssignmentService)->assign((int) $ticket->id, $agent_id, $user_id);
+        } catch (\InvalidArgumentException $e) {
+            return $this->error('escalated_invalid_assignment', $e->getMessage(), 422);
+        }
 
         $updated_ticket = Ticket::find($ticket->id);
 

@@ -55,6 +55,12 @@ class Admin_Settings
     private function fields(): array
     {
         return [
+            // Ticket access and routing (all opt-in).
+            'visibility' => 'sanitize_text_field',
+            'accounts_enabled' => 'absint',
+            'accounts_scope_agents' => 'absint',
+            'targeted_slas' => 'absint',
+
             // General
             'ticket_reference_prefix' => 'sanitize_text_field',
             'default_priority' => 'sanitize_text_field',
@@ -136,6 +142,9 @@ class Admin_Settings
                     continue;
                 }
 
+                if ($key === 'visibility' && ! in_array($value, ['all', 'department'], true)) {
+                    continue;
+                }
                 Setting::set($key, (string) $value);
             } else {
                 // Checkbox fields: if not present, store 0.

@@ -131,6 +131,24 @@ if ($edit_item) {
                     </td>
                 </tr>
                 <tr>
+                    <th scope="row"><?php esc_html_e('Applies to', 'escalated'); ?></th>
+                    <td>
+                        <label><?php esc_html_e('Department', 'escalated'); ?>
+                            <select name="department_id"><option value=""><?php esc_html_e('Any department', 'escalated'); ?></option>
+                            <?php foreach (\Escalated\Models\Department::all() as $department) { ?>
+                                <option value="<?php echo esc_attr($department->id); ?>" <?php selected($edit_item->department_id ?? '', $department->id); ?>><?php echo esc_html($department->name); ?></option>
+                            <?php } ?></select>
+                        </label>
+                        <label><?php esc_html_e('Ticket type', 'escalated'); ?>
+                            <select name="ticket_type"><option value=""><?php esc_html_e('Any type', 'escalated'); ?></option>
+                            <?php foreach (['question', 'incident', 'problem', 'task'] as $type) { ?>
+                                <option value="<?php echo esc_attr($type); ?>" <?php selected($edit_item->ticket_type ?? '', $type); ?>><?php echo esc_html(ucfirst($type)); ?></option>
+                            <?php } ?></select>
+                        </label>
+                        <p class="description"><?php esc_html_e('Targets apply when targeted SLAs are enabled in settings. Moving a ticket preserves its existing SLA clock.', 'escalated'); ?></p>
+                    </td>
+                </tr>
+                <tr>
                     <th scope="row"><?php esc_html_e('Options', 'escalated'); ?></th>
                     <td>
                         <label style="display: block; margin-bottom: 8px;">
