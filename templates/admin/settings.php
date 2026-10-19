@@ -21,6 +21,10 @@ $s = function ($key, $default = '') use ($settings) {
         <div class="notice notice-success is-dismissible">
             <p><?php esc_html_e('Settings saved successfully.', 'escalated'); ?></p>
         </div>
+    <?php } elseif ($message === 'invalid_widget_origins') { ?>
+        <div class="notice notice-error is-dismissible">
+            <p><?php esc_html_e('Embedding sites were not saved: every entry must be an origin such as https://shop.example.com or https://*.example.com, with no path. Other settings were saved.', 'escalated'); ?></p>
+        </div>
     <?php } ?>
 
     <form method="post">
@@ -384,6 +388,64 @@ foreach ($priorities as $key => $data) {
                     <input type="number" id="activity_purge_days" name="activity_purge_days" class="small-text" min="0"
                            value="<?php echo esc_attr($s('activity_purge_days', '90')); ?>">
                     <p class="description"><?php esc_html_e('Activity log entries older than this will be automatically deleted. Set to 0 to keep forever.', 'escalated'); ?></p>
+                </td>
+            </tr>
+        </table>
+
+        <!-- Widget Settings -->
+        <h2 class="title"><?php esc_html_e('Widget', 'escalated'); ?></h2>
+        <table class="form-table" role="presentation">
+            <tr>
+                <th scope="row"><?php esc_html_e('Support Widget', 'escalated'); ?></th>
+                <td>
+                    <label for="widget_enabled">
+                        <input type="checkbox" id="widget_enabled" name="widget_enabled" value="1"
+                            <?php checked($s('widget_enabled', '0'), '1'); ?>>
+                        <?php esc_html_e('Enable the support widget', 'escalated'); ?>
+                    </label>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="widget_color"><?php esc_html_e('Widget Color', 'escalated'); ?></label>
+                </th>
+                <td>
+                    <input type="text" id="widget_color" name="widget_color" class="small-text"
+                           value="<?php echo esc_attr($s('widget_color', '#3B82F6')); ?>" placeholder="#3B82F6">
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="widget_position"><?php esc_html_e('Widget Position', 'escalated'); ?></label>
+                </th>
+                <td>
+                    <select id="widget_position" name="widget_position">
+                        <option value="bottom-right" <?php selected($s('widget_position', 'bottom-right'), 'bottom-right'); ?>><?php esc_html_e('Bottom right', 'escalated'); ?></option>
+                        <option value="bottom-left" <?php selected($s('widget_position', 'bottom-right'), 'bottom-left'); ?>><?php esc_html_e('Bottom left', 'escalated'); ?></option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="widget_greeting"><?php esc_html_e('Widget Greeting', 'escalated'); ?></label>
+                </th>
+                <td>
+                    <input type="text" id="widget_greeting" name="widget_greeting" class="regular-text"
+                           value="<?php echo esc_attr($s('widget_greeting', __('Hi there! How can we help?', 'escalated'))); ?>">
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="widget_allowed_origins"><?php esc_html_e('Embedding Sites', 'escalated'); ?></label>
+                </th>
+                <td>
+                    <textarea id="widget_allowed_origins" name="widget_allowed_origins" class="large-text code" rows="4"
+                              placeholder="https://shop.example.com"><?php echo esc_textarea($s('widget_allowed_origins')); ?></textarea>
+                    <p class="description"><?php esc_html_e('Other sites that may embed the widget, one per line, e.g. https://shop.example.com or https://*.example.com. Leave empty to allow none.', 'escalated'); ?></p>
+                    <p class="description"><?php
+                        /* translators: %s: the widget script URL. */
+                        printf(esc_html__('Embed code: %s', 'escalated'), '<code>'.esc_html('<script src="'.rest_url('escalated/v1/widget/embed.js').'" async></script>').'</code>');
+?></p>
                 </td>
             </tr>
         </table>

@@ -60,7 +60,7 @@ class TicketService
     /**
      * Create a new ticket for a guest (unauthenticated) user.
      *
-     * @param  array  $data  Ticket data including subject, description, guest_name, guest_email, etc.
+     * @param  array  $data  Ticket data including subject, description, guest_name, guest_email, metadata, etc.
      * @return object The created ticket.
      */
     public function create_guest(array $data): object
@@ -123,6 +123,7 @@ class TicketService
             'guest_email' => $guest_email,
             'guest_token' => wp_generate_password(64, false),
             'contact_id' => $contact_id,
+            'metadata' => ! empty($data['metadata']) ? wp_json_encode($data['metadata']) : null,
             'created_at' => $now,
             'updated_at' => $now,
         ];

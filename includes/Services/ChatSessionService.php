@@ -23,7 +23,7 @@ class ChatSessionService
     /**
      * Start a new chat session. Creates an underlying ticket with channel "chat".
      */
-    public function start(string $visitor_name, ?string $visitor_email = null, ?string $initial_message = null, ?int $department_id = null): object
+    public function start(string $visitor_name, ?string $visitor_email = null, ?string $initial_message = null, ?int $department_id = null, ?array $metadata = null): object
     {
         $route = null;
         if (TicketAccess::enabled() || \Escalated\Models\Setting::get_bool('targeted_slas')) {
@@ -52,6 +52,7 @@ class ChatSessionService
             'agent_id' => $route['agent_id'] ?? null,
             'status' => ! empty($route['agent_id']) ? 'active' : 'waiting',
             'accepted_at' => ! empty($route['agent_id']) ? current_time('mysql') : null,
+            'metadata' => ! empty($metadata) ? wp_json_encode($metadata) : null,
         ];
 
         $session_id = ChatSession::create($session_data);

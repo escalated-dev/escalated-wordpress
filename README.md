@@ -109,6 +109,10 @@ Guest ticket creation (widget `POST /widget/tickets` and the guest form) is limi
 - Counters are transients, so a persistent object cache (Redis, Memcached) shares them across servers.
 - The client IP is `REMOTE_ADDR`. Behind a proxy or CDN, rewrite it from the trusted proxy's forwarded header, or every guest shares one IP.
 
+### Embedding the widget on other sites
+
+List the sites under **Settings > Widget > Embedding Sites** (or the `ESCALATED_WIDGET_ALLOWED_ORIGINS` constant), then add `<script src="https://your-site/wp-json/escalated/v1/widget/embed.js" async></script>` to the other site. Only listed origins get CORS headers, and their requests always run as a guest. See [embedding the widget](docs/embedding-the-widget.md).
+
 ## REST API
 
 - Namespace: `/wp-json/escalated/v1`

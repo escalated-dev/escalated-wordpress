@@ -4,6 +4,7 @@ namespace Escalated\Admin;
 
 use Escalated\Models\AuditLog;
 use Escalated\Models\Setting;
+use Escalated\Services\WidgetOrigins;
 
 class Admin_Settings
 {
@@ -40,9 +41,10 @@ class Admin_Settings
             wp_die(esc_html__('Security check failed.', 'escalated'));
         }
 
-        $this->persist(wp_unslash($_POST));
+        $errors = $this->persist(wp_unslash($_POST));
 
-        $redirect = admin_url('admin.php?page=escalated-settings&message=saved');
+        $message = isset($errors['widget_allowed_origins']) ? 'invalid_widget_origins' : 'saved';
+        $redirect = admin_url('admin.php?page=escalated-settings&message='.$message);
         wp_safe_redirect($redirect);
         exit;
     }
@@ -106,6 +108,13 @@ class Admin_Settings
 
             // Maintenance
             'activity_purge_days' => 'absint',
+
+            // Widget
+            'widget_enabled' => 'absint',
+            'widget_color' => 'sanitize_hex_color',
+            'widget_position' => 'sanitize_text_field',
+            'widget_greeting' => 'sanitize_text_field',
+            'widget_allowed_origins' => 'sanitize_textarea_field',
         ];
     }
 
@@ -118,9 +127,11 @@ class Admin_Settings
      * webhook_secret) flow through here too, so webhook changes are audited.
      *
      * @param  array<string, mixed>  $input
+     * @return array<string, string> Validation errors keyed by field; those fields are not saved.
      */
-    public function persist(array $input): void
+    public function persist(array $input): array
     {
+        $errors = [];
         $fields = $this->fields();
 
         $audit_keys = array_merge(
@@ -145,6 +156,28 @@ class Admin_Settings
                 if ($key === 'visibility' && ! in_array($value, ['all', 'department'], true)) {
                     continue;
                 }
+
+                if ($key === 'widget_color' && ($value === null || $value === '')) {
+                    continue;
+                }
+
+                if ($key === 'widget_position' && ! in_array($value, ['bottom-right', 'bottom-left'], true)) {
+                    continue;
+                }
+
+                if ($key === 'widget_allowed_origins') {
+                    $value = trim(str_replace(["\r\n", "\r"], "\n", (string) $value));
+                    $invalid = WidgetOrigins::invalid_entries($value);
+                    if ($invalid !== []) {
+                        $errors[$key] = sprintf(
+                            /* translators: %s: the rejected entries. */
+                            __('Embedding sites must be origins such as https://shop.example.com or https://*.example.com. Not saved: %s', 'escalated'),
+                            implode(', ', $invalid)
+                        );
+
+                        continue;
+                    }
+                }
                 Setting::set($key, (string) $value);
             } else {
                 // Checkbox fields: if not present, store 0.
@@ -158,6 +191,7 @@ class Admin_Settings
                     'notification_ticket_assigned',
                     'notification_sla_warning',
                     'notification_sla_breach',
+                    'widget_enabled',
                 ], true)) {
                     Setting::set($key, '0');
                 }
@@ -199,6 +233,8 @@ class Admin_Settings
         if ($new_values !== []) {
             AuditLog::record('settings.updated', 'Settings', null, $old_values, $new_values);
         }
+
+        return $errors;
     }
 
     /**

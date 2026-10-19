@@ -14,6 +14,7 @@ class Api_Bootstrap
     public function register(): void
     {
         add_action('rest_api_init', [$this, 'register_routes']);
+        (new Widget_Cors)->register();
     }
 
     /**
@@ -36,6 +37,7 @@ class Api_Bootstrap
             new Audit_Log_Controller,
             new Events_Controller,
             new Widget_Controller,
+            new Widget_Script_Controller,
             new Article_Controller,
             new Article_Category_Controller,
             new Saved_View_Controller,
