@@ -7,6 +7,7 @@
 namespace Escalated\Api;
 
 use Escalated\Models\ChatSession;
+use Escalated\Models\SatisfactionRating;
 use Escalated\Models\Ticket;
 use Escalated\Services\ChatSessionService;
 use Escalated\Services\WidgetMetadata;
@@ -22,6 +23,20 @@ class Widget_Chat_Controller extends Base_Controller
      * @var string
      */
     protected $rest_base = 'widget/chat';
+
+    /**
+     * Path pattern for the chat id the widget uses: the ticket's random guest
+     * token (wp_generate_password(64, false)). Numeric session ids, used by
+     * the older guest_token routes, are far shorter, so the two never overlap.
+     */
+    private const CHAT_ID = '(?P<id>[A-Za-z0-9]{32,64})';
+
+    /**
+     * Requests per minute per IP for the id-keyed routes. The widget polls
+     * messages every 3 seconds and sends typing pings, which the general
+     * 30/minute widget limit cannot carry.
+     */
+    private const CHAT_RATE_LIMIT = 120;
 
     /**
      * Register widget chat routes.
@@ -66,13 +81,84 @@ class Widget_Chat_Controller extends Base_Controller
                             'sanitize_callback' => 'sanitize_email',
                         ],
                         'message' => [
-                            'type' => 'string',
+                            'type' => ['string', 'null'],
                         ],
-                        'department_id' => [
-                            'type' => 'integer',
-                            'sanitize_callback' => 'absint',
-                        ],
+                        'department_id' => Widget_Controller::department_arg(),
                         'metadata' => WidgetMetadata::rest_arg(),
+                    ],
+                ],
+            ]
+        );
+
+        // Routes keyed by the chat id returned from /start (shared widget).
+        register_rest_route(
+            $this->namespace,
+            '/'.$this->rest_base.'/'.self::CHAT_ID.'/messages',
+            [
+                [
+                    'methods' => WP_REST_Server::READABLE,
+                    'callback' => [$this, 'list_messages'],
+                    'permission_callback' => [$this, 'chat_id_check'],
+                ],
+                [
+                    'methods' => WP_REST_Server::CREATABLE,
+                    'callback' => [$this, 'post_message'],
+                    'permission_callback' => [$this, 'chat_id_check'],
+                    'args' => [
+                        'body' => [
+                            'required' => true,
+                            'type' => 'string',
+                            'minLength' => 1,
+                            'maxLength' => 5000,
+                        ],
+                    ],
+                ],
+            ]
+        );
+
+        register_rest_route(
+            $this->namespace,
+            '/'.$this->rest_base.'/'.self::CHAT_ID.'/typing',
+            [
+                [
+                    'methods' => WP_REST_Server::CREATABLE,
+                    'callback' => [$this, 'typing'],
+                    'permission_callback' => [$this, 'chat_id_check'],
+                ],
+            ]
+        );
+
+        register_rest_route(
+            $this->namespace,
+            '/'.$this->rest_base.'/'.self::CHAT_ID.'/end',
+            [
+                [
+                    'methods' => WP_REST_Server::CREATABLE,
+                    'callback' => [$this, 'end_by_id'],
+                    'permission_callback' => [$this, 'chat_id_check'],
+                ],
+            ]
+        );
+
+        register_rest_route(
+            $this->namespace,
+            '/'.$this->rest_base.'/'.self::CHAT_ID.'/rate',
+            [
+                [
+                    'methods' => WP_REST_Server::CREATABLE,
+                    'callback' => [$this, 'rate'],
+                    'permission_callback' => [$this, 'chat_id_check'],
+                    'args' => [
+                        'rating' => [
+                            'required' => true,
+                            'type' => 'integer',
+                            'minimum' => 1,
+                            'maximum' => 5,
+                        ],
+                        'comment' => [
+                            'type' => ['string', 'null'],
+                            'maxLength' => 1000,
+                        ],
                     ],
                 ],
             ]
@@ -170,6 +256,17 @@ class Widget_Chat_Controller extends Base_Controller
         return (new Widget_Controller)->widget_enabled_check();
     }
 
+    /**
+     * Permission for the id-keyed routes: the widget must be enabled, with a
+     * per-IP limit sized for polling. The id itself is checked in the callback.
+     *
+     * @return bool|\WP_Error
+     */
+    public function chat_id_check()
+    {
+        return Widget_Controller::widget_guard('escalated_widget_chat_rate_', self::CHAT_RATE_LIMIT);
+    }
+
     public function availability(WP_REST_Request $request): WP_REST_Response
     {
         $service = new ChatSessionService;
@@ -191,17 +288,22 @@ class Widget_Chat_Controller extends Base_Controller
                 $request->get_param('name') ?: 'Visitor',
                 $request->get_param('email'),
                 $request->get_param('message'),
-                $request->get_param('department_id') ? (int) $request->get_param('department_id') : null,
+                Widget_Controller::active_department_id($request->get_param('department_id')),
                 WidgetMetadata::from_request($request)
             );
             $ticket = Ticket::find((int) $session->ticket_id);
 
             return $this->success([
-                'id' => (int) $session->id,
+                // The chat id is the ticket's random guest token, never the
+                // sequential session id; the id-keyed routes resolve it.
+                'id' => $ticket->guest_token ?? null,
+                'session_id' => (int) $session->id,
                 'ticket_id' => (int) $session->ticket_id,
                 'status' => $session->status,
                 'visitor_name' => $session->visitor_name,
                 'guest_token' => $ticket->guest_token ?? null,
+                'messages' => $ticket ? $this->chat_messages($session, $ticket) : [],
+                'agent' => $this->agent_payload($session),
                 'created_at' => $session->created_at,
             ], 201);
         } catch (\Throwable $e) {
@@ -280,6 +382,218 @@ class Widget_Chat_Controller extends Base_Controller
             'session_status' => $session->status,
             'messages' => $replies,
         ]);
+    }
+
+    /**
+     * GET /chat/{id}/messages - the conversation so far.
+     */
+    public function list_messages(WP_REST_Request $request)
+    {
+        $resolved = $this->session_for_id((string) $request->get_param('id'));
+        if ($resolved instanceof \WP_Error) {
+            return $resolved;
+        }
+        [$session, $ticket] = $resolved;
+
+        return $this->success([
+            'messages' => $this->chat_messages($session, $ticket),
+            'agent' => $this->agent_payload($session),
+            // WordPress has no agent typing signal yet.
+            'typing' => null,
+            'ended' => $session->status === 'ended',
+            'status' => $session->status,
+        ]);
+    }
+
+    /**
+     * POST /chat/{id}/messages {body} - a visitor message.
+     */
+    public function post_message(WP_REST_Request $request)
+    {
+        $resolved = $this->session_for_id((string) $request->get_param('id'));
+        if ($resolved instanceof \WP_Error) {
+            return $resolved;
+        }
+        [$session] = $resolved;
+
+        if ($session->status === 'ended') {
+            return $this->error('escalated_chat_ended', __('Chat has ended.', 'escalated'), 422);
+        }
+
+        $reply = (new ChatSessionService)->send_message((int) $session->id, (string) $request->get_param('body'), null, 'visitor');
+
+        return $this->success([
+            'message' => __('Message sent.', 'escalated'),
+            'reply_id' => (int) $reply->id,
+        ], 201);
+    }
+
+    /**
+     * POST /chat/{id}/typing - the visitor is typing. Kept for a few seconds
+     * in a transient and announced with the escalated_chat_visitor_typing action.
+     */
+    public function typing(WP_REST_Request $request)
+    {
+        $resolved = $this->session_for_id((string) $request->get_param('id'));
+        if ($resolved instanceof \WP_Error) {
+            return $resolved;
+        }
+        [$session] = $resolved;
+
+        if ($session->status === 'ended') {
+            return $this->error('escalated_chat_ended', __('Chat has ended.', 'escalated'), 422);
+        }
+
+        set_transient('escalated_chat_visitor_typing_'.(int) $session->id, time(), 5);
+        do_action('escalated_chat_visitor_typing', $session);
+
+        return $this->success(['message' => __('Typing updated.', 'escalated')]);
+    }
+
+    /**
+     * POST /chat/{id}/end - the visitor ends the chat.
+     */
+    public function end_by_id(WP_REST_Request $request)
+    {
+        $resolved = $this->session_for_id((string) $request->get_param('id'));
+        if ($resolved instanceof \WP_Error) {
+            return $resolved;
+        }
+        [$session] = $resolved;
+
+        if ($session->status === 'ended') {
+            return $this->error('escalated_chat_ended', __('Chat has already ended.', 'escalated'), 422);
+        }
+
+        $session = (new ChatSessionService)->end((int) $session->id);
+
+        return $this->success([
+            'message' => __('Chat ended.', 'escalated'),
+            'status' => $session->status,
+            'ended_at' => $session->ended_at,
+        ]);
+    }
+
+    /**
+     * POST /chat/{id}/rate {rating, comment?} - rate an ended chat. The rating
+     * is stored as the chat ticket's satisfaction rating.
+     */
+    public function rate(WP_REST_Request $request)
+    {
+        $resolved = $this->session_for_id((string) $request->get_param('id'));
+        if ($resolved instanceof \WP_Error) {
+            return $resolved;
+        }
+        [$session, $ticket] = $resolved;
+
+        if ($session->status !== 'ended') {
+            return $this->error('escalated_chat_not_ended', __('Chat must be ended before rating.', 'escalated'), 422);
+        }
+
+        if (SatisfactionRating::for_ticket((int) $ticket->id)) {
+            return $this->error('escalated_chat_already_rated', __('This chat has already been rated.', 'escalated'), 422);
+        }
+
+        $created = SatisfactionRating::create([
+            'ticket_id' => (int) $ticket->id,
+            'rating' => (int) $request->get_param('rating'),
+            'comment' => sanitize_textarea_field((string) $request->get_param('comment')),
+            'rated_by' => null,
+        ]);
+
+        if (! $created) {
+            return $this->error('escalated_chat_rating_failed', __('Could not save the rating.', 'escalated'), 500);
+        }
+
+        return $this->success(['message' => __('Rating submitted.', 'escalated')]);
+    }
+
+    /**
+     * Resolve a chat id (the ticket's guest token) to its chat session.
+     *
+     * @return array{0: object, 1: object}|\WP_Error
+     */
+    private function session_for_id(string $id)
+    {
+        $ticket = $id !== '' ? Ticket::find_by_guest_token($id) : null;
+        // The column's collation may compare case-insensitively.
+        if (! $ticket || ! hash_equals((string) $ticket->guest_token, $id)) {
+            return $this->error('escalated_not_found', __('Chat session not found.', 'escalated'), 404);
+        }
+
+        $session = ChatSession::find_by_ticket_id((int) $ticket->id);
+        if (! $session) {
+            return $this->error('escalated_not_found', __('Chat session not found.', 'escalated'), 404);
+        }
+
+        return [$session, $ticket];
+    }
+
+    /**
+     * The visible conversation: the opening message, then public replies.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function chat_messages(object $session, object $ticket): array
+    {
+        $messages = [];
+        $visitor = ['name' => (string) $session->visitor_name];
+
+        if (trim(wp_strip_all_tags((string) $ticket->description)) !== '') {
+            $messages[] = [
+                'id' => 0,
+                'body' => self::plain_text((string) $ticket->description),
+                'is_agent' => false,
+                'author' => $visitor,
+                'created_at' => mysql2date('c', (string) $ticket->created_at, false),
+            ];
+        }
+
+        $wpdb = \Escalated\Escalated::db();
+        $replies_table = \Escalated\Escalated::table('replies');
+        $replies = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT id, author_id, body, created_at FROM {$replies_table} WHERE ticket_id = %d AND is_internal_note = 0 AND deleted_at IS NULL ORDER BY id DESC LIMIT 100",
+                (int) $ticket->id
+            )
+        ) ?: [];
+
+        foreach (array_reverse($replies) as $reply) {
+            $author_id = (int) $reply->author_id;
+            $is_agent = $author_id > 0;
+            $user = $is_agent ? get_userdata($author_id) : null;
+            $messages[] = [
+                'id' => (int) $reply->id,
+                'body' => self::plain_text((string) $reply->body),
+                'is_agent' => $is_agent,
+                'author' => $is_agent ? ['name' => $user ? $user->display_name : __('Agent', 'escalated')] : $visitor,
+                'created_at' => mysql2date('c', (string) $reply->created_at, false),
+            ];
+        }
+
+        return $messages;
+    }
+
+    /**
+     * Message bodies as plain text: the widget renders them as text.
+     */
+    private static function plain_text(string $html): string
+    {
+        return html_entity_decode(wp_strip_all_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
+
+    /**
+     * @return array{name: string}|null
+     */
+    private function agent_payload(object $session): ?array
+    {
+        if (empty($session->agent_id)) {
+            return null;
+        }
+
+        $user = get_userdata((int) $session->agent_id);
+
+        return $user ? ['name' => $user->display_name] : null;
     }
 
     /**

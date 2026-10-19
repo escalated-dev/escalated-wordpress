@@ -110,15 +110,55 @@ site: it does not need CORS.
 
 ```json
 {
+  "enabled": true,
   "color": "#3B82F6",
   "position": "bottom-right",
   "greeting": "Hi there! How can we help?",
-  "accepts_metadata": true
+  "departments": [{ "id": 1, "name": "Sales" }],
+  "kb_enabled": true,
+  "guest_tickets_enabled": true,
+  "accepts_metadata": true,
+  "status_lookup_enabled": false
 }
 ```
 
-`color`, `position` and `greeting` come from the widget settings. The route
-answers 403 while the widget is disabled.
+`color`, `position` and `greeting` come from the widget settings.
+`departments` lists the active departments. `kb_enabled` is true when the
+knowledge base is on and public (or the visitor is signed in on a same-origin
+page). `status_lookup_enabled` is always false: the plugin has no mailbox
+verification, so looking up a ticket needs its guest token and the widget
+hides its Status tab. While the widget is disabled the route answers 403 with
+`{"enabled": false, "code": "escalated_widget_disabled", "message": "..."}`.
+
+### The routes the widget calls
+
+Paths are relative to `/wp-json/escalated/v1/widget`. Older clients keep
+working: existing routes, parameters and fields are unchanged.
+
+| Request | Answer |
+|---|---|
+| `GET /chat/availability` | `{ available, queue_depth }` |
+| `GET /articles?q=` (2 to 200 characters) | `{ articles: [{ id, title, slug, excerpt, category }] }`. Without `q` (or with the older `search` parameter) the answer is the bare array, as before. |
+| `GET /articles/{slug}` | `{ id, title, slug, body, content, category, related, feedback_enabled, date }`; `body` and `content` are the same HTML. |
+| `POST /tickets` `{ name, email, subject, description, department_id?, metadata? }` | 201 `{ message, reference, guest_token, guest_access_token }`. An unknown or inactive `department_id` is ignored. |
+| `POST /chat/start` `{ name, email, department_id?, message?, metadata? }` | 201 `{ id, session_id, status, messages, agent, guest_token, ... }` |
+| `GET /chat/{id}/messages` | `{ messages: [{ id, body, is_agent, author: { name }, created_at }], agent, typing, ended, status }` |
+| `POST /chat/{id}/messages` `{ body }` | 201; 422 once the chat has ended |
+| `POST /chat/{id}/typing` | 200; fires the `escalated_chat_visitor_typing` action |
+| `POST /chat/{id}/end` | 200; 422 if it already ended |
+| `POST /chat/{id}/rate` `{ rating: 1-5, comment? }` | 200; 422 before the chat ends or once rated. Saved as the chat ticket's satisfaction rating. |
+
+The chat `id` is the chat ticket's random 64-character guest token, not the
+numeric session id (returned as `session_id`). The `/chat/{id}/...` routes
+resolve the chat from it and answer 404 for anything else. They allow 120
+requests a minute per IP, so the widget's 3-second polling fits; the other
+widget routes keep the 30-a-minute limit. The older numeric routes
+(`/chat/{session_id}/messages`, `/end` and `/poll` with a `guest_token`
+parameter) still work. `typing` is always `null` for now: WordPress has no
+agent typing signal.
+
+`GET /tickets/{reference}` still needs the ticket's `guest_token` parameter.
+There is no lookup by email address.
 
 ### Host parameters
 

@@ -11,6 +11,7 @@ namespace Escalated\Api;
 
 use Escalated\Models\Article;
 use Escalated\Models\ArticleCategory;
+use Escalated\Models\Department;
 use Escalated\Models\Setting;
 use Escalated\Models\Ticket;
 use Escalated\Services\GuestRateLimiter;
@@ -43,7 +44,7 @@ class Widget_Controller extends Base_Controller
                 [
                     'methods' => WP_REST_Server::READABLE,
                     'callback' => [$this, 'get_config'],
-                    'permission_callback' => [$this, 'widget_enabled_check'],
+                    'permission_callback' => [$this, 'config_permission_check'],
                 ],
             ]
         );
@@ -58,6 +59,14 @@ class Widget_Controller extends Base_Controller
                     'callback' => [$this, 'get_articles'],
                     'permission_callback' => [$this, 'widget_enabled_check'],
                     'args' => [
+                        // The shared widget searches with `q` and reads
+                        // {articles: [...]}; `search` keeps the bare array.
+                        'q' => [
+                            'type' => 'string',
+                            'minLength' => 2,
+                            'maxLength' => 200,
+                            'sanitize_callback' => 'sanitize_text_field',
+                        ],
                         'search' => [
                             'type' => 'string',
                             'sanitize_callback' => 'sanitize_text_field',
@@ -140,6 +149,7 @@ class Widget_Controller extends Base_Controller
                             'required' => true,
                             'type' => 'string',
                         ],
+                        'department_id' => self::department_arg(),
                         'metadata' => WidgetMetadata::rest_arg(),
                     ],
                 ],
@@ -177,6 +187,18 @@ class Widget_Controller extends Base_Controller
      */
     public function widget_enabled_check()
     {
+        return self::widget_guard('escalated_widget_rate_', 30); // 30 requests per minute for widget.
+    }
+
+    /**
+     * Check that the widget is enabled and apply a per-IP, per-minute limit.
+     *
+     * @param  string  $bucket  Transient key prefix for the counter.
+     * @param  int  $limit  Requests per minute.
+     * @return bool|\WP_Error
+     */
+    public static function widget_guard(string $bucket, int $limit)
+    {
         if (! Setting::get_bool('widget_enabled', false)) {
             return new \WP_Error(
                 'escalated_widget_disabled',
@@ -187,8 +209,7 @@ class Widget_Controller extends Base_Controller
 
         // Rate limit by IP address.
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-        $key = 'escalated_widget_rate_'.md5($ip);
-        $limit = 30; // 30 requests per minute for widget.
+        $key = $bucket.md5($ip);
         $current = (int) get_transient($key);
 
         if ($current >= $limit) {
@@ -205,16 +226,83 @@ class Widget_Controller extends Base_Controller
     }
 
     /**
+     * Permission callback for /config: a disabled widget reaches get_config()
+     * so it can answer {enabled: false}; otherwise the usual guard applies.
+     *
+     * @return bool|\WP_Error
+     */
+    public function config_permission_check()
+    {
+        if (! Setting::get_bool('widget_enabled', false)) {
+            return true;
+        }
+
+        return $this->widget_enabled_check();
+    }
+
+    /**
      * Get widget configuration.
      */
     public function get_config()
     {
+        if (! Setting::get_bool('widget_enabled', false)) {
+            return $this->success([
+                'enabled' => false,
+                'code' => 'escalated_widget_disabled',
+                'message' => __('Widget is not enabled.', 'escalated'),
+            ], 403);
+        }
+
+        $departments = [];
+        foreach (Department::active() as $department) {
+            $departments[] = ['id' => (int) $department->id, 'name' => $department->name];
+        }
+
         return $this->success([
+            'enabled' => true,
             'color' => Setting::get('widget_color', '#3B82F6'),
             'position' => Setting::get('widget_position', 'bottom-right'),
             'greeting' => Setting::get('widget_greeting', __('Hi there! How can we help?', 'escalated')),
+            'departments' => $departments,
+            'kb_enabled' => KnowledgeBaseService::can_access(),
+            'guest_tickets_enabled' => Setting::get_bool('guest_tickets_enabled', true),
             'accepts_metadata' => true,
+            // Ticket status needs the ticket's guest token; there is no
+            // mailbox verification, so the widget hides its Status tab.
+            'status_lookup_enabled' => false,
         ]);
+    }
+
+    /**
+     * REST arg for an optional department id. The widget sends null when no
+     * department is picked.
+     *
+     * @return array<string, mixed>
+     */
+    public static function department_arg(): array
+    {
+        return [
+            'type' => ['integer', 'null'],
+            'sanitize_callback' => static fn ($value) => $value === null || $value === '' ? null : absint($value),
+        ];
+    }
+
+    /**
+     * The id of an active department, or null for a missing, unknown or
+     * inactive one (an unknown department is ignored, not an error).
+     *
+     * @param  mixed  $value
+     */
+    public static function active_department_id($value): ?int
+    {
+        $id = absint($value);
+        if ($id === 0) {
+            return null;
+        }
+
+        $department = Department::find($id);
+
+        return $department && (int) $department->is_active === 1 ? $id : null;
     }
 
     /**
@@ -226,7 +314,8 @@ class Widget_Controller extends Base_Controller
      */
     public function get_articles(WP_REST_Request $request)
     {
-        $search = $request->get_param('search');
+        $q = $request->get_param('q');
+        $search = $q !== null && $q !== '' ? $q : $request->get_param('search');
 
         $filters = ['limit' => 10];
         if (! empty($search)) {
@@ -242,6 +331,10 @@ class Widget_Controller extends Base_Controller
                 'excerpt' => wp_trim_words(wp_strip_all_tags((string) $row->body), 30),
                 'category' => $this->article_category($row),
             ];
+        }
+
+        if ($q !== null && $q !== '') {
+            return $this->success(['articles' => $articles]);
         }
 
         return $this->success($articles);
@@ -272,11 +365,14 @@ class Widget_Controller extends Base_Controller
             ];
         }
 
+        $body = wp_kses_post((string) $article->body);
+
         return $this->success([
             'id' => (int) $article->id,
             'title' => $article->title,
             'slug' => $article->slug,
-            'content' => wp_kses_post((string) $article->body),
+            'body' => $body,
+            'content' => $body,
             'category' => $this->article_category($article),
             'related' => $related,
             'feedback_enabled' => KnowledgeBaseService::is_feedback_enabled(),
@@ -356,6 +452,7 @@ class Widget_Controller extends Base_Controller
                 'guest_name' => $request->get_param('name'),
                 'guest_email' => $request->get_param('email'),
                 'channel' => 'widget',
+                'department_id' => self::active_department_id($request->get_param('department_id')),
                 'metadata' => WidgetMetadata::from_request($request),
             ]);
 
@@ -363,6 +460,7 @@ class Widget_Controller extends Base_Controller
                 'message' => __('Ticket created successfully.', 'escalated'),
                 'reference' => $ticket->reference,
                 'guest_token' => $ticket->guest_token,
+                'guest_access_token' => $ticket->guest_token,
             ], 201);
         } catch (\Throwable $e) {
             return $this->error('escalated_create_failed', $e->getMessage(), 500);
