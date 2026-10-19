@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- The bundled widget is now `@escalated-dev/escalated` 0.12.2. It hides its Check Status tab when `/config` returns `status_lookup_enabled: false`.
+
 ### Added
 - **Embed the widget on other sites.** List the sites under Settings > Widget > Embedding Sites, in the `ESCALATED_WIDGET_ALLOWED_ORIGINS` constant or with the `escalated_widget_allowed_origins` filter (`https://shop.example.com`, `https://*.example.com`), then load `/wp-json/escalated/v1/widget/embed.js` there. Listed origins get CORS headers on every `/widget` route, chat included, and always run as a guest; WordPress core's own CORS headers are turned off for those routes, so unlisted sites get no grant. Nothing changes until a site is listed. See [docs/embedding-the-widget.md](docs/embedding-the-widget.md).
 - Widget settings (enable, color, position, greeting, embedding sites) on the Escalated settings page. Invalid embedding sites are refused and the previous list is kept.
