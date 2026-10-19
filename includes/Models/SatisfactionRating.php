@@ -43,8 +43,8 @@ class SatisfactionRating
         $table = static::table();
         $now = current_time('mysql');
 
+        // The table has created_at only; an updated_at key fails the insert.
         $data['created_at'] = $now;
-        $data['updated_at'] = $now;
 
         $result = $wpdb->insert($table, $data);
 
@@ -62,7 +62,7 @@ class SatisfactionRating
         $wpdb = \Escalated\Escalated::db();
         $table = static::table();
 
-        $data['updated_at'] = current_time('mysql');
+        unset($data['updated_at']);
 
         return $wpdb->update($table, $data, ['id' => $id]) !== false;
     }
