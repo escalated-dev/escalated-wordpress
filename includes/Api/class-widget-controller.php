@@ -16,6 +16,8 @@ use Escalated\Models\Ticket;
 use Escalated\Services\GuestRateLimiter;
 use Escalated\Services\KnowledgeBaseService;
 use Escalated\Services\TicketService;
+use Escalated\Services\WidgetMetadata;
+use Escalated\Services\WidgetOrigins;
 use WP_REST_Request;
 use WP_REST_Server;
 
@@ -138,6 +140,7 @@ class Widget_Controller extends Base_Controller
                             'required' => true,
                             'type' => 'string',
                         ],
+                        'metadata' => WidgetMetadata::rest_arg(),
                     ],
                 ],
             ]
@@ -210,6 +213,7 @@ class Widget_Controller extends Base_Controller
             'color' => Setting::get('widget_color', '#3B82F6'),
             'position' => Setting::get('widget_position', 'bottom-right'),
             'greeting' => Setting::get('widget_greeting', __('Hi there! How can we help?', 'escalated')),
+            'accepts_metadata' => true,
         ]);
     }
 
@@ -352,6 +356,7 @@ class Widget_Controller extends Base_Controller
                 'guest_name' => $request->get_param('name'),
                 'guest_email' => $request->get_param('email'),
                 'channel' => 'widget',
+                'metadata' => WidgetMetadata::from_request($request),
             ]);
 
             return $this->success([
@@ -400,6 +405,7 @@ class Widget_Controller extends Base_Controller
             'widget_color' => Setting::get('widget_color', '#3B82F6'),
             'widget_position' => Setting::get('widget_position', 'bottom-right'),
             'widget_greeting' => Setting::get('widget_greeting', __('Hi there! How can we help?', 'escalated')),
+            'widget_allowed_origins' => (string) Setting::get('widget_allowed_origins', ''),
         ];
     }
 
@@ -415,6 +421,14 @@ class Widget_Controller extends Base_Controller
         foreach ($allowed as $key) {
             if (isset($settings[$key])) {
                 Setting::set($key, sanitize_text_field($settings[$key]));
+            }
+        }
+
+        // Embedding sites are saved only when every entry is a valid origin.
+        if (isset($settings['widget_allowed_origins'])) {
+            $origins = sanitize_textarea_field((string) $settings['widget_allowed_origins']);
+            if (WidgetOrigins::invalid_entries($origins) === []) {
+                Setting::set('widget_allowed_origins', $origins);
             }
         }
     }

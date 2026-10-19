@@ -9,6 +9,7 @@ namespace Escalated\Api;
 use Escalated\Models\ChatSession;
 use Escalated\Models\Ticket;
 use Escalated\Services\ChatSessionService;
+use Escalated\Services\WidgetMetadata;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_REST_Server;
@@ -71,6 +72,7 @@ class Widget_Chat_Controller extends Base_Controller
                             'type' => 'integer',
                             'sanitize_callback' => 'absint',
                         ],
+                        'metadata' => WidgetMetadata::rest_arg(),
                     ],
                 ],
             ]
@@ -189,7 +191,8 @@ class Widget_Chat_Controller extends Base_Controller
                 $request->get_param('name') ?: 'Visitor',
                 $request->get_param('email'),
                 $request->get_param('message'),
-                $request->get_param('department_id') ? (int) $request->get_param('department_id') : null
+                $request->get_param('department_id') ? (int) $request->get_param('department_id') : null,
+                WidgetMetadata::from_request($request)
             );
             $ticket = Ticket::find((int) $session->ticket_id);
 

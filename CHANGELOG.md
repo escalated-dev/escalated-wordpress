@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **Embed the widget on other sites.** List the sites under Settings > Widget > Embedding Sites, in the `ESCALATED_WIDGET_ALLOWED_ORIGINS` constant or with the `escalated_widget_allowed_origins` filter (`https://shop.example.com`, `https://*.example.com`), then load `/wp-json/escalated/v1/widget/embed.js` there. Listed origins get CORS headers on every `/widget` route, chat included, and always run as a guest; WordPress core's own CORS headers are turned off for those routes, so unlisted sites get no grant. Nothing changes until a site is listed. See [docs/embedding-the-widget.md](docs/embedding-the-widget.md).
+- Widget settings (enable, color, position, greeting, embedding sites) on the Escalated settings page. Invalid embedding sites are refused and the previous list is kept.
+- Widget tickets and chats accept an optional `metadata` object of host parameters (order number, plan, page URL, ...). It is sanitised to at most 25 flat scalar entries; `embedded_on` is set from the request's `Origin`. `/widget/config` returns `accepts_metadata: true`. Chat sessions get a nullable `metadata` column through the normal schema upgrade.
 - Opt-in department visibility and account restrictions across ticket queries, child records, REST tokens, reports, widget lookups, assignment and notifications. Administrators retain access; existing installations default to unrestricted staff visibility.
 - Nullable indexed ticket account identities with host requester/subject and agent resolver hooks. Escalation rules, workflows and automations support exact account and ticket-type conditions.
 - Optional department/type SLA targets and settings controls. Department moves preserve SLA deadlines; explicit reselection uses the original creation time.

@@ -4,7 +4,7 @@ namespace Escalated;
 
 class Activator
 {
-    public const SCHEMA_VERSION = 'ticket-access-1';
+    public const SCHEMA_VERSION = 'widget-embed-1';
 
     /**
      * Run on plugin activation.
@@ -498,6 +498,7 @@ class Activator
             accepted_at DATETIME NULL,
             ended_at DATETIME NULL,
             last_activity_at DATETIME NOT NULL,
+            metadata TEXT NULL,
             created_at DATETIME NOT NULL,
             updated_at DATETIME NOT NULL,
             PRIMARY KEY  (id),

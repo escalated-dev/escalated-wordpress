@@ -1,0 +1,166 @@
+# Embedding the widget on other sites
+
+The support widget, ticket form and live chat can run on a site other than
+your WordPress site: a store, a marketing site or a customer portal loads one
+script from WordPress. Nothing changes until you list the sites that may do
+this.
+
+## 1. Turn the widget on and allow the embedding sites
+
+Under **Escalated > Settings > Widget**, check **Enable the support widget**
+and list the sites in **Embedding Sites**, one per line (commas work too):
+
+```text
+https://shop.example.com
+https://*.example.org
+```
+
+You can also list them in `wp-config.php`:
+
+```php
+define('ESCALATED_WIDGET_ALLOWED_ORIGINS', 'https://shop.example.com,https://*.example.org');
+```
+
+or from code with the `escalated_widget_allowed_origins` filter:
+
+```php
+add_filter('escalated_widget_allowed_origins', function (array $origins) {
+    $origins[] = 'https://shop.example.com';
+
+    return $origins;
+});
+```
+
+All of them are combined. Each entry is an origin: `scheme://host[:port]`,
+http or https, no path, query or user name. `https://*.example.org` matches
+every subdomain of `example.org` at any depth, but not `example.org` itself and
+not `http://`. A bare `*` is never accepted. The settings page refuses to save
+the list when any entry is invalid and keeps the previous list; invalid
+entries in the constant or the filter are ignored.
+
+## 2. Add the script to the other site
+
+```html
+<script src="https://help.example.com/wp-json/escalated/v1/widget/embed.js" async></script>
+```
+
+For an on-page support form instead of a floating button:
+
+```html
+<div id="support-form"></div>
+<script
+  src="https://help.example.com/wp-json/escalated/v1/widget/embed.js"
+  data-mode="inline"
+  data-target="#support-form"
+  data-tabs="ticket"
+  data-meta-order-number="A-1001"
+></script>
+```
+
+The script finds the API from its own URL, so this works with pretty
+permalinks. With plain permalinks (`?rest_route=`), or when you serve the
+bundle from a CDN, tell it where WordPress is:
+
+```html
+<script
+  src="https://cdn.example.com/escalated-widget.js"
+  data-base-url="https://help.example.com"
+  data-widget-path="/wp-json/escalated/v1/widget"
+  async
+></script>
+```
+
+All host parameters (tabs, prefill, metadata, title, the JavaScript API) are
+described in the frontend package's
+[embedding guide](https://github.com/escalated-dev/escalated/blob/main/docs/embedding-the-widget.md).
+
+## What the plugin does
+
+`Escalated\Api\Widget_Cors` runs on every `/wp-json/escalated/v1/widget/*`
+route, including the live chat routes under `/widget/chat/*`. For a request
+whose `Origin` names another site on the list it:
+
+- answers preflight requests (`OPTIONS` with `Access-Control-Request-Method`)
+  with 204, `Access-Control-Allow-Origin: <origin>`, methods
+  `GET, POST, OPTIONS`, headers
+  `Accept, Authorization, Content-Type, X-Requested-With` and a 600 second
+  `Access-Control-Max-Age`;
+- adds `Access-Control-Allow-Origin`, `Access-Control-Expose-Headers:
+  Retry-After` and `Vary: Origin` to every other response, including 400,
+  403, 404 and 429 answers;
+- runs the request as a guest (user 0) even if the same browser is signed in
+  to WordPress. Guest tokens work as before.
+
+WordPress core normally answers every REST request that has an `Origin` with
+that origin and `Access-Control-Allow-Credentials: true`. The plugin turns
+that off for the widget routes only, so `Access-Control-Allow-Credentials` is
+never sent and a site that is not listed gets no `Access-Control-Allow-Origin`
+at all. Preflights from such sites get a 204 without a grant. Same-origin
+requests and requests without an `Origin` header are handled as before. The
+widget routes need no REST nonce, so there is no CSRF check to skip. The
+widget rate limit, the guest ticket rate limit and the guest policy apply to
+embedded requests unchanged.
+
+The plugin compares `Origin` with the requested scheme and `Host` and with
+the home and site URLs. Behind a proxy that ends TLS, make sure WordPress
+sees HTTPS (`is_ssl()`), as you would for anything else. Do not list your own
+site: it does not need CORS.
+
+### `GET /wp-json/escalated/v1/widget/config`
+
+```json
+{
+  "color": "#3B82F6",
+  "position": "bottom-right",
+  "greeting": "Hi there! How can we help?",
+  "accepts_metadata": true
+}
+```
+
+`color`, `position` and `greeting` come from the widget settings. The route
+answers 403 while the widget is disabled.
+
+### Host parameters
+
+`POST /widget/tickets` and `POST /widget/chat/start` accept an optional
+`metadata` object. For a ticket it is stored in the ticket's `metadata`
+column; for a chat, in the new `metadata` column of the chat session (shown as
+the ticket's `chat_metadata`). The values come from the visitor's browser, so
+only a flat map is kept: up to 25 entries, keys of letters, digits, `_ . : -`
+(64 characters at most), and string, number or boolean values (strings
+trimmed and cut to 500 characters). `page_url` is kept only when it is an
+http(s) URL of at most 2048 characters. `embedded_on` is always set by the
+server from the request's `Origin` and cannot be supplied by the page. A
+`metadata` that is not an object, or has more than 50 keys, is rejected with
+400. Treat all of it as unverified visitor input.
+
+The chat session column is added by the plugin's normal schema upgrade the
+first time the updated plugin loads.
+
+### The script
+
+`GET /wp-json/escalated/v1/widget/embed.js` serves
+`assets/widget/escalated-widget.js`, the standalone bundle from
+`@escalated-dev/escalated` 0.12.1, with
+`Content-Type: application/javascript; charset=utf-8`,
+`Cache-Control: public, max-age=3600`, an `ETag` (answering `If-None-Match`
+with 304), `X-Content-Type-Options: nosniff`,
+`Cross-Origin-Resource-Policy: cross-origin` and
+`Access-Control-Allow-Origin: *`. It is served even while the widget is
+disabled; the widget then shows nothing because `/config` answers 403.
+
+To update the bundle, copy `dist/widget/escalated-widget.js` from the
+published npm package (`npm pack @escalated-dev/escalated@<version>`) over the
+vendored file.
+
+## Troubleshooting
+
+- **The browser reports a CORS error.** The page's origin is not on the list,
+  or it differs in scheme or port (`http://` vs `https://`, `:8080`).
+- **Another plugin or the web server adds CORS headers.** A security or CORS
+  plugin, or a server rule, that sets `Access-Control-Allow-Origin` for all of
+  `/wp-json/` overrides this. Leave `/wp-json/escalated/v1/widget` out of it.
+- **A page cache serves the wrong headers.** Cache plugins that cache REST
+  responses must vary on `Origin`, or skip `/wp-json/escalated/v1/widget`.
+- **A signed-in agent testing the embed sees guest behaviour.** That is
+  intended: requests from another site never act as the signed-in user.
