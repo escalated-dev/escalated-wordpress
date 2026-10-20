@@ -11,8 +11,9 @@ class AttachmentService
     /**
      * Store a single uploaded file and create an Attachment database record.
      *
-     * Uses wp_handle_upload() for WordPress-standard file handling. Validates
-     * the file against blocked extensions and maximum size before processing.
+     * The file is validated against the blocked extensions and the maximum
+     * size, then moved into the private attachment store under a random name
+     * (see store_contents()). It is never placed in the public uploads tree.
      *
      * @param  string  $attachable_type  The parent type (e.g., 'reply', 'ticket').
      * @param  int  $attachable_id  The parent record ID.
@@ -23,61 +24,136 @@ class AttachmentService
      */
     public function store(string $attachable_type, int $attachable_id, array $file)
     {
-        // Validate the file before processing.
         $this->validate_file($file);
 
-        // Ensure the upload handler is available.
-        if (! function_exists('wp_handle_upload')) {
-            require_once ABSPATH.'wp-admin/includes/file.php';
+        $tmp = (string) ($file['tmp_name'] ?? '');
+        /**
+         * Whether the temporary file really came from this request's upload.
+         * Only tests should change this.
+         */
+        if ($tmp === '' || ! apply_filters('escalated_attachment_is_uploaded_file', is_uploaded_file($tmp), $file)) {
+            throw new \InvalidArgumentException('File upload failed: not an uploaded file.');
         }
 
-        $upload_overrides = [
-            'test_form' => false,
-            'test_type' => false,
-        ];
+        $content = file_get_contents($tmp);
+        if ($content === false) {
+            throw new \InvalidArgumentException('File upload failed: the file could not be read.');
+        }
 
-        $uploaded = wp_handle_upload($file, $upload_overrides);
+        $stored = $this->store_contents($attachable_type, $attachable_id, (string) ($file['name'] ?? ''), $content);
+        if ($stored) {
+            @unlink($tmp); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+        }
 
-        if (isset($uploaded['error'])) {
-            throw new \InvalidArgumentException(
-                sprintf('File upload failed: %s', $uploaded['error'])
-            );
+        return $stored;
+    }
+
+    /**
+     * Store raw bytes as an attachment.
+     *
+     * Bytes are written to the private store (storage_dir()) under a random,
+     * extension-less name, so neither the sender's file name nor its type
+     * decides how a web server would treat the file. The original name is kept
+     * only in the database and is used as the download file name. The MIME
+     * type is detected from the bytes, not taken from the sender.
+     *
+     * @return object|false The created Attachment record, or false when the
+     *                      file is blocked, empty, too large or cannot be saved.
+     */
+    public function store_contents(string $attachable_type, int $attachable_id, string $original_filename, string $content)
+    {
+        $original_filename = sanitize_file_name($original_filename !== '' ? $original_filename : 'unnamed');
+        if (self::is_blocked_filename($original_filename) || $content === '') {
+            return false;
+        }
+
+        $max_size_bytes = (int) Setting::get('max_attachment_size_kb', 10240) * 1024;
+        $size = strlen($content);
+        if ($size > $max_size_bytes) {
+            return false;
+        }
+
+        $dir = self::storage_dir().'/'.gmdate('Y/m');
+        if (! wp_mkdir_p($dir)) {
+            return false;
+        }
+
+        $filename = bin2hex(random_bytes(20));
+        $path = $dir.'/'.$filename;
+        if (file_put_contents($path, $content) === false) {
+            return false;
+        }
+        @chmod($path, 0640); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+
+        $mime_type = '';
+        if (function_exists('finfo_open')) {
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mime_type = (string) finfo_buffer($finfo, $content);
+            finfo_close($finfo);
         }
 
         $wpdb = \Escalated\Escalated::db();
-
         $table = Escalated::table('attachments');
-        $now = current_time('mysql');
-
-        // Generate a unique filename for storage reference.
-        $original_filename = sanitize_file_name($file['name']);
-        $filename = wp_unique_filename(dirname($uploaded['file']), $original_filename);
-
-        $attachment_data = [
+        $result = $wpdb->insert($table, [
             'attachable_type' => sanitize_text_field($attachable_type),
             'attachable_id' => $attachable_id,
             'filename' => $filename,
             'original_filename' => $original_filename,
-            'mime_type' => sanitize_mime_type($uploaded['type']),
-            'size' => $file['size'],
-            'path' => $uploaded['file'],
-            'created_at' => $now,
-        ];
-
-        $result = $wpdb->insert($table, $attachment_data);
+            'mime_type' => sanitize_mime_type($mime_type !== '' ? $mime_type : 'application/octet-stream'),
+            'size' => $size,
+            'path' => $path,
+            'created_at' => current_time('mysql'),
+        ]);
 
         if ($result === false) {
-            // Clean up the uploaded file if DB insert fails.
-            if (file_exists($uploaded['file'])) {
-                wp_delete_file($uploaded['file']);
-            }
+            wp_delete_file($path);
 
             return false;
         }
 
-        $attachment_id = $wpdb->insert_id;
+        return $this->find((int) $wpdb->insert_id);
+    }
 
-        return $this->find($attachment_id);
+    /**
+     * Directory holding attachment bytes.
+     *
+     * Defaults to wp-content/uploads/escalated-private, which is given
+     * deny-all .htaccess / web.config files and random file names. On servers
+     * that ignore those files (nginx), point the escalated_attachment_storage_dir
+     * filter at a directory outside the web root.
+     */
+    public static function storage_dir(): string
+    {
+        $uploads = wp_upload_dir(null, false);
+        $dir = untrailingslashit((string) apply_filters(
+            'escalated_attachment_storage_dir',
+            $uploads['basedir'].'/escalated-private'
+        ));
+
+        if (wp_mkdir_p($dir)) {
+            $guards = [
+                '.htaccess' => "# Escalated attachments are served only through the authenticated download route.\n<IfModule mod_authz_core.c>\n    Require all denied\n</IfModule>\n<IfModule !mod_authz_core.c>\n    Order deny,allow\n    Deny from all\n</IfModule>\n",
+                'web.config' => "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<configuration><system.webServer><authorization><deny users=\"*\" /></authorization></system.webServer></configuration>\n",
+                'index.php' => "<?php\n// Silence is golden.\n",
+            ];
+            foreach ($guards as $name => $body) {
+                if (! file_exists($dir.'/'.$name)) {
+                    file_put_contents($dir.'/'.$name, $body);
+                }
+            }
+        }
+
+        return $dir;
+    }
+
+    /**
+     * Whether a file name has a blocked extension.
+     */
+    public static function is_blocked_filename(string $filename): bool
+    {
+        $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+        return in_array($extension, Enums::blocked_extensions(), true);
     }
 
     /**
@@ -237,34 +313,50 @@ class AttachmentService
     }
 
     /**
-     * Convert an absolute file path to its public URL.
+     * The authenticated download URL for an attachment.
      *
-     * The stored path is an absolute server path produced by wp_handle_upload().
-     * This method replaces the upload basedir prefix with the corresponding
-     * baseurl so the file can be referenced from the browser.
-     *
-     * @param  string  $absolute_path  Absolute path on disk.
-     * @return string|null Public URL, or null if the path is outside the uploads directory.
+     * Attachments are never linked by their storage path. A signed-in browser
+     * session gets a REST nonce in the URL (cookie auth needs one); API
+     * clients send their bearer token with the request instead.
      */
-    public static function path_to_url(string $absolute_path): ?string
+    public static function download_url(object $attachment): string
     {
-        $uploads = wp_upload_dir();
-        $basedir = wp_normalize_path($uploads['basedir']);
-        $normalized = wp_normalize_path($absolute_path);
+        $url = rest_url('escalated/v1/attachments/'.(int) $attachment->id.'/download');
 
-        if (strpos($normalized, $basedir) !== 0) {
-            return null;
+        if (is_user_logged_in()) {
+            $url = add_query_arg('_wpnonce', wp_create_nonce('wp_rest'), $url);
         }
 
-        $relative = substr($normalized, strlen($basedir));
+        return $url;
+    }
 
-        return $uploads['baseurl'].$relative;
+    /**
+     * Whether a stored path is one this plugin wrote: inside the private
+     * store or the legacy public uploads/escalated tree.
+     */
+    public static function is_servable_path(string $path): bool
+    {
+        $real = $path !== '' ? realpath($path) : false;
+        if ($real === false || ! is_file($real)) {
+            return false;
+        }
+
+        $real = wp_normalize_path($real);
+        $uploads = wp_upload_dir(null, false);
+        foreach ([self::storage_dir(), $uploads['basedir'].'/escalated'] as $root) {
+            $root = realpath($root);
+            if ($root !== false && strpos($real, trailingslashit(wp_normalize_path($root))) === 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
      * Format an attachment record for JSON serialization.
      *
-     * Adds a `url` field so consumers can link directly to the file.
+     * The `url` is the authenticated download route, never a storage URL.
      *
      * @param  object  $attachment  A raw DB row from the attachments table.
      * @return array Serializable attachment array including `url`.
@@ -279,7 +371,7 @@ class AttachmentService
             'original_filename' => $attachment->original_filename,
             'mime_type' => $attachment->mime_type,
             'size' => (int) $attachment->size,
-            'url' => self::path_to_url($attachment->path ?? ''),
+            'url' => self::download_url($attachment),
             'created_at' => $attachment->created_at,
         ];
     }

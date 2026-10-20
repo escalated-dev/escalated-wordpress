@@ -3,7 +3,6 @@
 namespace Escalated\Services;
 
 use Escalated\Escalated;
-use Escalated\Helpers\Enums;
 use Escalated\Mail\Email_Threading;
 use Escalated\Mail\Inbound_Message;
 use Escalated\Mail\Message_Id_Util;
@@ -409,10 +408,11 @@ class InboundEmailService
     }
 
     /**
-     * Store raw inbound email attachments to the WordPress uploads directory.
+     * Store raw inbound email attachments.
      *
-     * Unlike the AttachmentService::store() method which handles $_FILES uploads,
-     * this method processes attachment data from the inbound email adapters.
+     * The bytes go to the private attachment store under a random name via
+     * AttachmentService::store_contents(); the sender's file name is kept only
+     * as the download name, and its claimed MIME type is ignored.
      *
      * @param  string  $attachable_type  The parent type (e.g., 'reply', 'ticket').
      * @param  int  $attachable_id  The parent record ID.
@@ -422,103 +422,20 @@ class InboundEmailService
      */
     public function store_inbound_attachments(string $attachable_type, int $attachable_id, array $attachments): array
     {
-        $wpdb = \Escalated\Escalated::db();
-
-        $results = [];
-        $now = current_time('mysql');
-        $table = Escalated::table('attachments');
-        $blocked = Enums::blocked_extensions();
-        $max_size_kb = (int) Setting::get('max_attachment_size_kb', 10240);
-        $max_size_bytes = $max_size_kb * 1024;
+        $service = new AttachmentService;
         $max_attachments = (int) Setting::get('max_attachments_per_reply', 5);
+        $results = [];
         $count = 0;
-
-        // Get the WordPress uploads directory.
-        $upload_dir = wp_upload_dir();
-        $escalated_dir = $upload_dir['basedir'].'/escalated/'.gmdate('Y/m');
-
-        // Ensure the directory exists.
-        wp_mkdir_p($escalated_dir);
 
         foreach ($attachments as $attachment) {
             if ($count >= $max_attachments) {
                 break;
             }
 
-            $filename = sanitize_file_name($attachment['name'] ?? 'unnamed');
-            $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-
-            // Check blocked extensions.
-            if (in_array($extension, $blocked, true)) {
-                $results[] = false;
-
-                continue;
-            }
-
-            // Get the content.
             $content = $attachment['content'] ?? '';
-            if (! is_string($content) || $content === '') {
-                $results[] = false;
-
-                continue;
-            }
-
-            // Check file size.
-            $size = strlen($content);
-            if ($size > $max_size_bytes) {
-                $results[] = false;
-
-                continue;
-            }
-
-            // Generate a unique file path.
-            $unique_filename = wp_unique_filename($escalated_dir, $filename);
-            $file_path = $escalated_dir.'/'.$unique_filename;
-
-            // Write the file to disk.
-            $written = file_put_contents($file_path, $content);
-            if ($written === false) {
-                $results[] = false;
-
-                continue;
-            }
-
-            // Set proper file permissions.
-            chmod($file_path, 0644);
-
-            // Determine MIME type.
-            $mime_type = $attachment['type'] ?? '';
-            if (empty($mime_type)) {
-                $finfo = finfo_open(FILEINFO_MIME_TYPE);
-                $mime_type = finfo_file($finfo, $file_path);
-                finfo_close($finfo);
-            }
-
-            // Create the database record.
-            $attachment_data = [
-                'attachable_type' => sanitize_text_field($attachable_type),
-                'attachable_id' => $attachable_id,
-                'filename' => $unique_filename,
-                'original_filename' => $filename,
-                'mime_type' => sanitize_mime_type($mime_type),
-                'size' => $size,
-                'path' => $file_path,
-                'created_at' => $now,
-            ];
-
-            $result = $wpdb->insert($table, $attachment_data);
-
-            if ($result !== false) {
-                $results[] = $wpdb->get_row(
-                    $wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $wpdb->insert_id)
-                );
-            } else {
-                // Clean up the file if DB insert fails.
-                if (file_exists($file_path)) {
-                    wp_delete_file($file_path);
-                }
-                $results[] = false;
-            }
+            $results[] = is_string($content)
+                ? $service->store_contents($attachable_type, $attachable_id, (string) ($attachment['name'] ?? ''), $content)
+                : false;
 
             $count++;
         }
