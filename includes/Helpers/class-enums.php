@@ -84,7 +84,8 @@ class Enums
             'exe', 'bat', 'cmd', 'com', 'msi', 'scr', 'pif', 'vbs', 'vbe',
             'js', 'jse', 'wsf', 'wsh', 'ps1', 'psm1', 'psd1', 'reg',
             'cpl', 'hta', 'inf', 'lnk', 'sct', 'shb', 'sys', 'drv',
-            'php', 'phtml', 'php3', 'php4', 'php5', 'phar',
+            'php', 'phtml', 'php3', 'php4', 'php5', 'php7', 'php8', 'pht', 'phps', 'phar',
+            'html', 'htm', 'xhtml', 'xht', 'shtml', 'shtm', 'svg', 'svgz', 'mht', 'mhtml', 'xsl', 'xslt',
             'sh', 'bash', 'csh', 'ksh', 'pl', 'py', 'rb',
             'dll', 'so', 'dylib',
         ];

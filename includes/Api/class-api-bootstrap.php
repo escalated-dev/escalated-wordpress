@@ -25,6 +25,7 @@ class Api_Bootstrap
         $controllers = [
             new Auth_Controller,
             new Ticket_Controller,
+            new Attachment_Controller,
             new Department_Controller,
             new Tag_Controller,
             new Canned_Response_Controller,

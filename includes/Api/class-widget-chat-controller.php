@@ -172,7 +172,7 @@ class Widget_Chat_Controller extends Base_Controller
                 [
                     'methods' => WP_REST_Server::CREATABLE,
                     'callback' => [$this, 'send_message'],
-                    'permission_callback' => '__return_true',
+                    'permission_callback' => [$this, 'chat_id_check'],
                     'args' => [
                         'session_id' => [
                             'required' => true,
@@ -281,6 +281,17 @@ class Widget_Chat_Controller extends Base_Controller
 
     public function start_chat(WP_REST_Request $request)
     {
+        // Every chat opens a guest ticket, so it honours the guest ticket
+        // switch and the per-IP guest submission limit.
+        $disabled = Widget_Controller::guest_tickets_disabled();
+        if ($disabled) {
+            return $disabled;
+        }
+        $limited = Widget_Controller::guest_limited('ticket');
+        if ($limited) {
+            return $limited;
+        }
+
         $service = new ChatSessionService;
 
         try {
@@ -321,6 +332,10 @@ class Widget_Chat_Controller extends Base_Controller
             $session = $this->verified_session($session_id, (string) $request->get_param('guest_token'));
             if ($session instanceof \WP_Error) {
                 return $session;
+            }
+            $limited = Widget_Controller::guest_limited('reply');
+            if ($limited) {
+                return $limited;
             }
 
             $reply = $service->send_message($session_id, $body, null, 'visitor');
@@ -418,6 +433,11 @@ class Widget_Chat_Controller extends Base_Controller
 
         if ($session->status === 'ended') {
             return $this->error('escalated_chat_ended', __('Chat has ended.', 'escalated'), 422);
+        }
+
+        $limited = Widget_Controller::guest_limited('reply');
+        if ($limited) {
+            return $limited;
         }
 
         $reply = (new ChatSessionService)->send_message((int) $session->id, (string) $request->get_param('body'), null, 'visitor');

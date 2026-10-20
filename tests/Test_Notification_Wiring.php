@@ -84,6 +84,10 @@ class Test_Notification_Wiring extends WP_UnitTestCase
         $args = $calls[0]['args'];
         $body = json_decode($args['body'], true);
         $this->assertSame('ticket.created', $body['event']);
+        // `timestamp` is unchanged for existing receivers; `occurred_at` is ISO-8601 UTC.
+        $this->assertIsInt($body['timestamp']);
+        $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+00:00$/', $body['occurred_at']);
+        $this->assertEqualsWithDelta(time(), strtotime($body['occurred_at']), 5);
         $this->assertSame((int) $ticket->id, $body['payload']['ticket']['id']);
         $this->assertSame($ticket->reference, $body['payload']['ticket']['reference']);
         $this->assertSame('ticket.created', $args['headers']['X-Escalated-Event']);
