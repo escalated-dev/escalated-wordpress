@@ -227,7 +227,10 @@ class NotificationService
         $body = wp_json_encode([
             'event' => $event,
             'payload' => $payload,
+            // Kept as-is for existing receivers.
             'timestamp' => current_time('timestamp'),
+            // ISO-8601 UTC, matching the Laravel reference's `timestamp`.
+            'occurred_at' => gmdate('c'),
         ]);
 
         $headers = [

@@ -207,22 +207,86 @@ class Widget_Controller extends Base_Controller
             );
         }
 
-        // Rate limit by IP address.
+        // Rate limit by IP address, in a fixed one-minute window whose reset
+        // time is kept so a 429 can say when to retry.
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
         $key = $bucket.md5($ip);
-        $current = (int) get_transient($key);
+        $now = time();
+        $window = get_transient($key);
+        if (! is_array($window) || (int) ($window['reset'] ?? 0) <= $now) {
+            $window = ['count' => 0, 'reset' => $now + MINUTE_IN_SECONDS];
+        }
 
-        if ($current >= $limit) {
+        $retry_after = max(1, (int) $window['reset'] - $now);
+        if ((int) $window['count'] >= $limit) {
             return new \WP_Error(
                 'escalated_rate_limited',
                 __('Too many requests. Please try again later.', 'escalated'),
-                ['status' => 429]
+                ['status' => 429, 'retry_after' => $retry_after]
             );
         }
 
-        set_transient($key, $current + 1, MINUTE_IN_SECONDS);
+        $window['count'] = (int) $window['count'] + 1;
+        set_transient($key, $window, $retry_after);
 
         return true;
+    }
+
+    /**
+     * A 429 response with a Retry-After header when the per-IP guest
+     * limiter rejects this request, otherwise null.
+     *
+     * @param  string  $scope  'ticket' or 'reply'.
+     */
+    public static function guest_limited(string $scope): ?\WP_REST_Response
+    {
+        $retry_after = GuestRateLimiter::attempt($scope);
+        if ($retry_after === null) {
+            return null;
+        }
+
+        $rejection = GuestRateLimiter::rejection($retry_after);
+        $response = rest_convert_error_to_response(new \WP_Error(
+            $rejection['code'],
+            $rejection['message'],
+            ['status' => 429, 'retry_after' => $retry_after]
+        ));
+        $response->header('Retry-After', (string) $retry_after);
+
+        return $response;
+    }
+
+    /**
+     * A 403 when the admin has turned guest tickets off, otherwise null.
+     */
+    public static function guest_tickets_disabled(): ?\WP_Error
+    {
+        if (Setting::get_bool('guest_tickets_enabled', true)) {
+            return null;
+        }
+
+        return new \WP_Error(
+            'escalated_guest_tickets_disabled',
+            __('Guest tickets are disabled.', 'escalated'),
+            ['status' => 403]
+        );
+    }
+
+    /**
+     * Gate for the widget KB endpoints, matching the customer KB: 404 while
+     * the knowledge base is off, 403 for anonymous callers when it is not
+     * public. Null when the caller may read it.
+     */
+    public static function knowledge_base_unavailable(): ?\WP_Error
+    {
+        if (! KnowledgeBaseService::is_enabled()) {
+            return new \WP_Error('escalated_kb_disabled', __('Knowledge base is disabled.', 'escalated'), ['status' => 404]);
+        }
+        if (! KnowledgeBaseService::can_access()) {
+            return new \WP_Error('escalated_kb_private', __('Knowledge base requires sign-in.', 'escalated'), ['status' => 403]);
+        }
+
+        return null;
     }
 
     /**
@@ -314,6 +378,11 @@ class Widget_Controller extends Base_Controller
      */
     public function get_articles(WP_REST_Request $request)
     {
+        $unavailable = self::knowledge_base_unavailable();
+        if ($unavailable) {
+            return $unavailable;
+        }
+
         $q = $request->get_param('q');
         $search = $q !== null && $q !== '' ? $q : $request->get_param('search');
 
@@ -346,6 +415,11 @@ class Widget_Controller extends Base_Controller
      */
     public function get_article(WP_REST_Request $request)
     {
+        $unavailable = self::knowledge_base_unavailable();
+        if ($unavailable) {
+            return $unavailable;
+        }
+
         $slug = $request->get_param('slug');
 
         $article = Article::find_published_by_slug($slug);
@@ -385,6 +459,11 @@ class Widget_Controller extends Base_Controller
      */
     public function submit_feedback(WP_REST_Request $request)
     {
+        $unavailable = self::knowledge_base_unavailable();
+        if ($unavailable) {
+            return $unavailable;
+        }
+
         if (! KnowledgeBaseService::is_feedback_enabled()) {
             return $this->error('escalated_feedback_disabled', __('Article feedback is disabled.', 'escalated'), 404);
         }
@@ -427,20 +506,17 @@ class Widget_Controller extends Base_Controller
      */
     public function create_ticket(WP_REST_Request $request)
     {
+        $disabled = self::guest_tickets_disabled();
+        if ($disabled) {
+            return $disabled;
+        }
+
         // Per-IP guest ticket limit, on top of the widget-wide limit in
         // widget_enabled_check(). See GuestRateLimiter for configuration and
         // the reverse-proxy caveat.
-        $retry_after = GuestRateLimiter::attempt('ticket');
-        if ($retry_after !== null) {
-            $rejection = GuestRateLimiter::rejection($retry_after);
-            $response = rest_convert_error_to_response(new \WP_Error(
-                $rejection['code'],
-                $rejection['message'],
-                ['status' => 429, 'retry_after' => $retry_after]
-            ));
-            $response->header('Retry-After', (string) $retry_after);
-
-            return $response;
+        $limited = self::guest_limited('ticket');
+        if ($limited) {
+            return $limited;
         }
 
         $service = new TicketService;

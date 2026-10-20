@@ -107,6 +107,13 @@ class Widget_Cors
             self::grant($response, $origin);
         }
 
+        // Permission-callback 429s carry their wait in the error data.
+        $data = $response->get_data();
+        $retry_after = is_array($data) ? ($data['data']['retry_after'] ?? null) : null;
+        if ($response->get_status() === 429 && is_int($retry_after) && ! isset($response->get_headers()['Retry-After'])) {
+            $response->header('Retry-After', (string) $retry_after);
+        }
+
         return $response;
     }
 
