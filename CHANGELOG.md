@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- The bundled widget is now `@escalated-dev/escalated` 0.12.3. It keeps its script settings when `embed.js` is placed in the page `<head>`, and Enter no longer picks a stale mention suggestion.
+
 ### Security
 - **Attachments are private.** Inbound email and form attachments were written to the public uploads directory under the sender's file name, with HTML and SVG allowed, and linked directly, so an emailed `invoice.html` or `logo.svg` could run script on the WordPress origin when an agent opened it. Bytes now go to `wp-content/uploads/escalated-private` (deny-all `.htaccess`/`web.config`; move it outside the web root with the `escalated_attachment_storage_dir` filter on nginx) under random extension-less names, the MIME type is detected from the bytes, and HTML, SVG, XHTML and more PHP extensions are blocked. Files are served only by `GET /escalated/v1/attachments/{id}/download`, which requires a bearer token (`tickets:read`) or a signed-in session with a REST nonce, ticket visibility for staff, or being the requester (internal-note attachments are staff only). Downloads always use `Content-Disposition: attachment`, `X-Content-Type-Options: nosniff` and a sandbox CSP, and anything outside a short list of safe types is sent as `application/octet-stream`. Serialized attachment `url`s and the agent ticket page now point at this route. Files stored by earlier versions under `uploads/escalated` keep working through the route; their old public URLs are no longer linked, but delete or protect that directory to stop direct access.
 - Widget ticket creation and chat start answer 403 when guest tickets are disabled.
