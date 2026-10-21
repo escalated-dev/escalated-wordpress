@@ -41,6 +41,7 @@ class WorkflowRunnerService
      */
     public function run_for_event(string $trigger_event, object $ticket): int
     {
+        $trigger_event = EventVocabulary::canonical($trigger_event);
         $workflows = $this->find_active_by_trigger($trigger_event);
         if (empty($workflows)) {
             return 0;
@@ -98,17 +99,23 @@ class WorkflowRunnerService
         return $executed;
     }
 
+    /**
+     * Active workflows for the event, including those stored under a legacy
+     * name for it (e.g. ticket.tagged for ticket.tag_added).
+     */
     protected function find_active_by_trigger(string $trigger_event): array
     {
         $wpdb = \Escalated\Escalated::db();
         $table = Workflow::table();
+        $names = EventVocabulary::names_for($trigger_event);
+        $placeholders = implode(', ', array_fill(0, count($names), '%s'));
 
         return $wpdb->get_results(
             $wpdb->prepare(
                 "SELECT * FROM {$table}
-                 WHERE trigger_event = %s AND is_active = 1
+                 WHERE trigger_event IN ({$placeholders}) AND is_active = 1
                  ORDER BY position ASC, name ASC",
-                $trigger_event
+                ...$names
             )
         ) ?: [];
     }

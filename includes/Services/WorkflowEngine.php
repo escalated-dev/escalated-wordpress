@@ -12,7 +12,11 @@ class WorkflowEngine
      */
     public const ACTION_TYPES = ['change_status', 'assign_agent', 'change_priority', 'add_tag', 'remove_tag', 'set_department', 'change_department', 'add_note', 'insert_canned_reply', 'send_webhook', 'set_type', 'delay', 'add_follower'];
 
-    public const TRIGGER_EVENTS = ['ticket.created', 'ticket.updated', 'ticket.status_changed', 'ticket.assigned', 'ticket.priority_changed', 'ticket.tagged', 'ticket.department_changed', 'reply.created', 'reply.agent_reply', 'sla.warning', 'sla.breached', 'ticket.reopened'];
+    /**
+     * The canonical trigger names WorkflowListener fires (ADR
+     * 2026-10-21-event-vocabulary). Stored legacy names are read as these.
+     */
+    public const TRIGGER_EVENTS = EventVocabulary::WORKFLOW_TRIGGERS;
 
     public function evaluateConditions(array $conditions, array $ticket): bool
     {

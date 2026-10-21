@@ -9,7 +9,8 @@ class NotificationService
 {
     /**
      * Hook ticket and reply emails and the global webhook into the ticket
-     * lifecycle. Called once from Escalated::boot().
+     * lifecycle. Called once from Escalated::boot(). Webhooks carry the
+     * canonical names in EventVocabulary::WEBHOOK_EVENTS.
      *
      * Priority 100 runs after the product-side handlers (10-20) and workflows
      * (50), and after Email_Threading (5) has set the threading context for
@@ -25,6 +26,119 @@ class NotificationService
         add_action('escalated_department_changed', [$this, 'on_department_changed'], 100, 4);
         add_action('escalated_reply_created', [$this, 'on_reply_created'], 100, 2);
         add_action('escalated_sla_breached', [$this, 'on_sla_breached'], 100, 2);
+        add_action('escalated_sla_warning', [$this, 'on_sla_warning'], 100, 3);
+        add_action('escalated_ticket_resolved', [$this, 'on_ticket_resolved'], 100, 2);
+        add_action('escalated_ticket_closed', [$this, 'on_ticket_closed'], 100, 2);
+        add_action('escalated_ticket_reopened', [$this, 'on_ticket_reopened'], 100, 2);
+        add_action('escalated_ticket_escalated', [$this, 'on_ticket_escalated'], 100, 1);
+        add_action('escalated_ticket_priority_changed', [$this, 'on_ticket_priority_changed'], 100, 4);
+        add_action('escalated_internal_note_added', [$this, 'on_note_created'], 100, 2);
+        add_action('escalated_tag_added', [$this, 'on_tag_added'], 100, 2);
+        add_action('escalated_tag_removed', [$this, 'on_tag_removed'], 100, 2);
+    }
+
+    public function on_ticket_resolved($ticket, $causer_id = null): void
+    {
+        $this->dispatch_ticket_event('ticket.resolved', $ticket, ['causer_id' => self::nullable_int($causer_id)]);
+    }
+
+    public function on_ticket_closed($ticket, $causer_id = null): void
+    {
+        $this->dispatch_ticket_event('ticket.closed', $ticket, ['causer_id' => self::nullable_int($causer_id)]);
+    }
+
+    public function on_ticket_reopened($ticket, $causer_id = null): void
+    {
+        $this->dispatch_ticket_event('ticket.reopened', $ticket, ['causer_id' => self::nullable_int($causer_id)]);
+    }
+
+    public function on_ticket_escalated($ticket): void
+    {
+        $this->dispatch_ticket_event('ticket.escalated', $ticket);
+    }
+
+    public function on_ticket_priority_changed($ticket, $old_priority = null, $new_priority = null, $causer_id = null): void
+    {
+        $this->dispatch_ticket_event('ticket.priority_changed', $ticket, [
+            'old_priority' => $old_priority,
+            'new_priority' => $new_priority,
+            'causer_id' => self::nullable_int($causer_id),
+        ]);
+    }
+
+    /**
+     * Internal notes are sent as note.created with the note's id and author,
+     * never its body, as escalated-laravel does.
+     */
+    public function on_note_created($note, $ticket = null): void
+    {
+        if (! is_object($note) || empty($note->id)) {
+            return;
+        }
+        if (! $this->is_ticket($ticket) && ! empty($note->ticket_id)) {
+            $ticket = Ticket::find((int) $note->ticket_id);
+        }
+        $this->dispatch_ticket_event('note.created', $ticket, [
+            'note' => [
+                'id' => (int) $note->id,
+                'author_id' => self::nullable_int($note->author_id ?? null),
+                'created_at' => $note->created_at ?? null,
+            ],
+        ]);
+    }
+
+    public function on_tag_added($ticket_id, $tag_id = null): void
+    {
+        $this->dispatch_tag_event('ticket.tag_added', $ticket_id, $tag_id);
+    }
+
+    public function on_tag_removed($ticket_id, $tag_id = null): void
+    {
+        $this->dispatch_tag_event('ticket.tag_removed', $ticket_id, $tag_id);
+    }
+
+    /**
+     * SlaService::check_warnings() runs every minute and fires the warning
+     * again while the ticket is inside the window. Send it once per ticket,
+     * SLA target and due time.
+     */
+    public function on_sla_warning($ticket, $sla_type = null, $due_at = null): void
+    {
+        if (! $this->is_ticket($ticket)) {
+            return;
+        }
+        $key = 'escalated_wh_sla_warning_'.md5($ticket->id.'|'.$sla_type.'|'.$due_at);
+        if (get_transient($key)) {
+            return;
+        }
+        set_transient($key, 1, WEEK_IN_SECONDS);
+
+        $this->dispatch_ticket_event('sla.warning', $ticket, [
+            'sla_type' => $sla_type,
+            'due_at' => $due_at,
+        ]);
+    }
+
+    protected function dispatch_tag_event(string $event, $ticket_id, $tag_id): void
+    {
+        if (! is_numeric($ticket_id)) {
+            return;
+        }
+        $ticket = Ticket::find((int) $ticket_id);
+        $tag = $tag_id ? \Escalated\Models\Tag::find((int) $tag_id) : null;
+        $this->dispatch_ticket_event($event, $ticket, [
+            'tag' => [
+                'id' => self::nullable_int($tag_id),
+                'name' => $tag->name ?? null,
+            ],
+        ]);
+    }
+
+    protected function dispatch_ticket_event(string $event, $ticket, array $extra = []): void
+    {
+        if ($this->is_ticket($ticket)) {
+            $this->dispatch_webhook($event, ['ticket' => $this->ticket_payload($ticket)] + $extra);
+        }
     }
 
     public function on_ticket_created($ticket): void
