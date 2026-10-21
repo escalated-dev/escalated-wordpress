@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
   - Failed deliveries are retried after 120 s and 240 s, then marked failed.
   - The URL must resolve only to public addresses. This is checked when a webhook is saved and again before every attempt; redirects are not followed and the connection is pinned to the checked address.
   - New tables `escalated_webhooks` and `escalated_webhook_deliveries`, created by the normal schema upgrade.
+- **Workflow admin.** Escalated > Workflows creates, edits, enables, orders and deletes workflows, so the existing engine can be configured without code. REST routes under `/admin/workflows` (index, new, edit, create, update, toggle, reorder, delete) take the shared workflow admin contract's body and return 422 with `errors` on bad input. Both need `escalated_automation_manage` and are audited. See [docs/workflows.md](docs/workflows.md).
+- Workflow conditions can use `tags`, `hours_since_created` and `hours_since_updated`, and `add_note` fills in `{{field}}` templates, as the contract says.
 
 ### Changed
 - **One event vocabulary** (escalated-developer-context ADR `2026-10-21-event-vocabulary`). Webhooks and workflow triggers use the canonical names, the same as escalated-laravel. The list is in `Escalated\Services\EventVocabulary`.
@@ -17,6 +19,9 @@ All notable changes to this project will be documented in this file.
   - Workflows can now also run on `ticket.tag_removed`, `ticket.unassigned`, `ticket.escalated`, `ticket.resolved`, `ticket.closed`, `note.created` and the live chat events `chat.started`, `chat.assigned`, `chat.message` and `chat.ended`.
   - The webhook now also receives `ticket.resolved`, `ticket.closed`, `ticket.reopened`, `ticket.escalated`, `ticket.priority_changed`, `ticket.tag_added`, `ticket.tag_removed`, `sla.warning` (once per warning, not on every SLA cron run) and `note.created`. `note.created` carries the note's id and author, never its body.
 - **Legacy names still work when read.** A workflow stored as `ticket.tagged`, `ticket.replied`, `internal_note.added`, `ticket.untagged` or another legacy name from the ADR runs on the canonical event. Workflow log rows record the canonical name.
+
+### Fixed
+- A workflow whose actions fire its own trigger (a `ticket.updated` workflow that changes the priority) no longer runs itself without end. It runs once per event; other events still chain.
 
 ### Upgrade notes
 - The Settings page no longer has Webhook URL and Secret fields. On upgrade an existing URL becomes a webhook subscribed to every event with the same secret, so receivers keep getting events. A URL set in the `webhook_url` setting from code is moved the same way when the next event fires.
