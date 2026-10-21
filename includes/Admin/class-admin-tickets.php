@@ -148,6 +148,27 @@ class Admin_Tickets
     }
 
     /**
+     * Merge a ticket into the ticket with the given reference and return
+     * where to go next: the target on success, back with an error otherwise.
+     */
+    public function merge(int $ticket_id, string $target_reference, int $causer_id, string $redirect): string
+    {
+        $source = Ticket::find($ticket_id);
+        $target = Ticket::find_by_reference(strtoupper(trim($target_reference)));
+        if (! $source || ! $target || ! empty($target->merged_into_id)) {
+            return add_query_arg('message', 'merge_not_found', $redirect);
+        }
+
+        try {
+            $target = (new \Escalated\Services\TicketMergeService)->merge($source, $target, $causer_id);
+        } catch (\InvalidArgumentException $e) {
+            return add_query_arg('message', 'merge_refused', $redirect);
+        }
+
+        return admin_url('admin.php?page=escalated&action=view&ticket_id='.$target->id.'&message=merged');
+    }
+
+    /**
      * Handle POST actions for tickets (reply, note, status change, etc.).
      */
     public function handle_actions(): void
@@ -245,6 +266,13 @@ class Admin_Tickets
                     $service->change_department($ticket_id, $department_id, $causer_id);
                     $redirect = add_query_arg('message', 'department_changed', $redirect);
                 }
+                break;
+
+            case 'merge':
+                if (! current_user_can('escalated_ticket_merge')) {
+                    wp_die(esc_html__('Permission denied.', 'escalated'));
+                }
+                $redirect = $this->merge($ticket_id, isset($_POST['target_reference']) ? sanitize_text_field(wp_unslash($_POST['target_reference'])) : '', $causer_id, $redirect);
                 break;
 
             case 'update_tags':
