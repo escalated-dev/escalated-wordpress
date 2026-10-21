@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.6.3] - 2026-10-21
+
+### Upgrading
+- **Guest clients need the code step.** The bundled widget (0.12.3) already has it, and the `[escalated_guest_create]` form gains it in this release. Custom widget or API clients must call `/verification` and send `verification_id` and `verification_code` with tickets, chats and lookups.
+- Guest links sent before this release (permanent `guest_token`) keep working while **Legacy guest links** is on under Settings (the default). Turn it off once guests have moved to expiring links. Live chat sessions still use the chat ticket's token as their id and are not affected.
+- New table `escalated_guest_verifications` and ticket columns `guest_access_hash` and `guest_access_expires_at`, added by the normal schema upgrade.
+- The Settings page no longer has Webhook URL and Secret fields. On upgrade an existing URL becomes a webhook subscribed to every event with the same secret, so receivers keep getting events. A URL set in the `webhook_url` setting from code is moved the same way when the next event fires.
+- Webhooks are now sent a moment after the change, from WP-Cron, instead of during the request. Sites with WP-Cron disabled need a real cron calling `wp-cron.php`.
+- `NotificationService::send_webhook()` now queues the event for every subscribed webhook and returns whether any delivery was queued.
+- `escalated_webhook_sent` and `escalated_webhook_failed` receive the webhook row as an extra last argument.
+- Webhook receivers get more events than before, including `note.created` for internal notes (id and author only). Ignore the names you do not handle.
+- `reply.agent_reply` (staff replies only) is kept as a WordPress extension trigger.
+
 ### Security
 - **Verified guest access**, like escalated-laravel. See [docs/guest-access.md](docs/guest-access.md).
   - Guests prove their mailbox with an emailed 8-digit code before they open a ticket (widget or `[escalated_guest_create]` form), start a chat, or look a ticket up. A code lasts 10 minutes, allows 5 guesses, works once, and is bound to the email and purpose. Only keyed digests are stored. Codes are limited to 3 an hour per mailbox per client IP and 10 an hour per mailbox.
@@ -32,17 +45,6 @@ All notable changes to this project will be documented in this file.
 - Customers and guests see the replies on their ticket pages again. The public reply query filtered on a column that does not exist, so it returned nothing.
 - The `[escalated_guest_create]` form posts `guest_name` / `guest_email`, which the handler did not read, so it always failed with "All fields are required". Both spellings are read now.
 - A workflow whose actions fire its own trigger (a `ticket.updated` workflow that changes the priority) no longer runs itself without end. It runs once per event; other events still chain.
-
-### Upgrade notes
-- **Guest clients need the code step.** The bundled widget (0.12.3) already has it, and the `[escalated_guest_create]` form gains it in this release. Custom widget or API clients must call `/verification` and send `verification_id` and `verification_code` with tickets, chats and lookups.
-- Guest links sent before this release (permanent `guest_token`) keep working while **Legacy guest links** is on under Settings (the default). Turn it off once guests have moved to expiring links. Live chat sessions still use the chat ticket's token as their id and are not affected.
-- New table `escalated_guest_verifications` and ticket columns `guest_access_hash` and `guest_access_expires_at`, added by the normal schema upgrade.
-- The Settings page no longer has Webhook URL and Secret fields. On upgrade an existing URL becomes a webhook subscribed to every event with the same secret, so receivers keep getting events. A URL set in the `webhook_url` setting from code is moved the same way when the next event fires.
-- Webhooks are now sent a moment after the change, from WP-Cron, instead of during the request. Sites with WP-Cron disabled need a real cron calling `wp-cron.php`.
-- `NotificationService::send_webhook()` now queues the event for every subscribed webhook and returns whether any delivery was queued.
-- `escalated_webhook_sent` and `escalated_webhook_failed` receive the webhook row as an extra last argument.
-- Webhook receivers get more events than before, including `note.created` for internal notes (id and author only). Ignore the names you do not handle.
-- `reply.agent_reply` (staff replies only) is kept as a WordPress extension trigger.
 
 ## [1.6.2] - 2026-10-20
 
