@@ -34,6 +34,7 @@ class Admin_Menu
         add_submenu_page('escalated', __('Departments', 'escalated'), __('Departments', 'escalated'), 'escalated_department_view', 'escalated-departments', [new Admin_Departments, 'render']);
         add_submenu_page('escalated', __('SLA Policies', 'escalated'), __('SLA Policies', 'escalated'), 'escalated_sla_view', 'escalated-sla-policies', [new Admin_Sla_Policies, 'render']);
         add_submenu_page('escalated', __('Automations', 'escalated'), __('Automations', 'escalated'), 'escalated_automation_view', 'escalated-automations', [new Admin_Automations, 'render']);
+        add_submenu_page('escalated', __('Workflows', 'escalated'), __('Workflows', 'escalated'), 'escalated_automation_manage', 'escalated-workflows', [new Admin_Workflows, 'render']);
         add_submenu_page('escalated', __('Escalation Rules', 'escalated'), __('Escalation Rules', 'escalated'), 'escalated_escalation_view', 'escalated-escalation-rules', [new Admin_Escalation_Rules, 'render']);
         add_submenu_page('escalated', __('Tags', 'escalated'), __('Tags', 'escalated'), 'escalated_tag_view', 'escalated-tags', [new Admin_Tags, 'render']);
         add_submenu_page('escalated', __('Skills', 'escalated'), __('Skills', 'escalated'), 'escalated_skill_manage', 'escalated-skills', [new Admin_Skills, 'render']);

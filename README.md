@@ -66,6 +66,7 @@ Configure opt-in department/account access and targeted SLAs using the
 - Department-based routing and assignment workflows.
 - SLA policies with first-response and resolution targets.
 - Automated escalation rules and scheduled SLA checks.
+- Event-driven workflows, managed in wp-admin or over REST ([guide](docs/workflows.md)).
 - Customer-facing frontend ticket pages via shortcodes.
 - Guest ticket submission and secure guest ticket access.
 - Inbound email ingestion via Mailgun, Postmark, and Amazon SES webhooks.
