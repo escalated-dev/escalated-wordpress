@@ -151,7 +151,7 @@ class Test_Verified_Guest_Access extends WP_UnitTestCase
         $proof = $this->proof('five@example.com', 'ticket');
 
         for ($i = 0; $i < 5; $i++) {
-            $this->assertFalse($verifier->consume($proof['verification_id'], '00000000' === $proof['verification_code'] ? '11111111' : '00000000', 'five@example.com', 'ticket'));
+            $this->assertFalse($verifier->consume($proof['verification_id'], $proof['verification_code'] === '00000000' ? '11111111' : '00000000', 'five@example.com', 'ticket'));
         }
         $this->assertFalse($verifier->consume($proof['verification_id'], $proof['verification_code'], 'five@example.com', 'ticket'), 'A sixth guess was allowed.');
 
