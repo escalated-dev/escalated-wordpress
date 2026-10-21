@@ -12,5 +12,7 @@ class Deactivator
         wp_clear_scheduled_hook('escalated_purge_activities');
         wp_clear_scheduled_hook('escalated_run_automations');
         wp_clear_scheduled_hook('escalated_dispatch_newsletters');
+        wp_clear_scheduled_hook(Services\WebhookDispatcher::CRON_HOOK);
+        wp_clear_scheduled_hook(Services\WebhookDispatcher::KICK_HOOK);
     }
 }

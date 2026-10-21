@@ -8,7 +8,7 @@ use Escalated\Models\Ticket;
 class NotificationService
 {
     /**
-     * Hook ticket and reply emails and the global webhook into the ticket
+     * Hook ticket and reply emails and the webhooks into the ticket
      * lifecycle. Called once from Escalated::boot(). Webhooks carry the
      * canonical names in EventVocabulary::WEBHOOK_EVENTS.
      *
@@ -251,13 +251,14 @@ class NotificationService
     }
 
     /**
-     * Send the global webhook. A failure is reported through
-     * escalated_webhook_failed and never escapes into the operation that
+     * Queue the event for every webhook subscribed to it. Delivery happens
+     * later, from WP-Cron (see WebhookDispatcher), so a slow receiver never
+     * holds up the request. A failure never escapes into the operation that
      * fired the hook.
      */
     protected function dispatch_webhook(string $event, array $payload): void
     {
-        $this->safely($event.' webhook', fn () => $this->send_webhook($event, $payload));
+        $this->safely($event.' webhook', fn () => (new WebhookDispatcher)->dispatch($event, $payload));
     }
 
     protected function safely(string $what, callable $callback): void
@@ -320,80 +321,18 @@ class NotificationService
     }
 
     /**
-     * Send a webhook notification for an event.
+     * Queue a webhook event for every subscribed webhook.
      *
-     * POSTs a JSON payload to the configured webhook URL. The request includes an
-     * HMAC-SHA256 signature in the X-Escalated-Signature header for verification.
+     * Before subscriptions this POSTed to the single webhook_url setting
+     * straight away; that setting is now folded into a subscription.
      *
      * @param  string  $event  The event name (e.g., 'ticket.created', 'reply.created').
      * @param  array  $payload  The event data to send.
-     * @return bool True if the webhook was sent successfully (2xx response), false otherwise.
+     * @return bool True when at least one delivery was queued.
      */
     public function send_webhook(string $event, array $payload): bool
     {
-        $webhook_url = Setting::get('webhook_url', '');
-        if (empty($webhook_url)) {
-            return false;
-        }
-
-        $webhook_secret = Setting::get('webhook_secret', '');
-
-        $body = wp_json_encode([
-            'event' => $event,
-            'payload' => $payload,
-            // Kept as-is for existing receivers.
-            'timestamp' => current_time('timestamp'),
-            // ISO-8601 UTC, matching the Laravel reference's `timestamp`.
-            'occurred_at' => gmdate('c'),
-        ]);
-
-        $headers = [
-            'Content-Type' => 'application/json',
-        ];
-
-        // Add HMAC signature if a secret is configured.
-        if (! empty($webhook_secret)) {
-            $signature = hash_hmac('sha256', $body, $webhook_secret);
-            $headers['X-Escalated-Signature'] = $signature;
-        }
-
-        $headers['X-Escalated-Event'] = $event;
-
-        /**
-         * Filter the webhook request arguments before sending.
-         *
-         * @param  array  $args  The wp_remote_post arguments.
-         * @param  string  $event  The event name.
-         * @param  array  $payload  The event payload.
-         */
-        $args = apply_filters('escalated_webhook_args', [
-            'body' => $body,
-            'headers' => $headers,
-            'timeout' => 15,
-            'sslverify' => true,
-        ], $event, $payload);
-
-        // wp_safe_remote_post refuses loopback, private and link-local hosts
-        // (cloud metadata included), and keeps refusing them on redirects.
-        $response = wp_safe_remote_post($webhook_url, $args);
-
-        if (is_wp_error($response)) {
-            do_action('escalated_webhook_failed', $event, $payload, $response->get_error_message());
-
-            return false;
-        }
-
-        $response_code = wp_remote_retrieve_response_code($response);
-
-        if ($response_code >= 200 && $response_code < 300) {
-            do_action('escalated_webhook_sent', $event, $payload, $response_code);
-
-            return true;
-        }
-
-        do_action('escalated_webhook_failed', $event, $payload, sprintf('HTTP %d', $response_code));
-
-        return false;
+        return (new WebhookDispatcher)->dispatch($event, $payload) > 0;
     }
 
     /**

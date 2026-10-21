@@ -16,6 +16,7 @@ use Escalated\Services\AssignmentService;
 use Escalated\Services\EventVocabulary;
 use Escalated\Services\SlaService;
 use Escalated\Services\TicketService;
+use Escalated\Services\WebhookDispatcher;
 use Escalated\Services\WorkflowEngine;
 
 class Test_Event_Vocabulary extends WP_UnitTestCase
@@ -46,11 +47,18 @@ class Test_Event_Vocabulary extends WP_UnitTestCase
 
         $this->http = [];
         add_filter('pre_http_request', [$this, 'record_http'], 10, 3);
+        add_filter('escalated_outbound_url_resolve', [$this, 'resolve_host'], 10, 2);
+    }
+
+    public function resolve_host($addresses, $host)
+    {
+        return $host === 'hooks.example.com' ? ['93.184.216.34'] : $addresses;
     }
 
     public function tear_down(): void
     {
         remove_filter('pre_http_request', [$this, 'record_http'], 10);
+        remove_filter('escalated_outbound_url_resolve', [$this, 'resolve_host'], 10);
         Setting::set('webhook_url', '');
         Setting::set('webhook_secret', '');
 
@@ -248,6 +256,7 @@ class Test_Event_Vocabulary extends WP_UnitTestCase
         $this->tickets->add_note($id, $this->agent_id, 'note');
         $this->tickets->reply($id, $this->agent_id, 'reply');
 
+        (new WebhookDispatcher)->process_due();
         $this->assertNotEmpty($this->http);
         foreach ($this->http as $call) {
             if ($call['url'] !== self::WEBHOOK_URL) {
@@ -272,6 +281,7 @@ class Test_Event_Vocabulary extends WP_UnitTestCase
 
     private function webhooks_named(string $event): array
     {
+        (new WebhookDispatcher)->process_due();
         $out = [];
         foreach ($this->http as $call) {
             if ($call['url'] !== self::WEBHOOK_URL) {

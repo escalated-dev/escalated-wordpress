@@ -4,7 +4,7 @@ namespace Escalated;
 
 class Activator
 {
-    public const SCHEMA_VERSION = 'widget-embed-1';
+    public const SCHEMA_VERSION = 'webhook-subscriptions-1';
 
     /**
      * Run on plugin activation.
@@ -22,6 +22,7 @@ class Activator
         self::insert_default_settings();
         self::seed_newsletter_options();
         self::schedule_cron_events();
+        Services\WebhookDispatcher::migrate_legacy_setting();
 
         update_option('escalated_version', ESCALATED_VERSION);
         update_option('escalated_schema_version', self::SCHEMA_VERSION);
@@ -67,6 +68,7 @@ class Activator
         self::insert_default_settings();
         self::seed_newsletter_options();
         self::schedule_cron_events();
+        Services\WebhookDispatcher::migrate_legacy_setting();
 
         update_option('escalated_version', ESCALATED_VERSION);
         update_option('escalated_schema_version', self::SCHEMA_VERSION);
@@ -521,6 +523,43 @@ class Activator
             updated_at DATETIME NOT NULL,
             PRIMARY KEY  (id),
             KEY priority (priority)
+        ) $charset_collate;";
+        Escalated::schema_delta($sql);
+
+        // escalated_webhooks — outbound webhook subscriptions.
+        $sql = "CREATE TABLE {$prefix}webhooks (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            url VARCHAR(500) NOT NULL,
+            events LONGTEXT NOT NULL,
+            secret VARCHAR(255) NULL,
+            active TINYINT(1) NOT NULL DEFAULT 1,
+            created_at DATETIME NOT NULL,
+            updated_at DATETIME NOT NULL,
+            PRIMARY KEY  (id),
+            KEY active (active)
+        ) $charset_collate;";
+        Escalated::schema_delta($sql);
+
+        // escalated_webhook_deliveries — the send queue and delivery log
+        // (UTC times). WebhookDispatcher works it from WP-Cron.
+        $sql = "CREATE TABLE {$prefix}webhook_deliveries (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            webhook_id BIGINT UNSIGNED NOT NULL,
+            event VARCHAR(64) NOT NULL,
+            payload LONGTEXT NULL,
+            status VARCHAR(16) NOT NULL DEFAULT 'pending',
+            attempts SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+            response_code SMALLINT UNSIGNED NULL,
+            response_body TEXT NULL,
+            next_attempt_at DATETIME NULL,
+            occurred_at DATETIME NULL,
+            delivered_at DATETIME NULL,
+            created_at DATETIME NOT NULL,
+            updated_at DATETIME NOT NULL,
+            PRIMARY KEY  (id),
+            KEY webhook_id (webhook_id),
+            KEY event (event),
+            KEY status_next (status, next_attempt_at)
         ) $charset_collate;";
         Escalated::schema_delta($sql);
 
@@ -1268,6 +1307,10 @@ class Activator
 
         if (! wp_next_scheduled('escalated_chat_cleanup')) {
             wp_schedule_event(time(), 'escalated_every_minute', 'escalated_chat_cleanup');
+        }
+
+        if (! wp_next_scheduled(\Escalated\Services\WebhookDispatcher::CRON_HOOK)) {
+            wp_schedule_event(time(), 'escalated_every_minute', \Escalated\Services\WebhookDispatcher::CRON_HOOK);
         }
 
         if (! wp_next_scheduled('escalated_run_due_deferred_workflow_jobs')) {

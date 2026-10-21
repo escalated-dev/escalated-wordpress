@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- **Webhook subscriptions** under Escalated > Webhooks, like escalated-laravel: any number of webhooks, each with its own URL, signing secret, events and active switch, and a delivery log with a Retry button. See [docs/webhooks.md](docs/webhooks.md).
+  - Events are queued and sent from WP-Cron (Action Scheduler when installed), so a slow receiver no longer holds up ticket requests.
+  - Failed deliveries are retried after 120 s and 240 s, then marked failed.
+  - The URL must resolve only to public addresses. This is checked when a webhook is saved and again before every attempt; redirects are not followed and the connection is pinned to the checked address.
+  - New tables `escalated_webhooks` and `escalated_webhook_deliveries`, created by the normal schema upgrade.
+
 ### Changed
 - **One event vocabulary** (escalated-developer-context ADR `2026-10-21-event-vocabulary`). Webhooks and workflow triggers use the canonical names, the same as escalated-laravel. The list is in `Escalated\Services\EventVocabulary`.
   - The workflow tag trigger is `ticket.tag_added` (was `ticket.tagged`).
@@ -12,6 +19,10 @@ All notable changes to this project will be documented in this file.
 - **Legacy names still work when read.** A workflow stored as `ticket.tagged`, `ticket.replied`, `internal_note.added`, `ticket.untagged` or another legacy name from the ADR runs on the canonical event. Workflow log rows record the canonical name.
 
 ### Upgrade notes
+- The Settings page no longer has Webhook URL and Secret fields. On upgrade an existing URL becomes a webhook subscribed to every event with the same secret, so receivers keep getting events. A URL set in the `webhook_url` setting from code is moved the same way when the next event fires.
+- Webhooks are now sent a moment after the change, from WP-Cron, instead of during the request. Sites with WP-Cron disabled need a real cron calling `wp-cron.php`.
+- `NotificationService::send_webhook()` now queues the event for every subscribed webhook and returns whether any delivery was queued.
+- `escalated_webhook_sent` and `escalated_webhook_failed` receive the webhook row as an extra last argument.
 - Webhook receivers get more events than before, including `note.created` for internal notes (id and author only). Ignore the names you do not handle.
 - `reply.agent_reply` (staff replies only) is kept as a WordPress extension trigger.
 

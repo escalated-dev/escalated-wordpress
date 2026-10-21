@@ -4,7 +4,7 @@
  * NotificationService is wired into the ticket lifecycle at boot.
  *
  * Ticket and reply emails go out as the notification settings say, and the
- * global webhook_url receives lifecycle events. Everything here goes through
+ * webhooks receive lifecycle events (the old webhook_url setting still works). Everything here goes through
  * the real services and the hooks the plugin registers in Escalated::boot();
  * nothing registers NotificationService by hand.
  *
@@ -16,6 +16,7 @@ use Escalated\Models\Setting;
 use Escalated\Services\AssignmentService;
 use Escalated\Services\NotificationService;
 use Escalated\Services\TicketService;
+use Escalated\Services\WebhookDispatcher;
 
 class Test_Notification_Wiring extends WP_UnitTestCase
 {
@@ -44,11 +45,18 @@ class Test_Notification_Wiring extends WP_UnitTestCase
 
         $this->http = [];
         add_filter('pre_http_request', [$this, 'record_http'], 10, 3);
+        add_filter('escalated_outbound_url_resolve', [$this, 'resolve_host'], 10, 2);
+    }
+
+    public function resolve_host($addresses, $host)
+    {
+        return $host === 'hooks.example.com' ? ['93.184.216.34'] : $addresses;
     }
 
     public function tear_down(): void
     {
         remove_filter('pre_http_request', [$this, 'record_http'], 10);
+        remove_filter('escalated_outbound_url_resolve', [$this, 'resolve_host'], 10);
         reset_phpmailer_instance();
 
         parent::tear_down();
@@ -140,10 +148,10 @@ class Test_Notification_Wiring extends WP_UnitTestCase
             $failure = $error;
         }, 10, 3);
 
-        $sent = (new NotificationService)->send_webhook('ticket.created', ['ticket' => ['id' => 1]]);
+        $this->assertTrue((new NotificationService)->send_webhook('ticket.created', ['ticket' => ['id' => 1]]));
+        (new WebhookDispatcher)->process_due();
 
-        $this->assertFalse($sent);
-        $this->assertSame('A valid URL was not provided.', $failure);
+        $this->assertSame('Refused: the URL does not resolve to a public address.', $failure);
     }
 
     // =========================================================================
@@ -222,6 +230,8 @@ class Test_Notification_Wiring extends WP_UnitTestCase
      */
     private function webhook_calls(): array
     {
+        (new WebhookDispatcher)->process_due();
+
         return array_values(array_filter($this->http, fn ($call) => $call['url'] === self::WEBHOOK_URL));
     }
 

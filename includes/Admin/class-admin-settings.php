@@ -84,10 +84,6 @@ class Admin_Settings
             'inbound_email_password' => 'sanitize_text_field',
             'inbound_email_encryption' => 'sanitize_text_field',
 
-            // API
-            'webhook_url' => 'esc_url_raw',
-            'webhook_secret' => 'sanitize_text_field',
-
             // Notifications
             'notification_new_ticket' => 'absint',
             'notification_ticket_reply' => 'absint',
@@ -123,8 +119,8 @@ class Admin_Settings
      * single `settings.updated` audit entry capturing the keys that changed.
      *
      * Extracted from handle_save() so it is unit-testable without the
-     * redirect/exit at the HTTP boundary. Webhook fields (webhook_url,
-     * webhook_secret) flow through here too, so webhook changes are audited.
+     * redirect/exit at the HTTP boundary. Webhooks are managed on their own
+     * screen (Admin_Webhooks), which audits its own changes.
      *
      * @param  array<string, mixed>  $input
      * @return array<string, string> Validation errors keyed by field; those fields are not saved.
