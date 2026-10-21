@@ -35,6 +35,8 @@ class Shortcodes
         wp_localize_script('escalated-frontend', 'escalatedFrontend', [
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('escalated_frontend'),
+            'guestVerificationUrl' => rest_url('escalated/v1/guest/verification'),
+            'guestLookupUrl' => rest_url('escalated/v1/guest/lookup'),
         ]);
     }
 
@@ -80,12 +82,18 @@ class Shortcodes
     public function render_view_ticket($atts): string
     {
         // Check for guest token first
+        // An access grant, or a legacy permanent token while those are accepted.
         $guest_token = isset($_GET['guest_token']) ? sanitize_text_field(wp_unslash($_GET['guest_token'])) : '';
         if ($guest_token) {
-            $ticket = \Escalated\Models\Ticket::find_by_guest_token($guest_token);
+            $ticket = \Escalated\Services\GuestAccess::ticket_for_token($guest_token);
             if (! $ticket) {
-                return '<p class="escalated-notice">'.esc_html__('Ticket not found.', 'escalated').'</p>';
+                return '<p class="escalated-notice">'.esc_html__('This link has expired. Verify your email to get a new one.', 'escalated').'</p>';
             }
+            if (! headers_sent()) {
+                nocache_headers();
+                header('Referrer-Policy: no-referrer');
+            }
+            $access_token = $guest_token;
             $replies = \Escalated\Models\Reply::for_ticket($ticket->id, false);
             $is_guest = true;
             ob_start();

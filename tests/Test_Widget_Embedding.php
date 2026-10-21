@@ -127,7 +127,7 @@ class Test_Widget_Embedding extends WP_UnitTestCase
             'email' => 'jane@example.com',
             'subject' => 'Where is my order?',
             'description' => 'It has not arrived yet.',
-        ], $extra);
+        ], escalated_test_guest_proof('jane@example.com'), $extra);
     }
 
     private function ticket_metadata(string $reference): ?array
@@ -406,6 +406,7 @@ class Test_Widget_Embedding extends WP_UnitTestCase
             'name' => 'John Doe',
             'email' => 'john@example.com',
             'message' => 'Hello',
+        ] + escalated_test_guest_proof('john@example.com', 'chat') + [
             'metadata' => ['page_url' => 'https://shop.example.com/cart', 'cart_total' => 129.5, 'deep' => ['x' => 1]],
         ]);
 

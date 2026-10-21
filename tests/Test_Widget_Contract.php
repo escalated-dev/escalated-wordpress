@@ -114,7 +114,7 @@ class Test_Widget_Contract extends WP_UnitTestCase
             'email' => 'wendy@example.com',
             'department_id' => null,
             'message' => 'My order is late.',
-        ], $extra));
+        ], escalated_test_guest_proof((string) ($extra['email'] ?? 'wendy@example.com'), 'chat'), $extra));
         $this->assertSame(201, $response['status'], (string) wp_json_encode($response['json']));
 
         return $response['json'];
@@ -141,8 +141,8 @@ class Test_Widget_Contract extends WP_UnitTestCase
         $this->assertTrue($config['kb_enabled']);
         $this->assertTrue($config['guest_tickets_enabled']);
         $this->assertTrue($config['accepts_metadata']);
-        $this->assertFalse($config['status_lookup_enabled']);
-        $this->assertArrayNotHasKey('guest_verification_required', $config);
+        $this->assertTrue($config['status_lookup_enabled']);
+        $this->assertTrue($config['guest_verification_required']);
         // Existing keys are unchanged.
         $this->assertArrayHasKey('color', $config);
         $this->assertArrayHasKey('position', $config);
@@ -228,13 +228,14 @@ class Test_Widget_Contract extends WP_UnitTestCase
             'subject' => 'Where is my order?',
             'description' => 'It has not arrived.',
             'department_id' => $sales,
-        ]);
+        ] + escalated_test_guest_proof('jane@example.com'));
 
         $this->assertSame(201, $response['status']);
         $this->assertNotEmpty($response['json']['message']);
         $ticket = Ticket::find_by_reference($response['json']['reference']);
         $this->assertSame($sales, (int) $ticket->department_id);
-        $this->assertSame($ticket->guest_token, $response['json']['guest_access_token']);
+        $this->assertStringStartsWith('ega1.', $response['json']['guest_access_token']);
+        $this->assertNotSame($ticket->guest_token, $response['json']['guest_access_token']);
         $this->assertSame($ticket->guest_token, $response['json']['guest_token']);
     }
 
@@ -249,7 +250,7 @@ class Test_Widget_Contract extends WP_UnitTestCase
                 'subject' => 'Where is my order?',
                 'description' => 'It has not arrived.',
                 'department_id' => $department_id,
-            ]);
+            ] + escalated_test_guest_proof('jane@example.com'));
 
             $this->assertSame(201, $response['status'], (string) wp_json_encode($response['json']));
             $this->assertNull(Ticket::find_by_reference($response['json']['reference'])->department_id);

@@ -292,6 +292,16 @@ class Widget_Chat_Controller extends Base_Controller
             return $limited;
         }
 
+        // A chat needs proof of the visitor's mailbox, like a ticket.
+        $email = (string) $request->get_param('email');
+        if (! is_email($email)) {
+            return GuestVerificationEndpoints::invalid(['email' => [__('Enter a valid email address.', 'escalated')]]);
+        }
+        $proof = GuestVerificationEndpoints::consume_proof($request, $email, 'chat');
+        if ($proof !== true) {
+            return $proof;
+        }
+
         $service = new ChatSessionService;
 
         try {
@@ -318,6 +328,8 @@ class Widget_Chat_Controller extends Base_Controller
                 'created_at' => $session->created_at,
             ], 201);
         } catch (\Throwable $e) {
+            (new \Escalated\Services\GuestEmailVerification)->release((string) $request->get_param('verification_id'));
+
             return $this->error('escalated_chat_error', $e->getMessage(), 500);
         }
     }

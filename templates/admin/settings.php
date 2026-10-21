@@ -89,6 +89,29 @@ foreach ($priorities as $key => $data) {
                             <?php checked($s('guest_tickets_enabled', '1'), '1'); ?>>
                         <?php esc_html_e('Allow guests (non-logged-in users) to submit tickets', 'escalated'); ?>
                     </label>
+                    <p class="description"><?php esc_html_e('Guests confirm their email address with an emailed code before they open a ticket or chat, or look a ticket up.', 'escalated'); ?></p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="guest_access_ttl_minutes"><?php esc_html_e('Guest link lifetime', 'escalated'); ?></label>
+                </th>
+                <td>
+                    <input type="number" id="guest_access_ttl_minutes" name="guest_access_ttl_minutes" class="small-text" min="5" max="10080"
+                           value="<?php echo esc_attr($s('guest_access_ttl_minutes', '1440')); ?>">
+                    <?php esc_html_e('minutes', 'escalated'); ?>
+                    <p class="description"><?php esc_html_e('How long a guest ticket link works (5 minutes to 7 days). Guests get a new one by looking the ticket up again.', 'escalated'); ?></p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row"><?php esc_html_e('Legacy guest links', 'escalated'); ?></th>
+                <td>
+                    <label>
+                        <input type="checkbox" name="guest_legacy_tokens_enabled" value="1"
+                            <?php checked($s('guest_legacy_tokens_enabled', '1'), '1'); ?>>
+                        <?php esc_html_e('Keep accepting the permanent guest links sent before verified guest access', 'escalated'); ?>
+                    </label>
+                    <p class="description"><?php esc_html_e('Turn this off once guests have moved to expiring links. Live chat sessions are not affected.', 'escalated'); ?></p>
                 </td>
             </tr>
             <tr>

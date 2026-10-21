@@ -65,6 +65,9 @@ class Test_Guest_Rate_Limit extends WP_UnitTestCase
         $request = new WP_REST_Request('POST', '/escalated/v1/widget/tickets');
         $request->set_param('name', 'Guest '.$n);
         $request->set_param('email', 'guest'.$n.'@example.com');
+        foreach (escalated_test_guest_proof('guest'.$n.'@example.com') as $key => $value) {
+            $request->set_param($key, $value);
+        }
         $request->set_param('subject', 'Help '.$n);
         $request->set_param('description', 'Something broke.');
 

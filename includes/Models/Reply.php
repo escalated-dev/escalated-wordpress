@@ -115,7 +115,7 @@ class Reply
         $values = [$ticket_id];
 
         if (! $include_internal) {
-            $sql .= ' AND is_internal = 0';
+            $sql .= ' AND is_internal_note = 0';
         }
 
         $sql .= ' ORDER BY created_at ASC';

@@ -75,7 +75,7 @@ class Test_Guest_Ajax_Rate_Limit extends WP_Ajax_UnitTestCase
             'email' => 'ajax-guest'.$n.'@example.com',
             'subject' => 'Help '.$n,
             'description' => 'Something broke.',
-        ]);
+        ] + escalated_test_guest_proof('ajax-guest'.$n.'@example.com'));
     }
 
     /** @return array<string, mixed> */

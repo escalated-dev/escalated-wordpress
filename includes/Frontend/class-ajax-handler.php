@@ -152,8 +152,9 @@ class Ajax_Handler
             wp_send_json_error(['message' => __('Guest tickets are disabled.', 'escalated')], 403);
         }
 
-        $name = sanitize_text_field(wp_unslash($_POST['name'] ?? ''));
-        $email = sanitize_email($_POST['email'] ?? '');
+        // The shortcode form names its fields guest_name / guest_email.
+        $name = sanitize_text_field(wp_unslash($_POST['name'] ?? $_POST['guest_name'] ?? ''));
+        $email = sanitize_email(wp_unslash($_POST['email'] ?? $_POST['guest_email'] ?? ''));
         $subject = sanitize_text_field(wp_unslash($_POST['subject'] ?? ''));
         $description = wp_kses_post(wp_unslash($_POST['description'] ?? ''));
 
@@ -165,26 +166,48 @@ class Ajax_Handler
             wp_send_json_error(['message' => __('Invalid email address.', 'escalated')], 422);
         }
 
+        // Proof of the mailbox: the code emailed by POST /guest/verification.
+        $verification_id = sanitize_text_field(wp_unslash($_POST['verification_id'] ?? ''));
+        $verification_code = preg_replace('/\s+/', '', sanitize_text_field(wp_unslash($_POST['verification_code'] ?? '')));
+        if ($verification_id === '' || $verification_code === '') {
+            wp_send_json_error(['message' => __('Verify your email address first: request a code and enter it.', 'escalated'), 'verification_required' => true], 422);
+        }
+        $verifier = new \Escalated\Services\GuestEmailVerification;
+        if (! $verifier->consume($verification_id, (string) $verification_code, $email, 'ticket')) {
+            wp_send_json_error(['message' => __('The verification code is wrong or has expired. Request a new one.', 'escalated'), 'verification_required' => true], 422);
+        }
+
         $service = new \Escalated\Services\TicketService;
-        $ticket = $service->create_guest([
-            'subject' => $subject,
-            'description' => $description,
-            'guest_name' => $name,
-            'guest_email' => $email,
-        ]);
+        try {
+            $ticket = $service->create_guest([
+                'subject' => $subject,
+                'description' => $description,
+                'guest_name' => $name,
+                'guest_email' => $email,
+            ]);
+        } catch (\Throwable $e) {
+            $verifier->release($verification_id);
+            wp_send_json_error(['message' => __('The ticket could not be created. Please try again.', 'escalated')], 500);
+        }
 
         // Attach default SLA policy
         $sla_service = new \Escalated\Services\SlaService;
         $sla_service->attach_default_policy($ticket->id);
 
-        $view_url = Guest_Handler::generate_view_url($ticket);
+        $grant = \Escalated\Services\GuestAccess::issue($ticket);
+        $view_url = Guest_Handler::generate_view_url($ticket, $grant['token']);
 
-        wp_send_json_success([
+        $data = [
             'message' => __('Ticket created successfully.', 'escalated'),
             'reference' => $ticket->reference,
-            'guest_token' => $ticket->guest_token,
             'view_url' => $view_url,
-        ]);
+            'expires_at' => $grant['expires_at'],
+        ];
+        if (\Escalated\Services\GuestAccess::legacy_tokens_enabled()) {
+            $data['guest_token'] = $ticket->guest_token;
+        }
+
+        wp_send_json_success($data);
     }
 
     public function guest_reply(): void
@@ -201,7 +224,7 @@ class Ajax_Handler
             wp_send_json_error(['message' => __('Invalid request.', 'escalated')], 422);
         }
 
-        $ticket = \Escalated\Models\Ticket::find_by_guest_token($guest_token);
+        $ticket = \Escalated\Services\GuestAccess::ticket_for_token($guest_token);
         if (! $ticket) {
             wp_send_json_error(['message' => __('Ticket not found.', 'escalated')], 404);
         }

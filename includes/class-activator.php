@@ -4,7 +4,7 @@ namespace Escalated;
 
 class Activator
 {
-    public const SCHEMA_VERSION = 'webhook-subscriptions-1';
+    public const SCHEMA_VERSION = 'verified-guest-access-1';
 
     /**
      * Run on plugin activation.
@@ -163,6 +163,8 @@ class Activator
             guest_name VARCHAR(255) NULL,
             guest_email VARCHAR(255) NULL,
             guest_token VARCHAR(64) NULL,
+            guest_access_hash CHAR(64) NULL,
+            guest_access_expires_at DATETIME NULL,
             contact_id BIGINT UNSIGNED NULL,
             created_at DATETIME,
             updated_at DATETIME,
@@ -523,6 +525,24 @@ class Activator
             updated_at DATETIME NOT NULL,
             PRIMARY KEY  (id),
             KEY priority (priority)
+        ) $charset_collate;";
+        Escalated::schema_delta($sql);
+
+        // escalated_guest_verifications — emailed guest codes (keyed digests
+        // only, UTC times). See Services\GuestEmailVerification.
+        $sql = "CREATE TABLE {$prefix}guest_verifications (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            public_id CHAR(32) NOT NULL,
+            email_digest CHAR(64) NOT NULL,
+            purpose VARCHAR(16) NOT NULL,
+            code_digest CHAR(64) NOT NULL,
+            attempts SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+            expires_at DATETIME NOT NULL,
+            consumed_at DATETIME NULL,
+            created_at DATETIME NOT NULL,
+            PRIMARY KEY  (id),
+            UNIQUE KEY public_id (public_id),
+            KEY expires_at (expires_at)
         ) $charset_collate;";
         Escalated::schema_delta($sql);
 
