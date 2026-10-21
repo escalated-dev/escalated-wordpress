@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
   - `/widget/config` now sends `guest_verification_required: true` and `status_lookup_enabled: true`, so the bundled widget shows its code step and Status tab.
 
 ### Added
+- **Ticket merge**, like escalated-laravel. The ticket screen has a Merge box. `POST /tickets/{ref}/merge` with `{target_reference}` and `GET /tickets/merge-search?q=` do the same over the API. Replies move to the target, both tickets get a system note, and the source is closed with the new `merged_into_id` column, in one transaction. Needs the `escalated_ticket_merge` capability. See the README.
 - **Webhook subscriptions** under Escalated > Webhooks, like escalated-laravel: any number of webhooks, each with its own URL, signing secret, events and active switch, and a delivery log with a Retry button. See [docs/webhooks.md](docs/webhooks.md).
   - Events are queued and sent from WP-Cron (Action Scheduler when installed), so a slow receiver no longer holds up ticket requests.
   - Failed deliveries are retried after 120 s and 240 s, then marked failed.

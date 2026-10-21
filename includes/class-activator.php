@@ -4,7 +4,7 @@ namespace Escalated;
 
 class Activator
 {
-    public const SCHEMA_VERSION = 'verified-guest-access-1';
+    public const SCHEMA_VERSION = 'ticket-merge-1';
 
     /**
      * Run on plugin activation.
@@ -165,6 +165,7 @@ class Activator
             guest_token VARCHAR(64) NULL,
             guest_access_hash CHAR(64) NULL,
             guest_access_expires_at DATETIME NULL,
+            merged_into_id BIGINT UNSIGNED NULL,
             contact_id BIGINT UNSIGNED NULL,
             created_at DATETIME,
             updated_at DATETIME,
@@ -173,6 +174,7 @@ class Activator
             UNIQUE KEY reference (reference),
             UNIQUE KEY guest_token (guest_token),
             KEY contact_id (contact_id),
+            KEY merged_into_id (merged_into_id),
             KEY account (account_type, account_id)
         ) $charset_collate;";
         Escalated::schema_delta($sql);

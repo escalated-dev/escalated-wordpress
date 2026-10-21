@@ -57,6 +57,9 @@ $nonce = wp_create_nonce('escalated_ticket_action_'.$ticket->id);
                     'assigned' => __('Assignment updated.', 'escalated'),
                     'department_changed' => __('Department updated.', 'escalated'),
                     'tags_updated' => __('Tags updated.', 'escalated'),
+                    'merged' => __('Ticket merged into this one.', 'escalated'),
+                    'merge_not_found' => __('No unmerged ticket has that reference.', 'escalated'),
+                    'merge_refused' => __('Those tickets cannot be merged.', 'escalated'),
                     'error' => __('An error occurred.', 'escalated'),
                 ];
         echo esc_html($messages[$message] ?? __('Action completed.', 'escalated'));
@@ -358,6 +361,27 @@ if ($requester_email) {
                     <?php submit_button(__('Update', 'escalated'), 'small', 'submit', false); ?>
                 </form>
             </div>
+
+            <!-- Merge -->
+            <?php if (current_user_can('escalated_ticket_merge')) { ?>
+                <div class="escalated-card" style="padding: 12px; margin-bottom: 12px;">
+                    <h4 class="escalated-text-primary" style="margin: 0 0 8px; font-size: 13px;"><?php esc_html_e('Merge', 'escalated'); ?></h4>
+                    <?php if (! empty($ticket->merged_into_id) && ($merged_into = \Escalated\Models\Ticket::find((int) $ticket->merged_into_id))) { ?>
+                        <p style="margin: 0; font-size: 13px;">
+                            <?php esc_html_e('Merged into', 'escalated'); ?>
+                            <a href="<?php echo esc_url(admin_url('admin.php?page=escalated&action=view&ticket_id='.$merged_into->id)); ?>"><?php echo esc_html($merged_into->reference); ?></a>
+                        </p>
+                    <?php } else { ?>
+                        <form method="post" onsubmit="return confirm('<?php echo esc_js(__('Move every reply to the other ticket and close this one?', 'escalated')); ?>');">
+                            <input type="hidden" name="escalated_ticket_action" value="merge">
+                            <input type="hidden" name="ticket_id" value="<?php echo esc_attr($ticket->id); ?>">
+                            <input type="hidden" name="_escalated_nonce" value="<?php echo esc_attr($nonce); ?>">
+                            <input type="text" name="target_reference" required placeholder="<?php esc_attr_e('Merge into reference, e.g. ESC-00042', 'escalated'); ?>" style="width: 100%; margin-bottom: 5px;">
+                            <?php submit_button(__('Merge', 'escalated'), 'small', 'submit', false); ?>
+                        </form>
+                    <?php } ?>
+                </div>
+            <?php } ?>
 
             <!-- Tags -->
             <div class="escalated-card" style="padding: 12px; margin-bottom: 12px;">

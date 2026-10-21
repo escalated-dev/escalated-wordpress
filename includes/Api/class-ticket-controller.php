@@ -16,6 +16,7 @@ use Escalated\Services\AssignmentService;
 use Escalated\Services\AttachmentService;
 use Escalated\Services\MacroService;
 use Escalated\Services\TicketActionRegistry;
+use Escalated\Services\TicketMergeService;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_REST_Server;
@@ -41,6 +42,39 @@ class Ticket_Controller extends Base_Controller
      */
     public function register_routes(): void
     {
+        // Unmerged tickets to merge into, by reference or subject.
+        register_rest_route(
+            $this->namespace,
+            '/'.$this->rest_base.'/merge-search',
+            [
+                [
+                    'methods' => WP_REST_Server::READABLE,
+                    'callback' => [$this, 'merge_search'],
+                    'permission_callback' => [$this, 'token_permissions_check'],
+                    'args' => [
+                        'q' => ['type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                        'exclude' => ['type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                    ],
+                ],
+            ]
+        );
+
+        // Merge this ticket into another: {target_reference}.
+        register_rest_route(
+            $this->namespace,
+            '/'.$this->rest_base.'/'.self::REF_PATTERN.'/merge',
+            [
+                [
+                    'methods' => WP_REST_Server::CREATABLE,
+                    'callback' => [$this, 'merge'],
+                    'permission_callback' => [$this, 'token_permissions_check'],
+                    'args' => [
+                        'target_reference' => ['required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+                    ],
+                ],
+            ]
+        );
+
         // List tickets.
         register_rest_route(
             $this->namespace,
@@ -1172,6 +1206,65 @@ class Ticket_Controller extends Base_Controller
      * @param  WP_REST_Request  $request  The incoming request.
      * @return object|\WP_Error The ticket object or WP_Error if not found.
      */
+    /**
+     * GET /tickets/merge-search?q=: unmerged tickets the caller can see.
+     */
+    public function merge_search(WP_REST_Request $request)
+    {
+        $user_id = $this->check_token_permission($request, 'tickets:read');
+        if ($user_id === null) {
+            return $this->error('escalated_unauthorized', __('Unauthorized.', 'escalated'), 401);
+        }
+
+        $exclude = (string) $request->get_param('exclude');
+        $excluded = $exclude !== '' ? Ticket::find_by_reference($exclude) : null;
+
+        return $this->success([
+            'tickets' => (new TicketMergeService)->search((string) $request->get_param('q'), $excluded ? (int) $excluded->id : null),
+        ]);
+    }
+
+    /**
+     * POST /tickets/{ref}/merge: merge this ticket into target_reference.
+     * Needs tickets:update and the ticket.merge permission.
+     */
+    public function merge(WP_REST_Request $request)
+    {
+        $user_id = $this->check_token_permission($request, 'tickets:update');
+        if ($user_id === null) {
+            return $this->error('escalated_unauthorized', __('Unauthorized.', 'escalated'), 401);
+        }
+        if (! user_can($user_id, 'escalated_ticket_merge')) {
+            return $this->error('escalated_forbidden', __('You do not have permission to merge tickets.', 'escalated'), 403);
+        }
+
+        $source = $this->resolve_ticket($request);
+        if (is_wp_error($source)) {
+            return $source;
+        }
+
+        $target = Ticket::find_by_reference(strtoupper(trim((string) $request->get_param('target_reference'))));
+        if (! $target || ! empty($target->merged_into_id)) {
+            return $this->error('escalated_not_found', __('Target ticket not found.', 'escalated'), 404);
+        }
+
+        try {
+            $target = (new TicketMergeService)->merge($source, $target, $user_id);
+        } catch (\InvalidArgumentException $e) {
+            return $this->error('escalated_merge_refused', $e->getMessage(), 422);
+        }
+
+        return $this->success([
+            'message' => sprintf(
+                /* translators: 1: source reference, 2: target reference */
+                __('%1$s was merged into %2$s.', 'escalated'),
+                $source->reference,
+                $target->reference
+            ),
+            'ticket' => Ticket::enrich($target),
+        ]);
+    }
+
     private function resolve_ticket(WP_REST_Request $request)
     {
         $ref = sanitize_text_field($request->get_param('ref'));
