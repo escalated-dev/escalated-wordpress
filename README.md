@@ -100,7 +100,7 @@ Use these shortcodes on WordPress pages:
 - `[escalated_create_ticket]` - Logged-in requester new ticket form.
 - `[escalated_view_ticket]` - Ticket detail view:
   - Logged-in users: expects `?ticket=ESC-123`
-  - Guests: expects `?guest_token=<token>`
+  - Guests: expects `?guest_token=<link token>` (an expiring link from the guest form or a lookup; see [verified guest access](docs/guest-access.md))
 - `[escalated_guest_create]` - Guest ticket creation form (if enabled in settings).
 
 ### Guest rate limits

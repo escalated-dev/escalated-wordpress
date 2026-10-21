@@ -118,16 +118,17 @@ site: it does not need CORS.
   "kb_enabled": true,
   "guest_tickets_enabled": true,
   "accepts_metadata": true,
-  "status_lookup_enabled": false
+  "guest_verification_required": true,
+  "status_lookup_enabled": true
 }
 ```
 
 `color`, `position` and `greeting` come from the widget settings.
 `departments` lists the active departments. `kb_enabled` is true when the
 knowledge base is on and public (or the visitor is signed in on a same-origin
-page). `status_lookup_enabled` is always false: the plugin has no mailbox
-verification, so looking up a ticket needs its guest token and the widget
-hides its Status tab. While the widget is disabled the route answers 403 with
+page). `guest_verification_required` and `status_lookup_enabled` are true:
+visitors confirm their email with a code before they open a ticket, start a
+chat or look a ticket up (see [guest-access.md](guest-access.md)). While the widget is disabled the route answers 403 with
 `{"enabled": false, "code": "escalated_widget_disabled", "message": "..."}`.
 
 ### The routes the widget calls
@@ -140,8 +141,11 @@ working: existing routes, parameters and fields are unchanged.
 | `GET /chat/availability` | `{ available, queue_depth }` |
 | `GET /articles?q=` (2 to 200 characters) | `{ articles: [{ id, title, slug, excerpt, category }] }`. Without `q` (or with the older `search` parameter) the answer is the bare array, as before. |
 | `GET /articles/{slug}` | `{ id, title, slug, body, content, category, related, feedback_enabled, date }`; `body` and `content` are the same HTML. |
-| `POST /tickets` `{ name, email, subject, description, department_id?, metadata? }` | 201 `{ message, reference, guest_token, guest_access_token }`. An unknown or inactive `department_id` is ignored. |
-| `POST /chat/start` `{ name, email, department_id?, message?, metadata? }` | 201 `{ id, session_id, status, messages, agent, guest_token, ... }` |
+| `POST /verification` `{ email, purpose }` | 202 `{ verification_id, expires_in: 600, message }`; the 8-digit code is emailed. `purpose` is `ticket`, `chat` or `lookup`. |
+| `POST /tickets` `{ name, email, subject, description, department_id?, metadata?, verification_id, verification_code }` | 201 `{ message, reference, guest_access_token, expires_at }`, plus the legacy `guest_token` while legacy guest links are on. An unknown or inactive `department_id` is ignored. |
+| `POST /lookup` `{ email, reference, verification_id, verification_code }` | `{ data: [{ reference, subject, guest_access_token, expires_at }] }` |
+| `GET /tickets/{reference}` with `Authorization: Bearer <guest_access_token>` | `{ reference, subject, status, created_at, updated_at }` |
+| `POST /chat/start` `{ name, email, department_id?, message?, metadata?, verification_id, verification_code }` | 201 `{ id, session_id, status, messages, agent, guest_token, ... }` |
 | `GET /chat/{id}/messages` | `{ messages: [{ id, body, is_agent, author: { name }, created_at }], agent, typing, ended, status }` |
 | `POST /chat/{id}/messages` `{ body }` | 201; 422 once the chat has ended |
 | `POST /chat/{id}/typing` | 200; fires the `escalated_chat_visitor_typing` action |
@@ -157,8 +161,9 @@ widget routes keep the 30-a-minute limit. The older numeric routes
 parameter) still work. `typing` is always `null` for now: WordPress has no
 agent typing signal.
 
-`GET /tickets/{reference}` still needs the ticket's `guest_token` parameter.
-There is no lookup by email address.
+`GET /tickets/{reference}` needs a grant for that ticket; an email address
+never opens it. While legacy guest links are on, the old `guest_token`
+parameter still works too.
 
 ### Host parameters
 
