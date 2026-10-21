@@ -115,7 +115,7 @@ $is_closed = in_array($ticket->status, ['resolved', 'closed'], true);
                 <h3><?php esc_html_e('Reply', 'escalated'); ?></h3>
                 <form class="escalated-guest-reply-form" method="post" enctype="multipart/form-data">
                     <input type="hidden" name="ticket_id" value="<?php echo esc_attr($ticket->id); ?>" />
-                    <input type="hidden" name="guest_token" value="<?php echo esc_attr($ticket->guest_token); ?>" />
+                    <input type="hidden" name="guest_token" value="<?php echo esc_attr($access_token ?? $ticket->guest_token); ?>" />
 
                     <div class="escalated-form-group">
                         <label for="escalated-guest-reply-body" class="screen-reader-text">

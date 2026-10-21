@@ -101,6 +101,9 @@ class Test_Widget_Api extends WP_UnitTestCase
         $request = new WP_REST_Request('POST', '/escalated/v1/widget/tickets');
         $request->set_param('name', 'Jane Widget');
         $request->set_param('email', 'jane@widget.com');
+        foreach (escalated_test_guest_proof('jane@widget.com') as $key => $value) {
+            $request->set_param($key, $value);
+        }
         $request->set_param('subject', 'Widget issue');
         $request->set_param('description', 'I found a bug via the widget.');
 
@@ -110,7 +113,8 @@ class Test_Widget_Api extends WP_UnitTestCase
 
         $data = $response->get_data();
         $this->assertNotEmpty($data['reference']);
-        $this->assertNotEmpty($data['guest_token']);
+        $this->assertStringStartsWith('ega1.', $data['guest_access_token']);
+        $this->assertNotEmpty($data['expires_at']);
     }
 
     public function test_created_widget_ticket_has_widget_channel(): void
@@ -120,6 +124,9 @@ class Test_Widget_Api extends WP_UnitTestCase
         $request = new WP_REST_Request('POST', '/escalated/v1/widget/tickets');
         $request->set_param('name', 'Widget User');
         $request->set_param('email', 'widget@test.com');
+        foreach (escalated_test_guest_proof('widget@test.com') as $key => $value) {
+            $request->set_param($key, $value);
+        }
         $request->set_param('subject', 'Widget test');
         $request->set_param('description', 'Testing widget channel.');
 

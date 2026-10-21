@@ -64,12 +64,12 @@ class Test_Widget_Guards extends WP_UnitTestCase
     {
         return $this->post('widget/tickets', [
             'name' => 'Visitor', 'email' => 'visitor@example.com', 'subject' => 'Hi', 'description' => 'Help',
-        ]);
+        ] + escalated_test_guest_proof('visitor@example.com'));
     }
 
     private function start_chat(): WP_REST_Response
     {
-        return $this->post('widget/chat/start', ['name' => 'Visitor', 'email' => 'visitor@example.com', 'message' => 'Hello']);
+        return $this->post('widget/chat/start', ['name' => 'Visitor', 'email' => 'visitor@example.com', 'message' => 'Hello'] + escalated_test_guest_proof('visitor@example.com', 'chat'));
     }
 
     private function article(): string

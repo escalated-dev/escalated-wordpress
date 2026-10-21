@@ -38,6 +38,7 @@ class Api_Bootstrap
             new Audit_Log_Controller,
             new Events_Controller,
             new Widget_Controller,
+            new Guest_Controller,
             new Widget_Script_Controller,
             new Article_Controller,
             new Article_Category_Controller,

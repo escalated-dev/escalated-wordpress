@@ -10,6 +10,16 @@
             $(document).on('submit', '.escalated-create-form', this.handleCreateTicket);
             $(document).on('submit', '.escalated-reply-form', this.handleReply);
             $(document).on('submit', '.escalated-guest-create-form', this.handleGuestCreate);
+            $(document).on('click', '.escalated-guest-resend', function() {
+                EscalatedFrontend.requestGuestCode($(this).closest('form'));
+            });
+            // A code is tied to the address it was sent to.
+            $(document).on('input', '.escalated-guest-create-form [name="guest_email"]', function() {
+                var form = $(this).closest('form');
+                form.find('input[name="verification_id"]').val('');
+                form.find('[name="verification_code"]').val('').prop('required', false);
+                form.find('.escalated-guest-verification').prop('hidden', true);
+            });
             $(document).on('submit', '.escalated-guest-reply-form', this.handleGuestReply);
             $(document).on('click', '.escalated-close-ticket-btn', this.handleCloseTicket);
             $(document).on('submit', '.escalated-rating-form', this.handleRating);
@@ -87,9 +97,19 @@
         handleGuestCreate: function(e) {
             e.preventDefault();
             var form = $(this);
+            var idField = form.find('input[name="verification_id"]');
+
+            // Step 1: prove the mailbox. Ask for a code, then show its field.
+            if (!idField.val()) {
+                EscalatedFrontend.requestGuestCode(form);
+                return;
+            }
+
             var formData = new FormData(this);
             formData.append('action', 'escalated_guest_create');
             formData.append('nonce', escalatedFrontend.nonce);
+            formData.set('name', form.find('[name="guest_name"]').val() || '');
+            formData.set('email', form.find('[name="guest_email"]').val() || '');
 
             EscalatedFrontend.setLoading(form, true);
 
@@ -102,21 +122,45 @@
                 success: function(response) {
                     if (response.success) {
                         form.hide();
-                        var msg = '<div class="escalated-success-panel">';
-                        msg += '<h3>' + response.data.message + '</h3>';
-                        msg += '<p>Reference: <strong>' + response.data.reference + '</strong></p>';
+                        var panel = $('<div class="escalated-success-panel"></div>');
+                        panel.append($('<h3></h3>').text(response.data.message));
+                        panel.append($('<p></p>').text('Reference: ').append($('<strong></strong>').text(response.data.reference)));
                         if (response.data.view_url) {
-                            msg += '<p><a href="' + response.data.view_url + '" class="escalated-btn escalated-btn--primary">View Your Ticket</a></p>';
+                            panel.append($('<p></p>').append($('<a class="escalated-btn escalated-btn--primary"></a>').attr('href', response.data.view_url).text('View Your Ticket')));
                         }
-                        msg += '<p class="escalated-notice">Save this link to track your ticket.</p>';
-                        msg += '</div>';
-                        form.after(msg);
+                        panel.append($('<p class="escalated-notice"></p>').text('This link expires. To get a new one later, look your ticket up with its reference and your email.'));
+                        form.after(panel);
                     } else {
-                        EscalatedFrontend.showNotice(form, 'error', response.data.message);
+                        EscalatedFrontend.showNotice(form, 'error', $('<div>').text(response.data.message).html());
                     }
                 },
-                error: function() {
-                    EscalatedFrontend.showNotice(form, 'error', 'An error occurred.');
+                error: function(xhr) {
+                    var data = xhr.responseJSON && xhr.responseJSON.data;
+                    EscalatedFrontend.showNotice(form, 'error', $('<div>').text((data && data.message) || 'An error occurred.').html());
+                },
+                complete: function() {
+                    EscalatedFrontend.setLoading(form, false);
+                }
+            });
+        },
+
+        requestGuestCode: function(form) {
+            var email = form.find('[name="guest_email"]').val();
+            EscalatedFrontend.setLoading(form, true);
+            $.ajax({
+                url: escalatedFrontend.guestVerificationUrl,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ email: email, purpose: 'ticket' }),
+                success: function(data) {
+                    form.find('input[name="verification_id"]').val(data.verification_id);
+                    form.find('.escalated-guest-verification').prop('hidden', false);
+                    form.find('[name="verification_code"]').val('').prop('required', true).trigger('focus');
+                    EscalatedFrontend.showNotice(form, 'success', 'Check your email for the 8-digit code, then submit again.');
+                },
+                error: function(xhr) {
+                    var data = xhr.responseJSON || {};
+                    EscalatedFrontend.showNotice(form, 'error', $('<div>').text(data.message || 'Could not send a verification code.').html());
                 },
                 complete: function() {
                     EscalatedFrontend.setLoading(form, false);

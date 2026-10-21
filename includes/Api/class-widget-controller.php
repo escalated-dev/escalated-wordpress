@@ -14,6 +14,8 @@ use Escalated\Models\ArticleCategory;
 use Escalated\Models\Department;
 use Escalated\Models\Setting;
 use Escalated\Models\Ticket;
+use Escalated\Services\GuestAccess;
+use Escalated\Services\GuestEmailVerification;
 use Escalated\Services\GuestRateLimiter;
 use Escalated\Services\KnowledgeBaseService;
 use Escalated\Services\TicketService;
@@ -140,6 +142,8 @@ class Widget_Controller extends Base_Controller
                             'type' => 'string',
                             'sanitize_callback' => 'sanitize_email',
                         ],
+                        'verification_id' => ['type' => 'string'],
+                        'verification_code' => ['type' => 'string'],
                         'subject' => [
                             'required' => true,
                             'type' => 'string',
@@ -152,6 +156,32 @@ class Widget_Controller extends Base_Controller
                         'department_id' => self::department_arg(),
                         'metadata' => WidgetMetadata::rest_arg(),
                     ],
+                ],
+            ]
+        );
+
+        // Email a guest verification code (purpose: ticket, chat or lookup).
+        register_rest_route(
+            $this->namespace,
+            '/'.$this->rest_base.'/verification',
+            [
+                [
+                    'methods' => WP_REST_Server::CREATABLE,
+                    'callback' => [$this, 'request_verification'],
+                    'permission_callback' => [$this, 'guest_write_check'],
+                ],
+            ]
+        );
+
+        // Trade a lookup proof plus a reference for fresh access grants.
+        register_rest_route(
+            $this->namespace,
+            '/'.$this->rest_base.'/lookup',
+            [
+                [
+                    'methods' => WP_REST_Server::CREATABLE,
+                    'callback' => [$this, 'lookup'],
+                    'permission_callback' => [$this, 'guest_write_check'],
                 ],
             ]
         );
@@ -178,6 +208,44 @@ class Widget_Controller extends Base_Controller
                 ],
             ]
         );
+    }
+
+    /**
+     * Permission for the verification and lookup routes: the widget guard
+     * plus the per-IP guest reply limit, so codes and lookups cannot be
+     * hammered from one address.
+     *
+     * @return bool|\WP_Error
+     */
+    public function guest_write_check()
+    {
+        $guard = $this->widget_enabled_check();
+        if ($guard !== true) {
+            return $guard;
+        }
+        $retry_after = GuestRateLimiter::attempt('reply');
+        if ($retry_after !== null) {
+            $rejection = GuestRateLimiter::rejection($retry_after);
+
+            return new \WP_Error($rejection['code'], $rejection['message'], ['status' => 429, 'retry_after' => $retry_after]);
+        }
+
+        return true;
+    }
+
+    public function request_verification(WP_REST_Request $request)
+    {
+        return GuestVerificationEndpoints::request_code($request);
+    }
+
+    public function lookup(WP_REST_Request $request)
+    {
+        $disabled = self::guest_tickets_disabled();
+        if ($disabled) {
+            return $disabled;
+        }
+
+        return GuestVerificationEndpoints::lookup($request);
     }
 
     /**
@@ -331,9 +399,10 @@ class Widget_Controller extends Base_Controller
             'kb_enabled' => KnowledgeBaseService::can_access(),
             'guest_tickets_enabled' => Setting::get_bool('guest_tickets_enabled', true),
             'accepts_metadata' => true,
-            // Ticket status needs the ticket's guest token; there is no
-            // mailbox verification, so the widget hides its Status tab.
-            'status_lookup_enabled' => false,
+            // Guests prove their mailbox with an emailed code before they
+            // create a ticket, start a chat or look a ticket up.
+            'guest_verification_required' => true,
+            'status_lookup_enabled' => true,
         ]);
     }
 
@@ -519,6 +588,16 @@ class Widget_Controller extends Base_Controller
             return $limited;
         }
 
+        $email = (string) $request->get_param('email');
+        if (! is_email($email)) {
+            return GuestVerificationEndpoints::invalid(['email' => [__('Enter a valid email address.', 'escalated')]]);
+        }
+
+        $proof = GuestVerificationEndpoints::consume_proof($request, $email, 'ticket');
+        if ($proof !== true) {
+            return $proof;
+        }
+
         $service = new TicketService;
 
         try {
@@ -526,47 +605,63 @@ class Widget_Controller extends Base_Controller
                 'subject' => $request->get_param('subject'),
                 'description' => wp_kses_post($request->get_param('description')),
                 'guest_name' => $request->get_param('name'),
-                'guest_email' => $request->get_param('email'),
+                'guest_email' => $email,
                 'channel' => 'widget',
                 'department_id' => self::active_department_id($request->get_param('department_id')),
                 'metadata' => WidgetMetadata::from_request($request),
             ]);
-
-            return $this->success([
-                'message' => __('Ticket created successfully.', 'escalated'),
-                'reference' => $ticket->reference,
-                'guest_token' => $ticket->guest_token,
-                'guest_access_token' => $ticket->guest_token,
-            ], 201);
         } catch (\Throwable $e) {
+            // The ticket was not created: hand the code back for a retry.
+            (new GuestEmailVerification)->release((string) $request->get_param('verification_id'));
+
             return $this->error('escalated_create_failed', $e->getMessage(), 500);
         }
+
+        $grant = GuestAccess::issue($ticket);
+        $body = [
+            'message' => __('Ticket created successfully.', 'escalated'),
+            'reference' => $ticket->reference,
+            'guest_access_token' => $grant['token'],
+            'expires_at' => $grant['expires_at'],
+        ];
+        if (GuestAccess::legacy_tokens_enabled()) {
+            // Kept for embedders that read it during the transition.
+            $body['guest_token'] = $ticket->guest_token;
+        }
+
+        return GuestVerificationEndpoints::no_store($this->success($body, 201));
     }
 
     /**
-     * Lookup a ticket by reference (requires the guest token for verification).
+     * A ticket's status. Needs `Authorization: Bearer <grant>` for the same
+     * reference, or the legacy ?guest_token= while legacy tokens are
+     * accepted. An email address never authorises it.
      */
     public function get_ticket(WP_REST_Request $request)
     {
         $ref = sanitize_text_field($request->get_param('ref'));
-        $guest_token = sanitize_text_field((string) $request->get_param('guest_token'));
+        $token = GuestVerificationEndpoints::bearer($request);
+        if ($token === '' && GuestAccess::legacy_tokens_enabled()) {
+            $token = sanitize_text_field((string) $request->get_param('guest_token'));
+        }
 
         $ticket = Ticket::find_by_reference($ref);
         if (! $ticket) {
             return $this->error('escalated_not_found', __('Ticket not found.', 'escalated'), 404);
         }
 
-        if (empty($ticket->guest_token) || ! hash_equals((string) $ticket->guest_token, $guest_token)) {
-            return $this->error('escalated_forbidden', __('Ticket verification failed.', 'escalated'), 403);
+        $granted = $token !== '' ? GuestAccess::ticket_for_token($token) : null;
+        if (! $granted || (int) $granted->id !== (int) $ticket->id) {
+            return $this->error('escalated_forbidden', __('The link has expired. Verify your email for a new one.', 'escalated'), 403);
         }
 
-        return $this->success([
+        return GuestVerificationEndpoints::no_store($this->success([
             'reference' => $ticket->reference,
             'subject' => $ticket->subject,
             'status' => $ticket->status,
             'created_at' => $ticket->created_at,
             'updated_at' => $ticket->updated_at,
-        ]);
+        ]));
     }
 
     /**

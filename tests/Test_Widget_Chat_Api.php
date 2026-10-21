@@ -110,6 +110,9 @@ class Test_Widget_Chat_Api extends WP_UnitTestCase
         $request->set_param('name', 'Widget Visitor');
         $request->set_param('email', 'visitor@example.com');
         $request->set_param('message', 'I need help.');
+        foreach (escalated_test_guest_proof('visitor@example.com', 'chat') as $key => $value) {
+            $request->set_param($key, $value);
+        }
 
         return $this->server->dispatch($request);
     }

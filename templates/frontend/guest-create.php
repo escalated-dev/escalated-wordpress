@@ -19,7 +19,7 @@ if (! defined('ABSPATH')) {
     <div class="escalated-guest-form">
         <h2><?php esc_html_e('Submit a Support Request', 'escalated'); ?></h2>
         <p style="color: var(--escalated-text-secondary); margin-bottom: 20px;">
-            <?php esc_html_e('Fill out the form below to create a support ticket. You will receive a link to track your request.', 'escalated'); ?>
+            <?php esc_html_e('Fill out the form below to create a support ticket. We will email you a code to confirm your address, then give you a link to track your request.', 'escalated'); ?>
         </p>
 
         <form class="escalated-guest-create-form" method="post" enctype="multipart/form-data">
@@ -71,6 +71,19 @@ if (! defined('ABSPATH')) {
                         </select>
                     </div>
                 <?php } ?>
+            </div>
+
+            <div class="escalated-form-group escalated-guest-verification" hidden>
+                <label for="escalated-guest-verification-code">
+                    <?php esc_html_e('Verification code', 'escalated'); ?> <span class="required">*</span>
+                </label>
+                <input type="text" id="escalated-guest-verification-code" name="verification_code" class="escalated-input"
+                       inputmode="numeric" autocomplete="one-time-code" maxlength="8" pattern="[0-9]{8}" />
+                <input type="hidden" name="verification_id" value="" />
+                <p class="escalated-help-text">
+                    <?php esc_html_e('We emailed you an 8-digit code. It expires in 10 minutes.', 'escalated'); ?>
+                    <button type="button" class="escalated-link-button escalated-guest-resend"><?php esc_html_e('Send a new code', 'escalated'); ?></button>
+                </p>
             </div>
 
             <div class="escalated-form-group" style="margin-top: 24px;">
