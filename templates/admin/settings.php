@@ -272,31 +272,15 @@ foreach ($priorities as $key => $data) {
             </tr>
         </table>
 
-        <!-- API Settings -->
-        <h2 class="title"><?php esc_html_e('API & Webhooks', 'escalated'); ?></h2>
-        <table class="form-table" role="presentation">
-            <tr>
-                <th scope="row">
-                    <label for="webhook_url"><?php esc_html_e('Webhook URL', 'escalated'); ?></label>
-                </th>
-                <td>
-                    <input type="url" id="webhook_url" name="webhook_url" class="regular-text"
-                           value="<?php echo esc_attr($s('webhook_url')); ?>"
-                           placeholder="https://example.com/webhook">
-                    <p class="description"><?php esc_html_e('URL to send webhook notifications for ticket events.', 'escalated'); ?></p>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row">
-                    <label for="webhook_secret"><?php esc_html_e('Webhook Secret', 'escalated'); ?></label>
-                </th>
-                <td>
-                    <input type="text" id="webhook_secret" name="webhook_secret" class="regular-text"
-                           value="<?php echo esc_attr($s('webhook_secret')); ?>">
-                    <p class="description"><?php esc_html_e('Secret key used to sign webhook payloads.', 'escalated'); ?></p>
-                </td>
-            </tr>
-        </table>
+        <!-- Webhooks -->
+        <h2 class="title"><?php esc_html_e('Webhooks', 'escalated'); ?></h2>
+        <p><?php
+        printf(
+            /* translators: %s: link to the Webhooks screen */
+            esc_html__('Webhooks are managed under %s: several endpoints, each with its own secret and events, and a delivery log.', 'escalated'),
+            '<a href="'.esc_url(admin_url('admin.php?page=escalated-webhooks')).'">'.esc_html__('Escalated > Webhooks', 'escalated').'</a>'
+        );
+?></p>
 
         <!-- Notification Settings -->
         <h2 class="title"><?php esc_html_e('Notifications', 'escalated'); ?></h2>

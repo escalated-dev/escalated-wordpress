@@ -46,6 +46,7 @@ class Escalated
         (new Services\BroadcastService)->register();
         (new Services\WorkflowListener)->register();
         (new Services\NotificationService)->register();
+        Services\WebhookDispatcher::register();
         (new Services\Custom_Action_Listener)->register();
         (new Cron\Snooze_Check)->register();
         (new Cron\Chat_Cleanup)->register();

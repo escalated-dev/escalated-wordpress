@@ -69,6 +69,7 @@ Configure opt-in department/account access and targeted SLAs using the
 - Customer-facing frontend ticket pages via shortcodes.
 - Guest ticket submission and secure guest ticket access.
 - Inbound email ingestion via Mailgun, Postmark, and Amazon SES webhooks.
+- Outbound webhooks: several endpoints with their own events and secrets, a delivery log and retries ([guide](docs/webhooks.md)).
 - Canned responses, macros, and tag management.
 - Bearer token REST API with per-token abilities and rate limiting.
 - Attachment support with configurable upload limits.

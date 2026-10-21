@@ -179,23 +179,19 @@ class Test_Audit_Log extends WP_UnitTestCase
         $this->assertSame('ESC', $old['ticket_reference_prefix']);
     }
 
-    public function test_webhook_change_is_audited_with_redacted_secret(): void
+    public function test_settings_no_longer_store_webhook_fields(): void
     {
         wp_set_current_user($this->admin_id);
 
+        // Webhooks moved to their own audited screen (Test_Webhook_Subscriptions).
         (new Admin_Settings)->persist([
             'webhook_url' => 'https://example.com/hook',
             'webhook_secret' => 'super-secret-value',
         ]);
 
+        $this->assertSame('', (string) \Escalated\Models\Setting::get('webhook_url', ''));
         $row = $this->latest_for('settings.updated');
-        $this->assertNotNull($row);
-
-        $new = json_decode($row->new_values, true);
-        $this->assertSame('https://example.com/hook', $new['webhook_url']);
-        // Secret is redacted, never stored in plaintext in the audit trail.
-        $this->assertSame('********', $new['webhook_secret']);
-        $this->assertStringNotContainsString('super-secret-value', (string) $row->new_values);
+        $this->assertStringNotContainsString('webhook', (string) ($row->new_values ?? ''));
     }
 
     public function test_settings_persist_records_only_on_change(): void
