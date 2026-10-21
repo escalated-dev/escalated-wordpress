@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- **One event vocabulary** (escalated-developer-context ADR `2026-10-21-event-vocabulary`). Webhooks and workflow triggers use the canonical names, the same as escalated-laravel. The list is in `Escalated\Services\EventVocabulary`.
+  - The workflow tag trigger is `ticket.tag_added` (was `ticket.tagged`).
+  - Workflows can now also run on `ticket.tag_removed`, `ticket.unassigned`, `ticket.escalated`, `ticket.resolved`, `ticket.closed`, `note.created` and the live chat events `chat.started`, `chat.assigned`, `chat.message` and `chat.ended`.
+  - The webhook now also receives `ticket.resolved`, `ticket.closed`, `ticket.reopened`, `ticket.escalated`, `ticket.priority_changed`, `ticket.tag_added`, `ticket.tag_removed`, `sla.warning` (once per warning, not on every SLA cron run) and `note.created`. `note.created` carries the note's id and author, never its body.
+- **Legacy names still work when read.** A workflow stored as `ticket.tagged`, `ticket.replied`, `internal_note.added`, `ticket.untagged` or another legacy name from the ADR runs on the canonical event. Workflow log rows record the canonical name.
+
+### Upgrade notes
+- Webhook receivers get more events than before, including `note.created` for internal notes (id and author only). Ignore the names you do not handle.
+- `reply.agent_reply` (staff replies only) is kept as a WordPress extension trigger.
+
 ## [1.6.2] - 2026-10-20
 
 ### Changed

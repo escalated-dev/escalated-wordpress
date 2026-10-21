@@ -16,6 +16,7 @@ use Escalated\Models\Tag;
 use Escalated\Models\Ticket;
 use Escalated\Models\Workflow;
 use Escalated\Services\AssignmentService;
+use Escalated\Services\ChatSessionService;
 use Escalated\Services\SlaService;
 use Escalated\Services\TicketService;
 use Escalated\Services\WorkflowEngine;
@@ -30,15 +31,25 @@ class Test_Workflow_Wiring extends WP_UnitTestCase
         'ticket.created',
         'ticket.updated',
         'ticket.status_changed',
+        'ticket.resolved',
+        'ticket.closed',
+        'ticket.reopened',
         'ticket.assigned',
+        'ticket.unassigned',
+        'ticket.escalated',
         'ticket.priority_changed',
-        'ticket.tagged',
         'ticket.department_changed',
+        'ticket.tag_added',
+        'ticket.tag_removed',
         'reply.created',
         'reply.agent_reply',
+        'note.created',
         'sla.warning',
         'sla.breached',
-        'ticket.reopened',
+        'chat.started',
+        'chat.assigned',
+        'chat.message',
+        'chat.ended',
     ];
 
     private TicketService $tickets;
@@ -135,17 +146,17 @@ class Test_Workflow_Wiring extends WP_UnitTestCase
         $this->assertSame(0, $this->log_count($workflow_id));
     }
 
-    public function test_removing_a_tag_does_not_run_tagged_workflows(): void
+    public function test_removing_a_tag_does_not_run_tag_added_workflows(): void
     {
         $ticket_id = (int) $this->make_ticket()->id;
         $tag_id = $this->make_tag();
-        $workflow_id = $this->create_workflow('ticket.tagged', [['type' => 'add_note', 'value' => 'tagged']]);
+        $workflow_id = $this->create_workflow('ticket.tag_added', [['type' => 'add_note', 'value' => 'tagged']]);
 
         $this->tickets->add_tags($ticket_id, [$tag_id]);
-        $this->assertSame(1, $this->log_count($workflow_id), 'Adding a tag did not run the ticket.tagged workflow.');
+        $this->assertSame(1, $this->log_count($workflow_id), 'Adding a tag did not run the ticket.tag_added workflow.');
 
         $this->tickets->remove_tags($ticket_id, [$tag_id]);
-        $this->assertSame(1, $this->log_count($workflow_id), 'Removing a tag ran the ticket.tagged workflow.');
+        $this->assertSame(1, $this->log_count($workflow_id), 'Removing a tag ran the ticket.tag_added workflow.');
     }
 
     public function test_requester_reply_does_not_run_agent_reply_workflows(): void
@@ -281,6 +292,20 @@ class Test_Workflow_Wiring extends WP_UnitTestCase
             return;
         }
 
+        if (strpos($trigger, 'chat.') === 0) {
+            $chats = new ChatSessionService;
+            $session = $chats->start('Visitor', 'visitor@example.com', 'Hello');
+            if ($trigger === 'chat.assigned') {
+                $chats->accept((int) $session->id, $this->agent_id);
+            } elseif ($trigger === 'chat.message') {
+                $chats->send_message((int) $session->id, 'Still there?');
+            } elseif ($trigger === 'chat.ended') {
+                $chats->end((int) $session->id);
+            }
+
+            return;
+        }
+
         $id = (int) $this->make_ticket()->id;
 
         switch ($trigger) {
@@ -296,8 +321,30 @@ class Test_Workflow_Wiring extends WP_UnitTestCase
             case 'ticket.priority_changed':
                 $this->tickets->change_priority($id, 'urgent', $this->agent_id);
                 break;
-            case 'ticket.tagged':
+            case 'ticket.tag_added':
                 $this->tickets->add_tags($id, [$this->make_tag()]);
+                break;
+            case 'ticket.tag_removed':
+                $tag_id = $this->make_tag();
+                $this->tickets->add_tags($id, [$tag_id]);
+                $this->tickets->remove_tags($id, [$tag_id]);
+                break;
+            case 'ticket.unassigned':
+                (new AssignmentService)->assign($id, $this->agent_id);
+                (new AssignmentService)->unassign($id);
+                break;
+            case 'ticket.escalated':
+                $this->tickets->change_status($id, 'escalated');
+                break;
+            case 'ticket.resolved':
+                $this->tickets->change_status($id, 'resolved');
+                break;
+            case 'ticket.closed':
+                $this->tickets->change_status($id, 'resolved');
+                $this->tickets->change_status($id, 'closed');
+                break;
+            case 'note.created':
+                $this->tickets->add_note($id, $this->agent_id, 'Internal only.');
                 break;
             case 'ticket.department_changed':
                 $this->tickets->change_department($id, $this->make_department());

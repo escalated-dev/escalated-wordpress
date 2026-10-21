@@ -8,9 +8,9 @@ use Escalated\Models\Ticket;
  * Bridges WordPress `escalated_*` actions into WorkflowRunnerService.
  *
  * Final piece of the workflow stack for WordPress. Each hook handler
- * maps the WP action to a canonical workflow trigger name (matching
- * the 12-event set in WorkflowEngine::TRIGGER_EVENTS) and delegates
- * to the runner.
+ * maps the WP action to its canonical trigger name from ADR
+ * 2026-10-21-event-vocabulary (WorkflowEngine::TRIGGER_EVENTS) and
+ * delegates to the runner.
  *
  * Register once during plugin boot by calling ->register().
  *
@@ -35,16 +35,24 @@ class WorkflowListener
         add_action('escalated_ticket_created', [$this, 'on_ticket_created'], 50, 1);
         add_action('escalated_ticket_updated', [$this, 'on_ticket_updated'], 50, 1);
         add_action('escalated_ticket_status_changed', [$this, 'on_ticket_status_changed'], 50, 4);
-        add_action('escalated_ticket_assigned', [$this, 'on_ticket_assigned'], 50, 4);
+        add_action('escalated_ticket_resolved', [$this, 'on_ticket_resolved'], 50, 2);
+        add_action('escalated_ticket_closed', [$this, 'on_ticket_closed'], 50, 2);
         add_action('escalated_ticket_reopened', [$this, 'on_ticket_reopened'], 50, 2);
+        add_action('escalated_ticket_escalated', [$this, 'on_ticket_escalated'], 50, 1);
+        add_action('escalated_ticket_assigned', [$this, 'on_ticket_assigned'], 50, 4);
+        add_action('escalated_ticket_unassigned', [$this, 'on_ticket_unassigned'], 50, 3);
         add_action('escalated_reply_created', [$this, 'on_reply_created'], 50, 2);
-        // ticket.tagged means a tag was added. Removing one fires
-        // escalated_tag_removed, which has no workflow trigger.
-        add_action('escalated_tag_added', [$this, 'on_tag_changed'], 50, 2);
+        add_action('escalated_internal_note_added', [$this, 'on_note_created'], 50, 2);
+        add_action('escalated_tag_added', [$this, 'on_tag_added'], 50, 2);
+        add_action('escalated_tag_removed', [$this, 'on_tag_removed'], 50, 2);
         add_action('escalated_department_changed', [$this, 'on_department_changed'], 50, 4);
         add_action('escalated_ticket_priority_changed', [$this, 'on_ticket_priority_changed'], 50, 4);
         add_action('escalated_sla_warning', [$this, 'on_sla_warning'], 50, 3);
         add_action('escalated_sla_breached', [$this, 'on_sla_breached'], 50, 2);
+        add_action('escalated_chat_started', [$this, 'on_chat_started'], 50, 1);
+        add_action('escalated_chat_accepted', [$this, 'on_chat_assigned'], 50, 2);
+        add_action('escalated_chat_message', [$this, 'on_chat_message'], 50, 2);
+        add_action('escalated_chat_ended', [$this, 'on_chat_ended'], 50, 2);
     }
 
     public function on_ticket_created($ticket): void
@@ -75,6 +83,62 @@ class WorkflowListener
     public function on_ticket_reopened($ticket, $causer_id = null): void
     {
         $this->run_if_ticket('ticket.reopened', $ticket);
+    }
+
+    public function on_ticket_resolved($ticket, $causer_id = null): void
+    {
+        $this->run_if_ticket('ticket.resolved', $ticket);
+    }
+
+    public function on_ticket_closed($ticket, $causer_id = null): void
+    {
+        $this->run_if_ticket('ticket.closed', $ticket);
+    }
+
+    public function on_ticket_escalated($ticket): void
+    {
+        $this->run_if_ticket('ticket.escalated', $ticket);
+    }
+
+    public function on_ticket_unassigned($ticket, $old_agent_id = null, $causer_id = null): void
+    {
+        $this->run_if_ticket('ticket.unassigned', $ticket);
+    }
+
+    public function on_note_created($note, $ticket = null): void
+    {
+        if ($ticket === null && is_object($note) && ! empty($note->ticket_id)) {
+            $ticket = Ticket::find((int) $note->ticket_id);
+        }
+        $this->run_if_ticket('note.created', $ticket);
+    }
+
+    public function on_chat_started($session): void
+    {
+        $this->run_for_chat('chat.started', $session);
+    }
+
+    public function on_chat_assigned($session, $agent_id = null): void
+    {
+        $this->run_for_chat('chat.assigned', $session);
+    }
+
+    public function on_chat_message($session, $reply = null): void
+    {
+        $this->run_for_chat('chat.message', $session);
+    }
+
+    public function on_chat_ended($session, $causer_id = null): void
+    {
+        $this->run_for_chat('chat.ended', $session);
+    }
+
+    protected function run_for_chat(string $trigger, $session): void
+    {
+        if (! is_object($session) || empty($session->ticket_id)) {
+            return;
+        }
+        $this->run_if_ticket($trigger, Ticket::find((int) $session->ticket_id));
     }
 
     public function on_reply_created($reply, $ticket = null): void
@@ -131,13 +195,22 @@ class WorkflowListener
         return $author_id > 0 && $author_id !== (int) ($ticket->requester_id ?? 0);
     }
 
-    public function on_tag_changed($ticket_id, $tag_id = null): void
+    public function on_tag_added($ticket_id, $tag_id = null): void
+    {
+        $this->run_for_ticket_id('ticket.tag_added', $ticket_id);
+    }
+
+    public function on_tag_removed($ticket_id, $tag_id = null): void
+    {
+        $this->run_for_ticket_id('ticket.tag_removed', $ticket_id);
+    }
+
+    protected function run_for_ticket_id(string $trigger, $ticket_id): void
     {
         if (! is_numeric($ticket_id)) {
             return;
         }
-        $ticket = Ticket::find((int) $ticket_id);
-        $this->run_if_ticket('ticket.tagged', $ticket);
+        $this->run_if_ticket($trigger, Ticket::find((int) $ticket_id));
     }
 
     public function on_department_changed($ticket, $old_department_id = null, $new_department_id = null, $causer_id = null): void
