@@ -42,10 +42,36 @@ class WorkflowRunnerService
     public function run_for_event(string $trigger_event, object $ticket): int
     {
         $trigger_event = EventVocabulary::canonical($trigger_event);
+
+        // A workflow's own actions must not fire the event it is running for
+        // on the same ticket again (a ticket.updated workflow that changes the
+        // priority would otherwise run itself without end). Other events
+        // still chain.
+        $key = (int) $ticket->id.'|'.$trigger_event;
+        if (isset(self::$running[$key])) {
+            return 0;
+        }
+
         $workflows = $this->find_active_by_trigger($trigger_event);
         if (empty($workflows)) {
             return 0;
         }
+
+        self::$running[$key] = true;
+        try {
+            return $this->run_workflows($workflows, $trigger_event, $ticket);
+        } finally {
+            unset(self::$running[$key]);
+        }
+    }
+
+    /**
+     * @var array<string, true> ticket id|trigger pairs being run now.
+     */
+    private static array $running = [];
+
+    private function run_workflows(array $workflows, string $trigger_event, object $ticket): int
+    {
 
         $condition_map = $this->ticket_to_condition_map($ticket);
         $executed = 0;
@@ -180,6 +206,20 @@ class WorkflowRunnerService
                 continue;
             }
             $out[$key] = (string) $val;
+        }
+
+        // Contract fields that are not ticket columns: tag names (comma
+        // separated) and whole hours since the ticket was created / updated.
+        if (! empty($ticket->id) && ! isset($out['tags'])) {
+            $out['tags'] = implode(',', array_map(
+                static fn ($tag) => (string) $tag->name,
+                \Escalated\Models\Tag::for_ticket((int) $ticket->id) ?: []
+            ));
+        }
+        $now = (int) current_time('timestamp');
+        foreach (['hours_since_created' => 'created_at', 'hours_since_updated' => 'updated_at'] as $field => $column) {
+            $at = ! empty($ticket->{$column}) ? strtotime((string) $ticket->{$column}) : false;
+            $out[$field] = $at !== false ? (string) intdiv(max(0, $now - $at), HOUR_IN_SECONDS) : '';
         }
 
         return $out;

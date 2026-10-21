@@ -190,7 +190,8 @@ class WorkflowExecutorService
                 break;
 
             case 'add_note':
-                $this->add_note($ticket_id, $value);
+                // The contract lets a note body use {{field}} templates.
+                $this->add_note($ticket_id, WorkflowEngine::interpolateVariables($value, $this->ticket_to_array($ticket)));
                 break;
 
             case 'insert_canned_reply':

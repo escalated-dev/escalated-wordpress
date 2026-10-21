@@ -47,6 +47,7 @@ class Api_Bootstrap
             new Chat_Controller,
             new Widget_Chat_Controller,
             new Skill_Controller,
+            new Workflow_Controller,
             new Ticket_Subject_Controller,
             new Newsletter_List_Controller,
             new Newsletter_Template_Controller,
