@@ -135,15 +135,18 @@ class Test_Ticket_Merge extends WP_UnitTestCase
 
     public function test_merge_search_finds_unmerged_tickets_and_escapes_wildcards(): void
     {
-        $refund = $this->make_ticket('Refund for order 100%');
-        $other = $this->make_ticket('Refund please');
-        $merged = $this->make_ticket('Refund duplicate');
+        // A word no other test uses: merges commit, so rows from other
+        // tests can be visible here.
+        $word = 'Zq'.strtolower(wp_generate_password(8, false, false));
+        $refund = $this->make_ticket($word.' order 100% late');
+        $other = $this->make_ticket($word.' please');
+        $merged = $this->make_ticket($word.' duplicate');
         $this->api('POST', '/tickets/'.$merged->reference.'/merge', ['target_reference' => $other->reference]);
 
-        $found = $this->api('GET', '/tickets/merge-search', ['q' => 'Refund', 'exclude' => $other->reference])->get_data()['tickets'];
+        $found = $this->api('GET', '/tickets/merge-search', ['q' => $word, 'exclude' => $other->reference])->get_data()['tickets'];
         $this->assertSame([$refund->reference], array_column($found, 'reference'));
 
-        $percent = $this->api('GET', '/tickets/merge-search', ['q' => '100%'])->get_data()['tickets'];
+        $percent = $this->api('GET', '/tickets/merge-search', ['q' => $word.' order 100%'])->get_data()['tickets'];
         $this->assertSame([$refund->reference], array_column($percent, 'reference'));
         foreach ($this->api('GET', '/tickets/merge-search', ['q' => '%'])->get_data()['tickets'] as $hit) {
             $this->assertStringContainsString('%', $hit['subject'], 'A bare % matched everything.');
