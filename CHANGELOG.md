@@ -8,12 +8,18 @@ All notable changes to this project will be documented in this file.
 - New tables `escalated_business_schedules` and `escalated_holidays`, and a nullable `business_schedule_id` column on `escalated_sla_policies` and `escalated_departments`, added by the normal schema upgrade.
 - Nothing changes until a business schedule exists. With none, SLA policies limited to business hours keep the fixed hours of the `escalated_business_hours_start`, `escalated_business_hours_end` and `escalated_business_days` filters.
 - Once a schedule is marked **Default**, every policy limited to business hours counts on it (or on a more specific one) instead of on those filters. Business-hours deadlines then follow the schedule's time zone rather than the site clock.
+- The Settings screen shows a stored inbound mailbox password as `********`. Saving the form with that mask (or the older `abc*****` form) keeps the stored password; any other value replaces it, and an empty field clears it, as before.
+- On the Webhooks screen, leaving the secret blank keeps the stored secret and ticking **Remove secret** (`clear_secret`) removes it, as before. `clear_secret` is now read as a boolean, so `0` or `false` no longer removes the secret.
+- `GET /escalated/v1/admin/api-tokens` returns `token_masked` as `********` for every token. It used to carry the first 8 characters of the stored value.
 
 ### Added
 - **Business hours and holidays**, like escalated-laravel. Escalated > Business Hours (wp-admin, `escalated_sla_manage` to change, `escalated_sla_view` to look) lists schedules and edits each one: name, time zone, default switch, opening and closing time per weekday, and holidays (one-off or every year).
   - SLA deadlines for a policy limited to business hours are counted on the policy's own schedule, else the ticket department's, else the default schedule. The SLA policy and department screens gain a **Business schedule** picker.
   - `Escalated\Services\BusinessHoursCalculator` counts real elapsed time in the schedule's time zone, so daylight-saving days are handled; it supports overnight hours (closing before opening) and `24:00`, and skips holidays. It gives the same deadlines as the other Escalated backends.
   - Deleting a schedule removes its holidays, and policies and departments that used it fall back to the default schedule.
+
+### Security
+- **Stored secrets are no longer sent to the browser.** The Settings screen put the inbound mailbox (IMAP) password into the page as the field's value; it now gets a full mask. The API tokens screen showed the last 8 and `GET /admin/api-tokens` the first 8 characters of each stored token, which for a token issued before tokens were hashed (and not used since) is part of the token itself; both now show a fixed mask. A `clear_secret` of `false` removed a webhook's signing secret. A new guard test covers the Webhooks list, edit and delivery-log screens, the Settings screen, the API tokens screen and REST list and create, and the two-factor status, confirm and recovery-code endpoints. Only the one-time plaintext token on creation and the 2FA setup response hand out a secret, by design.
 
 ## [1.6.3] - 2026-10-21
 

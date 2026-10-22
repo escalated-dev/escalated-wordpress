@@ -169,8 +169,13 @@ class Admin_Webhooks
         }
 
         $secret = sanitize_text_field((string) ($input['secret'] ?? ''));
-        if ($existing && $secret === '' && empty($input['clear_secret'])) {
-            // A blank secret field on edit keeps the stored secret.
+        // The form never receives the stored secret, so a blank one on edit
+        // keeps it; `clear_secret` (a truthy flag, not just any value)
+        // removes it.
+        $clear = filter_var($input['clear_secret'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        if ($existing && $clear) {
+            $secret = '';
+        } elseif ($existing && $secret === '') {
             $secret = (string) ($existing->secret ?? '');
         }
 

@@ -4,10 +4,14 @@ namespace Escalated\Admin;
 
 use Escalated\Models\AuditLog;
 use Escalated\Models\Setting;
+use Escalated\Services\SecretMask;
 use Escalated\Services\WidgetOrigins;
 
 class Admin_Settings
 {
+    /** Stored secrets the screen sees only as a mask. */
+    private const SECRET_KEYS = ['inbound_email_password'];
+
     public function __construct()
     {
         add_action('admin_init', [$this, 'handle_save']);
@@ -19,6 +23,9 @@ class Admin_Settings
     public function render(): void
     {
         $settings = Setting::all();
+        foreach (self::SECRET_KEYS as $key) {
+            $settings[$key] = SecretMask::mask(isset($settings[$key]) ? (string) $settings[$key] : null);
+        }
         $message = isset($_GET['message']) ? sanitize_text_field(wp_unslash($_GET['message'])) : '';
 
         include ESCALATED_PLUGIN_DIR.'templates/admin/settings.php';
@@ -145,6 +152,12 @@ class Admin_Settings
 
         foreach ($fields as $key => $sanitizer) {
             if (isset($input[$key])) {
+                // The screen posts the mask back for a secret the admin did
+                // not change: keep the stored value.
+                if (in_array($key, self::SECRET_KEYS, true) && SecretMask::is_masked($input[$key])) {
+                    continue;
+                }
+
                 $value = call_user_func($sanitizer, $input[$key]);
 
                 if ($key === 'ticket_reference_prefix' && ! $this->is_valid_ticket_reference_prefix((string) $value)) {
