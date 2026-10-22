@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Upgrading
+- New tables `escalated_business_schedules` and `escalated_holidays`, and a nullable `business_schedule_id` column on `escalated_sla_policies` and `escalated_departments`, added by the normal schema upgrade.
+- Nothing changes until a business schedule exists. With none, SLA policies limited to business hours keep the fixed hours of the `escalated_business_hours_start`, `escalated_business_hours_end` and `escalated_business_days` filters.
+- Once a schedule is marked **Default**, every policy limited to business hours counts on it (or on a more specific one) instead of on those filters. Business-hours deadlines then follow the schedule's time zone rather than the site clock.
+
+### Added
+- **Business hours and holidays**, like escalated-laravel. Escalated > Business Hours (wp-admin, `escalated_sla_manage` to change, `escalated_sla_view` to look) lists schedules and edits each one: name, time zone, default switch, opening and closing time per weekday, and holidays (one-off or every year).
+  - SLA deadlines for a policy limited to business hours are counted on the policy's own schedule, else the ticket department's, else the default schedule. The SLA policy and department screens gain a **Business schedule** picker.
+  - `Escalated\Services\BusinessHoursCalculator` counts real elapsed time in the schedule's time zone, so daylight-saving days are handled; it supports overnight hours (closing before opening) and `24:00`, and skips holidays. It gives the same deadlines as the other Escalated backends.
+  - Deleting a schedule removes its holidays, and policies and departments that used it fall back to the default schedule.
+
 ## [1.6.3] - 2026-10-21
 
 ### Upgrading

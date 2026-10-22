@@ -4,7 +4,7 @@ namespace Escalated;
 
 class Activator
 {
-    public const SCHEMA_VERSION = 'ticket-merge-1';
+    public const SCHEMA_VERSION = 'business-hours-1';
 
     /**
      * Run on plugin activation.
@@ -103,6 +103,7 @@ class Activator
             slug VARCHAR(255) NOT NULL,
             description TEXT,
             is_active TINYINT(1) DEFAULT 1,
+            business_schedule_id BIGINT UNSIGNED NULL,
             created_at DATETIME,
             updated_at DATETIME,
             PRIMARY KEY  (id),
@@ -129,6 +130,7 @@ class Activator
             first_response_hours TEXT,
             resolution_hours TEXT,
             business_hours_only TINYINT(1) DEFAULT 0,
+            business_schedule_id BIGINT UNSIGNED NULL,
             is_active TINYINT(1) DEFAULT 1,
             created_at DATETIME,
             updated_at DATETIME,
@@ -545,6 +547,37 @@ class Activator
             PRIMARY KEY  (id),
             UNIQUE KEY public_id (public_id),
             KEY expires_at (expires_at)
+        ) $charset_collate;";
+        Escalated::schema_delta($sql);
+
+        // escalated_business_schedules — weekly opening hours in one time
+        // zone. `schedule` is JSON keyed by weekday: {"monday": {"start":
+        // "09:00", "end": "17:00"}, ...}. SlaService counts business-hours
+        // deadlines against one when a policy is limited to business hours.
+        $sql = "CREATE TABLE {$prefix}business_schedules (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            name VARCHAR(255) NOT NULL,
+            timezone VARCHAR(64) NOT NULL DEFAULT 'UTC',
+            is_default TINYINT(1) NOT NULL DEFAULT 0,
+            schedule LONGTEXT NOT NULL,
+            created_at DATETIME,
+            updated_at DATETIME,
+            PRIMARY KEY  (id),
+            KEY is_default (is_default)
+        ) $charset_collate;";
+        Escalated::schema_delta($sql);
+
+        // escalated_holidays — dates a schedule is closed (every year when recurring).
+        $sql = "CREATE TABLE {$prefix}holidays (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            schedule_id BIGINT UNSIGNED NOT NULL,
+            name VARCHAR(255) NOT NULL,
+            date DATE NOT NULL,
+            recurring TINYINT(1) NOT NULL DEFAULT 0,
+            created_at DATETIME,
+            updated_at DATETIME,
+            PRIMARY KEY  (id),
+            KEY schedule_id (schedule_id)
         ) $charset_collate;";
         Escalated::schema_delta($sql);
 

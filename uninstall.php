@@ -7,6 +7,8 @@ if (! defined('WP_UNINSTALL_PLUGIN')) {
 global $wpdb;
 
 $tables = [
+    'escalated_holidays',
+    'escalated_business_schedules',
     'escalated_webhook_deliveries',
     'escalated_webhooks',
     'escalated_api_tokens',

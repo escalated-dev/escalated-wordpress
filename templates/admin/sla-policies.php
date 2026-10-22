@@ -168,6 +168,20 @@ if ($edit_item) {
                         </label>
                     </td>
                 </tr>
+                <tr>
+                    <th scope="row">
+                        <label for="sla-business-schedule"><?php esc_html_e('Business schedule', 'escalated'); ?></label>
+                    </th>
+                    <td>
+                        <select id="sla-business-schedule" name="business_schedule_id">
+                            <option value=""><?php esc_html_e('Department or default schedule', 'escalated'); ?></option>
+                            <?php foreach (\Escalated\Models\BusinessSchedule::all() as $business_schedule) { ?>
+                                <option value="<?php echo esc_attr($business_schedule->id); ?>"<?php selected((string) ($edit_item->business_schedule_id ?? ''), (string) $business_schedule->id); ?>><?php echo esc_html($business_schedule->name.' ('.$business_schedule->timezone.')'); ?></option>
+                            <?php } ?>
+                        </select>
+                        <p class="description"><?php esc_html_e('Business-hours deadlines are counted on this schedule, else on the ticket department\'s, else on the default one. With no schedule at all, the fixed business hours apply.', 'escalated'); ?></p>
+                    </td>
+                </tr>
             </table>
 
             <!-- SLA Hours Grid -->
