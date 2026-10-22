@@ -3,6 +3,7 @@
 namespace Escalated\Admin;
 
 use Escalated\Helpers\Enums;
+use Escalated\Models\BusinessSchedule;
 use Escalated\Models\SlaPolicy;
 
 class Admin_Sla_Policies
@@ -77,7 +78,7 @@ class Admin_Sla_Policies
                     'resolution_hours' => $resolution,
                     'business_hours_only' => isset($_POST['business_hours_only']) ? 1 : 0,
                     'is_active' => isset($_POST['is_active']) ? 1 : 0,
-                ];
+                ] + BusinessSchedule::reference_from_input(wp_unslash($_POST));
 
                 $result = SlaPolicy::create($data);
                 if ($result) {
@@ -118,7 +119,7 @@ class Admin_Sla_Policies
                     'resolution_hours' => $resolution,
                     'business_hours_only' => isset($_POST['business_hours_only']) ? 1 : 0,
                     'is_active' => isset($_POST['is_active']) ? 1 : 0,
-                ];
+                ] + BusinessSchedule::reference_from_input(wp_unslash($_POST));
 
                 SlaPolicy::update($id, $data);
                 $redirect = add_query_arg('message', 'updated', $redirect);

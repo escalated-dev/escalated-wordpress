@@ -79,6 +79,20 @@ if (! defined('ABSPATH')) {
                             </td>
                         </tr>
                         <tr>
+                            <th scope="row">
+                                <label for="dept-business-schedule"><?php esc_html_e('Business schedule', 'escalated'); ?></label>
+                            </th>
+                            <td>
+                                <select id="dept-business-schedule" name="business_schedule_id">
+                                    <option value=""><?php esc_html_e('Default schedule', 'escalated'); ?></option>
+                                    <?php foreach (\Escalated\Models\BusinessSchedule::all() as $business_schedule) { ?>
+                                        <option value="<?php echo esc_attr($business_schedule->id); ?>"<?php selected((string) ($edit_item->business_schedule_id ?? ''), (string) $business_schedule->id); ?>><?php echo esc_html($business_schedule->name.' ('.$business_schedule->timezone.')'); ?></option>
+                                    <?php } ?>
+                                </select>
+                                <p class="description"><?php esc_html_e('Business-hours SLA deadlines for this department\'s tickets use this schedule unless the policy names its own.', 'escalated'); ?></p>
+                            </td>
+                        </tr>
+                        <tr>
                             <th scope="row"><?php esc_html_e('Active', 'escalated'); ?></th>
                             <td>
                                 <label>

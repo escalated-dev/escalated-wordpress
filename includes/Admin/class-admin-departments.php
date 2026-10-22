@@ -61,7 +61,7 @@ class Admin_Departments
                     'slug' => sanitize_title(wp_unslash($_POST['slug'] ?? $_POST['name'] ?? '')),
                     'description' => sanitize_textarea_field(wp_unslash($_POST['description'] ?? '')),
                     'is_active' => isset($_POST['is_active']) ? 1 : 0,
-                ];
+                ] + \Escalated\Models\BusinessSchedule::reference_from_input(wp_unslash($_POST));
 
                 $result = Department::create($data);
                 if ($result) {
@@ -82,7 +82,7 @@ class Admin_Departments
                     'slug' => sanitize_title(wp_unslash($_POST['slug'] ?? '')),
                     'description' => sanitize_textarea_field(wp_unslash($_POST['description'] ?? '')),
                     'is_active' => isset($_POST['is_active']) ? 1 : 0,
-                ];
+                ] + \Escalated\Models\BusinessSchedule::reference_from_input(wp_unslash($_POST));
 
                 Department::update($id, $data);
                 $redirect = add_query_arg('message', 'updated', $redirect);

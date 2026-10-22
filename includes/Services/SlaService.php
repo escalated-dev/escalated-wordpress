@@ -3,6 +3,8 @@
 namespace Escalated\Services;
 
 use Escalated\Escalated;
+use Escalated\Models\BusinessSchedule;
+use Escalated\Models\Department;
 use Escalated\Models\Ticket;
 use Escalated\Models\TicketActivity;
 
@@ -83,6 +85,7 @@ class SlaService
             : null;
 
         $now = $ticket->created_at ?? current_time('mysql');
+        $schedule = $business_hours_only ? $this->schedule_for($policy, $ticket) : null;
 
         $update = [
             'sla_policy_id' => $policy->id,
@@ -94,11 +97,11 @@ class SlaService
         }
 
         if ($fr_hours !== null) {
-            $update['first_response_due_at'] = $this->calculate_due_date($now, $fr_hours, $business_hours_only);
+            $update['first_response_due_at'] = $this->due_date($now, $fr_hours, $business_hours_only, $schedule);
         }
 
         if ($res_hours !== null) {
-            $update['resolution_due_at'] = $this->calculate_due_date($now, $res_hours, $business_hours_only);
+            $update['resolution_due_at'] = $this->due_date($now, $res_hours, $business_hours_only, $schedule);
         }
 
         Ticket::update($ticket_id, $update);
@@ -256,9 +259,57 @@ class SlaService
     }
 
     /**
+     * The business schedule a ticket's business-hours deadlines are counted
+     * against: the policy's own schedule, then the ticket department's, then
+     * the default schedule. Null when none is set, which keeps the fixed
+     * hours of the escalated_business_hours_* filters.
+     *
+     * @param  object  $policy  SLA policy row.
+     * @param  object|null  $ticket  Ticket row.
+     * @return object|null Business schedule row.
+     */
+    public function schedule_for(object $policy, ?object $ticket = null): ?object
+    {
+        $candidates = [(int) ($policy->business_schedule_id ?? 0)];
+        if ($ticket && ! empty($ticket->department_id)) {
+            $department = Department::find((int) $ticket->department_id);
+            $candidates[] = (int) ($department->business_schedule_id ?? 0);
+        }
+
+        foreach ($candidates as $id) {
+            if ($id > 0 && ($schedule = BusinessSchedule::find($id))) {
+                return $schedule;
+            }
+        }
+
+        return BusinessSchedule::get_default();
+    }
+
+    /**
+     * A due date counted on `$schedule` when there is one, otherwise by
+     * calculate_due_date(). Stored datetimes are in the site time zone.
+     */
+    private function due_date(string $from, float $hours, bool $business_hours_only, ?object $schedule): string
+    {
+        if (! $business_hours_only || $schedule === null) {
+            return $this->calculate_due_date($from, $hours, $business_hours_only);
+        }
+
+        $zone = wp_timezone();
+        $due = (new BusinessHoursCalculator)->add_business_hours(
+            new \DateTimeImmutable($from, $zone),
+            $hours,
+            BusinessSchedule::for_calculator($schedule)
+        );
+
+        return $due->setTimezone($zone)->format('Y-m-d H:i:s');
+    }
+
+    /**
      * Calculate a due date by adding hours to a starting datetime.
      *
      * Supports both calendar hours and business hours (Mon-Fri, configurable start/end times).
+     * This is the fallback when no business schedule is configured; see schedule_for().
      *
      * @param  string  $from  Starting datetime string (MySQL format).
      * @param  float  $hours  Number of hours to add.
