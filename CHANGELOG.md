@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.6.4] - 2026-10-22
+
 ### Upgrading
 - New tables `escalated_business_schedules` and `escalated_holidays`, and a nullable `business_schedule_id` column on `escalated_sla_policies` and `escalated_departments`, added by the normal schema upgrade.
 - Nothing changes until a business schedule exists. With none, SLA policies limited to business hours keep the fixed hours of the `escalated_business_hours_start`, `escalated_business_hours_end` and `escalated_business_days` filters.
