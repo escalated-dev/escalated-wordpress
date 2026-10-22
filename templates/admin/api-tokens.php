@@ -68,8 +68,9 @@ if (! defined('ABSPATH')) {
                     $user = get_userdata($token->user_id);
                     $user_name = $user ? $user->display_name : __('Unknown', 'escalated');
 
-                    // Mask the stored hash.
-                    $token_display = '****'.substr($token->token_hash ?? $token->token ?? '', -8);
+                    // Show none of the stored value: it is the token's hash, or
+                    // the token itself for one issued before hashing.
+                    $token_display = \Escalated\Services\SecretMask::MASK;
 
                     // Parse abilities.
                     $abilities = json_decode($token->abilities ?? '["*"]', true);

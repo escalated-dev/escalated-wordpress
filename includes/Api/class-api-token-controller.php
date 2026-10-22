@@ -8,6 +8,7 @@ namespace Escalated\Api;
 
 use Escalated\Models\ApiToken;
 use Escalated\Models\AuditLog;
+use Escalated\Services\SecretMask;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_REST_Server;
@@ -138,7 +139,7 @@ class Api_Token_Controller extends Base_Controller
     }
 
     /**
-     * List all API tokens with masked token values.
+     * List all API tokens. No part of a stored token is returned.
      *
      * @param  WP_REST_Request  $request  The incoming request.
      * @return WP_REST_Response|\WP_Error
@@ -152,8 +153,9 @@ class Api_Token_Controller extends Base_Controller
 
         $result = [];
         foreach ($tokens as $token) {
-            // Mask the token: show first 8 characters, mask the rest.
-            $masked = substr($token->token, 0, 8).str_repeat('*', max(0, strlen($token->token) - 8));
+            // The column holds the token's hash (or, for a token issued before
+            // hashing and not used since, the token itself): show none of it.
+            $masked = SecretMask::MASK;
 
             // Parse abilities.
             $abilities = $token->abilities;
