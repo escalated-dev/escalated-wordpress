@@ -131,6 +131,27 @@ class Chat_Controller extends Base_Controller
             ]
         );
 
+        // Transfer a chat to another agent and/or department
+        // (escalated-laravel escalated.admin.chat.transfer).
+        register_rest_route(
+            $this->namespace,
+            '/'.$this->rest_base.'/(?P<session_id>\d+)/transfer',
+            [
+                [
+                    'methods' => WP_REST_Server::CREATABLE,
+                    'callback' => [$this, 'transfer_session'],
+                    'permission_callback' => [$this, 'token_permissions_check'],
+                    'args' => [
+                        'session_id' => [
+                            'required' => true,
+                            'type' => 'integer',
+                            'sanitize_callback' => 'absint',
+                        ],
+                    ],
+                ],
+            ]
+        );
+
         // Get a specific session.
         register_rest_route(
             $this->namespace,
@@ -210,6 +231,60 @@ class Chat_Controller extends Base_Controller
         } catch (\Throwable $e) {
             return $this->error('escalated_chat_error', $e->getMessage(), 400);
         }
+    }
+
+    /**
+     * POST /chat/{session_id}/transfer. The body is {agent_id, department_id}
+     * (either or both), as escalated-laravel's ChatController::transfer; the
+     * shared ChatActionBar's {type: "agent"|"department", id} is read too.
+     */
+    public function transfer_session(WP_REST_Request $request)
+    {
+        $session_id = (int) $request->get_param('session_id');
+
+        if (! \Escalated\Models\ChatSession::find($session_id)) {
+            return $this->error('escalated_not_found', __('Chat session not found.', 'escalated'), 404);
+        }
+
+        $agent_id = $request->get_param('agent_id');
+        $department_id = $request->get_param('department_id');
+        $type = $request->get_param('type');
+        if ($type === 'agent' && self::blank($agent_id)) {
+            $agent_id = $request->get_param('id');
+        } elseif ($type === 'department' && self::blank($department_id)) {
+            $department_id = $request->get_param('id');
+        }
+
+        foreach (['agent_id' => $agent_id, 'department_id' => $department_id] as $field => $value) {
+            if (! self::blank($value) && (is_bool($value) || filter_var($value, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) === false)) {
+                /* translators: %s: field name */
+                return $this->error('escalated_validation', sprintf(__('The %s must be an integer.', 'escalated'), $field), 422);
+            }
+        }
+        $agent_id = self::blank($agent_id) ? null : (int) $agent_id;
+        $department_id = self::blank($department_id) ? null : (int) $department_id;
+
+        if ($agent_id === null && $department_id === null) {
+            return $this->error('escalated_validation', __('Provide an agent_id or department_id.', 'escalated'), 422);
+        }
+
+        try {
+            $session = (new ChatSessionService)->transfer($session_id, $agent_id, $department_id);
+        } catch (\InvalidArgumentException $e) {
+            return $this->error('escalated_chat_transfer_refused', $e->getMessage(), 422);
+        } catch (\Throwable $e) {
+            return $this->error('escalated_chat_error', $e->getMessage(), 500);
+        }
+
+        return $this->success([
+            'message' => __('Chat transferred.', 'escalated'),
+            'session' => $session,
+        ]);
+    }
+
+    private static function blank($value): bool
+    {
+        return $value === null || (is_string($value) && trim($value) === '');
     }
 
     public function get_session(WP_REST_Request $request)

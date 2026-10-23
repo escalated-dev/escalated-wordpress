@@ -48,6 +48,7 @@ class Test_Workflow_Wiring extends WP_UnitTestCase
         'sla.breached',
         'chat.started',
         'chat.assigned',
+        'chat.transferred',
         'chat.message',
         'chat.ended',
     ];
@@ -299,6 +300,8 @@ class Test_Workflow_Wiring extends WP_UnitTestCase
                 $chats->accept((int) $session->id, $this->agent_id);
             } elseif ($trigger === 'chat.message') {
                 $chats->send_message((int) $session->id, 'Still there?');
+            } elseif ($trigger === 'chat.transferred') {
+                $chats->transfer((int) $session->id, null, $this->make_department());
             } elseif ($trigger === 'chat.ended') {
                 $chats->end((int) $session->id);
             }

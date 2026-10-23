@@ -35,6 +35,7 @@ class NotificationService
         add_action('escalated_internal_note_added', [$this, 'on_note_created'], 100, 2);
         add_action('escalated_tag_added', [$this, 'on_tag_added'], 100, 2);
         add_action('escalated_tag_removed', [$this, 'on_tag_removed'], 100, 2);
+        add_action('escalated_chat_transferred', [$this, 'on_chat_transferred'], 100, 4);
     }
 
     public function on_ticket_resolved($ticket, $causer_id = null): void
@@ -83,6 +84,29 @@ class NotificationService
                 'id' => (int) $note->id,
                 'author_id' => self::nullable_int($note->author_id ?? null),
                 'created_at' => $note->created_at ?? null,
+            ],
+        ]);
+    }
+
+    /**
+     * chat.transferred, with escalated-laravel's DispatchWebhook chat fields.
+     * The visitor's email and chat token stay out.
+     */
+    public function on_chat_transferred($session, $from_agent_id = null, $to_agent_id = null, $to_department_id = null): void
+    {
+        if (! is_object($session) || empty($session->ticket_id)) {
+            return;
+        }
+        $this->dispatch_ticket_event('chat.transferred', Ticket::find((int) $session->ticket_id), [
+            'chat' => [
+                'session_id' => (int) $session->id,
+                'ticket_id' => (int) $session->ticket_id,
+                'status' => $session->status ?? null,
+                'agent_id' => self::nullable_int($session->agent_id ?? null),
+                'department_id' => self::nullable_int($session->department_id ?? null),
+                'from_agent_id' => self::nullable_int($from_agent_id),
+                'to_agent_id' => self::nullable_int($to_agent_id),
+                'to_department_id' => self::nullable_int($to_department_id),
             ],
         ]);
     }
