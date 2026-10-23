@@ -369,7 +369,7 @@ class Widget_Chat_Controller extends Base_Controller
                 return $session;
             }
 
-            $session = $service->end($session_id);
+            $session = $service->end($session_id, null, 'customer');
 
             return $this->success([
                 'id' => (int) $session->id,
@@ -497,7 +497,7 @@ class Widget_Chat_Controller extends Base_Controller
             return $this->error('escalated_chat_ended', __('Chat has already ended.', 'escalated'), 422);
         }
 
-        $session = (new ChatSessionService)->end((int) $session->id);
+        $session = (new ChatSessionService)->end((int) $session->id, null, 'customer');
 
         return $this->success([
             'message' => __('Chat ended.', 'escalated'),

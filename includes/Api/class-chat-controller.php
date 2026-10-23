@@ -225,7 +225,7 @@ class Chat_Controller extends Base_Controller
         $session_id = (int) $request->get_param('session_id');
 
         try {
-            $session = $service->end($session_id);
+            $session = $service->end($session_id, null, 'agent');
 
             return $this->success($session);
         } catch (\Throwable $e) {

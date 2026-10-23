@@ -52,8 +52,8 @@ class WorkflowListener
         add_action('escalated_chat_started', [$this, 'on_chat_started'], 50, 1);
         add_action('escalated_chat_accepted', [$this, 'on_chat_assigned'], 50, 2);
         add_action('escalated_chat_transferred', [$this, 'on_chat_transferred'], 50, 4);
-        add_action('escalated_chat_message', [$this, 'on_chat_message'], 50, 2);
-        add_action('escalated_chat_ended', [$this, 'on_chat_ended'], 50, 2);
+        add_action('escalated_chat_message', [$this, 'on_chat_message'], 50, 3);
+        add_action('escalated_chat_ended', [$this, 'on_chat_ended'], 50, 3);
     }
 
     public function on_ticket_created($ticket): void
@@ -129,12 +129,12 @@ class WorkflowListener
         $this->run_for_chat('chat.transferred', $session);
     }
 
-    public function on_chat_message($session, $reply = null): void
+    public function on_chat_message($session, $reply = null, $author_type = 'visitor'): void
     {
         $this->run_for_chat('chat.message', $session);
     }
 
-    public function on_chat_ended($session, $causer_id = null): void
+    public function on_chat_ended($session, $causer_id = null, $ended_by = 'system'): void
     {
         $this->run_for_chat('chat.ended', $session);
     }

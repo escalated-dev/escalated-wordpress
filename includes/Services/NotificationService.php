@@ -35,7 +35,11 @@ class NotificationService
         add_action('escalated_internal_note_added', [$this, 'on_note_created'], 100, 2);
         add_action('escalated_tag_added', [$this, 'on_tag_added'], 100, 2);
         add_action('escalated_tag_removed', [$this, 'on_tag_removed'], 100, 2);
+        add_action('escalated_chat_started', [$this, 'on_chat_started'], 100, 1);
+        add_action('escalated_chat_accepted', [$this, 'on_chat_assigned'], 100, 2);
         add_action('escalated_chat_transferred', [$this, 'on_chat_transferred'], 100, 4);
+        add_action('escalated_chat_message', [$this, 'on_chat_message'], 100, 3);
+        add_action('escalated_chat_ended', [$this, 'on_chat_ended'], 100, 3);
     }
 
     public function on_ticket_resolved($ticket, $causer_id = null): void
@@ -88,26 +92,62 @@ class NotificationService
         ]);
     }
 
-    /**
-     * chat.transferred, with escalated-laravel's DispatchWebhook chat fields.
-     * The visitor's email and chat token stay out.
-     */
+    public function on_chat_started($session): void
+    {
+        $this->dispatch_chat_event('chat.started', $session);
+    }
+
+    public function on_chat_assigned($session, $agent_id = null): void
+    {
+        $this->dispatch_chat_event('chat.assigned', $session);
+    }
+
     public function on_chat_transferred($session, $from_agent_id = null, $to_agent_id = null, $to_department_id = null): void
+    {
+        $this->dispatch_chat_event('chat.transferred', $session, [
+            'from_agent_id' => self::nullable_int($from_agent_id),
+            'to_agent_id' => self::nullable_int($to_agent_id),
+            'to_department_id' => self::nullable_int($to_department_id),
+        ]);
+    }
+
+    /**
+     * chat.message carries the reply's id and who wrote it, never the body:
+     * a subscriber reads that through the API.
+     */
+    public function on_chat_message($session, $reply = null, $author_type = 'visitor'): void
+    {
+        $this->dispatch_chat_event('chat.message', $session, [
+            'reply_id' => is_object($reply) && ! empty($reply->id) ? (int) $reply->id : null,
+            'author_type' => $author_type === 'agent' ? 'agent' : 'visitor',
+        ]);
+    }
+
+    public function on_chat_ended($session, $causer_id = null, $ended_by = 'system'): void
+    {
+        $this->dispatch_chat_event('chat.ended', $session, [
+            'ended_by' => in_array($ended_by, ['agent', 'customer', 'system'], true) ? $ended_by : 'system',
+        ]);
+    }
+
+    /**
+     * A chat event with escalated-laravel's DispatchWebhook chat fields, plus
+     * the ticket. The visitor's email, the chat token and message bodies
+     * stay out.
+     */
+    protected function dispatch_chat_event(string $event, $session, array $extra = []): void
     {
         if (! is_object($session) || empty($session->ticket_id)) {
             return;
         }
-        $this->dispatch_ticket_event('chat.transferred', Ticket::find((int) $session->ticket_id), [
+        $this->dispatch_ticket_event($event, Ticket::find((int) $session->ticket_id), [
             'chat' => [
                 'session_id' => (int) $session->id,
                 'ticket_id' => (int) $session->ticket_id,
                 'status' => $session->status ?? null,
                 'agent_id' => self::nullable_int($session->agent_id ?? null),
                 'department_id' => self::nullable_int($session->department_id ?? null),
-                'from_agent_id' => self::nullable_int($from_agent_id),
-                'to_agent_id' => self::nullable_int($to_agent_id),
-                'to_department_id' => self::nullable_int($to_department_id),
-            ],
+            ] + $extra,
         ]);
     }
 

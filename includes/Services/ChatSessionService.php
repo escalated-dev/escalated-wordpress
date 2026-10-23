@@ -185,6 +185,8 @@ class ChatSessionService
 
     /**
      * Send a message within a chat session. Stored as a reply on the ticket.
+     * Fires escalated_chat_message ($session, $reply, $author_type), where
+     * $author_type is 'agent' or 'visitor'.
      */
     public function send_message(int $session_id, string $body, ?int $author_id = null, string $author_type = 'visitor'): object
     {
@@ -204,15 +206,18 @@ class ChatSessionService
             'last_activity_at' => current_time('mysql'),
         ]);
 
-        do_action('escalated_chat_message', $session, $reply);
+        do_action('escalated_chat_message', $session, $reply, $author_type === 'agent' ? 'agent' : 'visitor');
 
         return $reply;
     }
 
     /**
-     * End a chat session. The underlying ticket is resolved.
+     * End a chat session. The underlying ticket is resolved. Fires
+     * escalated_chat_ended ($session, $causer_id, $ended_by), where $ended_by
+     * is who ended it, as escalated-laravel's ChatEnded: 'agent', 'customer'
+     * (the visitor) or 'system' (idle cleanup).
      */
-    public function end(int $session_id, ?int $causer_id = null): object
+    public function end(int $session_id, ?int $causer_id = null, string $ended_by = 'system'): object
     {
         $session = ChatSession::find($session_id);
 
@@ -233,7 +238,7 @@ class ChatSessionService
 
         $session = ChatSession::find($session_id);
 
-        do_action('escalated_chat_ended', $session, $causer_id);
+        do_action('escalated_chat_ended', $session, $causer_id, $ended_by);
 
         return $session;
     }
