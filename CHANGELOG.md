@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.6.5] - 2026-10-22
+
 ### Added
 - Live chat transfer (escalated-laravel `escalated.admin.chat.transfer`): `POST /wp-json/escalated/v1/chat/{session_id}/transfer`, with an API token like the other agent chat endpoints. The body is `{agent_id, department_id}` (either or both); the shared `ChatActionBar`'s `{type: "agent"|"department", id}` is accepted too. With an agent, the session and ticket are reassigned to them. With only a department, the ticket moves there and the chat goes back to the queue (unassigned, waiting), then chat routing runs again for the new department. A missing or non-integer target, an unknown department, an ended chat, or an agent who is not staff or cannot see the ticket is a 422; an unknown session is a 404. New `ChatSessionService::transfer()` and `escalated_chat_transferred` action (`$session, $from_agent_id, $to_agent_id, $to_department_id`).
 - `chat.transferred` runs workflows (new trigger, "Chat transferred") and is sent to webhooks subscribed to it; the webhook form offers it. Its payload is the ticket plus `chat {session_id, ticket_id, status, agent_id, department_id, from_agent_id, to_agent_id, to_department_id}`, as escalated-laravel's. Existing webhooks are not subscribed to it automatically.
