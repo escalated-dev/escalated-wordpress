@@ -51,6 +51,7 @@ class WorkflowListener
         add_action('escalated_sla_breached', [$this, 'on_sla_breached'], 50, 2);
         add_action('escalated_chat_started', [$this, 'on_chat_started'], 50, 1);
         add_action('escalated_chat_accepted', [$this, 'on_chat_assigned'], 50, 2);
+        add_action('escalated_chat_transferred', [$this, 'on_chat_transferred'], 50, 4);
         add_action('escalated_chat_message', [$this, 'on_chat_message'], 50, 2);
         add_action('escalated_chat_ended', [$this, 'on_chat_ended'], 50, 2);
     }
@@ -121,6 +122,11 @@ class WorkflowListener
     public function on_chat_assigned($session, $agent_id = null): void
     {
         $this->run_for_chat('chat.assigned', $session);
+    }
+
+    public function on_chat_transferred($session, $from_agent_id = null, $to_agent_id = null, $to_department_id = null): void
+    {
+        $this->run_for_chat('chat.transferred', $session);
     }
 
     public function on_chat_message($session, $reply = null): void

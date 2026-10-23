@@ -29,7 +29,7 @@ The `escalated_webhook_args` filter can change the request arguments. `escalated
 
 The canonical names from the shared event vocabulary:
 
-`ticket.created`, `ticket.updated`, `ticket.status_changed`, `ticket.resolved`, `ticket.closed`, `ticket.reopened`, `ticket.assigned`, `ticket.unassigned`, `ticket.escalated`, `ticket.priority_changed`, `ticket.department_changed`, `reply.created`, `note.created`, `sla.breached`, `sla.warning`, `ticket.tag_added`, `ticket.tag_removed`.
+`ticket.created`, `ticket.updated`, `ticket.status_changed`, `ticket.resolved`, `ticket.closed`, `ticket.reopened`, `ticket.assigned`, `ticket.unassigned`, `ticket.escalated`, `ticket.priority_changed`, `ticket.department_changed`, `reply.created`, `note.created`, `sla.breached`, `sla.warning`, `ticket.tag_added`, `ticket.tag_removed`, `chat.transferred`.
 
 A webhook saved with an older name (`ticket.tagged`, `internal_note.added`, ...) receives the event under its current name.
 

@@ -104,6 +104,86 @@ class ChatSessionService
     }
 
     /**
+     * Hand a chat to another agent and/or department, as escalated-laravel's
+     * ChatSessionService::transferChat. With an agent, the session and its
+     * ticket are reassigned to that agent. With a department, the ticket
+     * moves there; without an agent too, the chat goes back to the queue
+     * (unassigned, waiting) and routing picks an agent for its new
+     * department. Fires escalated_chat_transferred (chat.transferred) with
+     * the previous agent, the new agent and the new department.
+     *
+     * @throws \InvalidArgumentException when neither target is given, the chat
+     *                                   has ended, the department does not
+     *                                   exist, or the agent cannot take it
+     */
+    public function transfer(int $session_id, ?int $to_agent_id = null, ?int $to_department_id = null): object
+    {
+        $session = ChatSession::find($session_id);
+
+        if (! $session) {
+            throw new \InvalidArgumentException('Chat session not found.');
+        }
+
+        if ($session->status === 'ended') {
+            throw new \InvalidArgumentException('Chat session has already ended.');
+        }
+
+        if (! $to_agent_id && ! $to_department_id) {
+            throw new \InvalidArgumentException('Provide an agent_id or department_id.');
+        }
+
+        if ($to_department_id && ! \Escalated\Models\Department::find($to_department_id)) {
+            throw new \InvalidArgumentException('The selected department_id is invalid.');
+        }
+
+        $ticket_id = (int) $session->ticket_id;
+        $from_agent_id = $session->agent_id ? (int) $session->agent_id : null;
+
+        return TicketAccess::without_restriction(function () use ($session_id, $ticket_id, $from_agent_id, $to_agent_id, $to_department_id) {
+            // Checked against the ticket as it will be (in its new department).
+            $prospective = (array) Ticket::find($ticket_id);
+            if ($to_department_id) {
+                $prospective['department_id'] = $to_department_id;
+            }
+            if ($to_agent_id && (! TicketAccess::is_staff($to_agent_id) || ! TicketAccess::allows($prospective, $to_agent_id))) {
+                throw new \InvalidArgumentException('Agent cannot access this ticket.');
+            }
+
+            $ticket_updates = ['assigned_to' => $to_agent_id ?: null];
+            if ($to_department_id) {
+                $ticket_updates['department_id'] = $to_department_id;
+            }
+            Ticket::update($ticket_id, $ticket_updates);
+
+            $session_updates = [];
+            if ($to_department_id) {
+                $session_updates['department_id'] = $to_department_id;
+            }
+            if ($to_agent_id) {
+                $session_updates['agent_id'] = $to_agent_id;
+            } else {
+                $session_updates['agent_id'] = null;
+                $session_updates['status'] = 'waiting';
+                $session_updates['accepted_at'] = null;
+            }
+            ChatSession::update($session_id, $session_updates);
+
+            $session = ChatSession::find($session_id);
+
+            do_action('escalated_chat_transferred', $session, $from_agent_id, $to_agent_id, $to_department_id);
+
+            if (! $to_agent_id) {
+                $route = $this->routing->resolve($to_department_id);
+                if (! empty($route['agent_id']) && TicketAccess::can_receive($ticket_id, (int) $route['agent_id'])) {
+                    $session = $this->accept($session_id, (int) $route['agent_id']);
+                }
+            }
+
+            return $session;
+        });
+    }
+
+    /**
      * Send a message within a chat session. Stored as a reply on the ticket.
      */
     public function send_message(int $session_id, string $body, ?int $author_id = null, string $author_type = 'visitor'): object

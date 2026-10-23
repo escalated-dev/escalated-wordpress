@@ -49,11 +49,11 @@ final class EventVocabulary
         'sla.warning',
         'ticket.tag_added',
         'ticket.tag_removed',
+        'chat.transferred',
     ];
 
     /**
-     * The events WorkflowListener runs workflows on. Live chat has no
-     * transfer, so chat.transferred is not fired. reply.agent_reply is a
+     * The events WorkflowListener runs workflows on. reply.agent_reply is a
      * WordPress extension: reply.created limited to staff replies.
      */
     public const WORKFLOW_TRIGGERS = [
@@ -77,6 +77,7 @@ final class EventVocabulary
         'sla.breached',
         'chat.started',
         'chat.assigned',
+        'chat.transferred',
         'chat.message',
         'chat.ended',
     ];

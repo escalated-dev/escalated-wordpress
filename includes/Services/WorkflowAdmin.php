@@ -218,6 +218,7 @@ class WorkflowAdmin
             'sla.breached' => __('SLA breached', 'escalated'),
             'chat.started' => __('Chat started', 'escalated'),
             'chat.assigned' => __('Chat assigned', 'escalated'),
+            'chat.transferred' => __('Chat transferred', 'escalated'),
             'chat.message' => __('Chat message', 'escalated'),
             'chat.ended' => __('Chat ended', 'escalated'),
         ];
