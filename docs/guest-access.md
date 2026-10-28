@@ -69,6 +69,6 @@ Links sent before this release carry the ticket's permanent `guest_token`. They 
 ## Differences from Laravel
 
 - Legacy permanent links are not cut off at once. A setting controls them.
-- Live chat keeps the chat ticket's random token as its session id, not an expiring chat grant.
+- Live chat uses a random chat token rather than a sealed grant. Like Laravel's chat grant it expires `guest_access_ttl_minutes` after the chat starts, only its SHA-256 is stored, and it cannot open ticket routes; it is not rotated by a ticket link.
 - Using up the code and creating the ticket are not one database transaction. A failed create hands the code back instead.
 - There is no mobile guest API and no `external_reference` on tickets, so lookup matches the ticket reference only.

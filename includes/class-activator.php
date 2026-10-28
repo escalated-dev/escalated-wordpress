@@ -4,7 +4,7 @@ namespace Escalated;
 
 class Activator
 {
-    public const SCHEMA_VERSION = 'business-hours-1';
+    public const SCHEMA_VERSION = 'chat-token-expiry-1';
 
     /**
      * Run on plugin activation.
@@ -507,12 +507,15 @@ class Activator
             ended_at DATETIME NULL,
             last_activity_at DATETIME NOT NULL,
             metadata TEXT NULL,
+            visitor_token_hash CHAR(64) NULL,
+            visitor_token_expires_at DATETIME NULL,
             created_at DATETIME NOT NULL,
             updated_at DATETIME NOT NULL,
             PRIMARY KEY  (id),
             KEY ticket_id (ticket_id),
             KEY status (status),
-            KEY agent_id (agent_id)
+            KEY agent_id (agent_id),
+            UNIQUE KEY visitor_token_hash (visitor_token_hash)
         ) $charset_collate;";
         Escalated::schema_delta($sql);
 

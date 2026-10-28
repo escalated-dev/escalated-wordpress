@@ -28,6 +28,19 @@ class ChatSession
     }
 
     /**
+     * Find a chat session by the SHA-256 of its visitor token.
+     */
+    public static function find_by_visitor_token_hash(string $hash): ?object
+    {
+        $wpdb = \Escalated\Escalated::db();
+        $table = static::table();
+
+        return $wpdb->get_row(
+            $wpdb->prepare("SELECT * FROM {$table} WHERE visitor_token_hash = %s", $hash)
+        );
+    }
+
+    /**
      * Find a chat session by ticket ID.
      */
     public static function find_by_ticket_id(int $ticket_id): ?object
