@@ -331,6 +331,47 @@ class AttachmentService
     }
 
     /**
+     * A download URL for a guest holding an active access grant (the mobile
+     * guest API). It carries a signature over the attachment, the ticket's
+     * current grant hash and guest email, and the grant's expiry, so it stops
+     * working when the grant expires, rotates or is revoked, or the guest
+     * email changes. The grant itself is never put in the URL.
+     */
+    public static function guest_download_url(object $attachment, object $ticket): string
+    {
+        $expires = (int) strtotime((string) $ticket->guest_access_expires_at.' UTC');
+
+        return add_query_arg([
+            'guest' => self::guest_signature($attachment, $ticket, $expires),
+            'expires' => $expires,
+        ], rest_url('escalated/v1/attachments/'.(int) $attachment->id.'/download'));
+    }
+
+    /**
+     * Whether a guest download link (guest_download_url()) is still good for
+     * this attachment. Internal-note attachments are never served to guests.
+     */
+    public static function guest_link_valid(object $attachment, object $ticket, bool $internal, string $signature, int $expires): bool
+    {
+        if ($internal || $signature === '' || empty($ticket->guest_access_hash) || empty($ticket->guest_email)
+            || empty($ticket->guest_access_expires_at) || $expires <= time()
+            || (int) strtotime((string) $ticket->guest_access_expires_at.' UTC') <= time()) {
+            return false;
+        }
+
+        return hash_equals(self::guest_signature($attachment, $ticket, $expires), $signature);
+    }
+
+    private static function guest_signature(object $attachment, object $ticket, int $expires): string
+    {
+        return hash_hmac(
+            'sha256',
+            (int) $attachment->id.'|'.(int) $ticket->id.'|'.$ticket->guest_access_hash.'|'.GuestEmailVerification::email_digest((string) $ticket->guest_email).'|'.$expires,
+            wp_salt('auth').'|escalated-guest-attachment'
+        );
+    }
+
+    /**
      * Whether a stored path is one this plugin wrote: inside the private
      * store or the legacy public uploads/escalated tree.
      */

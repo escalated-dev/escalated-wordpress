@@ -39,6 +39,7 @@ class Api_Bootstrap
             new Events_Controller,
             new Widget_Controller,
             new Guest_Controller,
+            new Mobile_Guest_Controller,
             new Widget_Script_Controller,
             new Article_Controller,
             new Article_Category_Controller,

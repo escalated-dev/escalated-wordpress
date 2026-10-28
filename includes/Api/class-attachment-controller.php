@@ -65,12 +65,18 @@ class Attachment_Controller extends Base_Controller
     }
 
     /**
-     * A bearer token (tickets:read) or a signed-in session with a REST nonce.
+     * A bearer token (tickets:read), a signed-in session with a REST nonce,
+     * or a signed guest link (AttachmentService::guest_download_url(),
+     * checked in download()).
      *
      * @return bool|\WP_Error
      */
     public function download_permissions_check(WP_REST_Request $request)
     {
+        if (self::guest_signature($request) !== '') {
+            return true;
+        }
+
         if ($request->get_header('Authorization')) {
             return $this->check_token_permission($request, 'tickets:read') !== null
                 ? true
@@ -89,29 +95,35 @@ class Attachment_Controller extends Base_Controller
     {
         $user = TicketAccess::actor();
         $not_found = $this->error('escalated_not_found', __('Attachment not found.', 'escalated'), 404);
+        $guest = self::guest_signature($request);
 
-        // Ticket visibility applies to the attachment, reply and ticket lookups.
-        $attachment = Attachment::find((int) $request->get_param('id'));
-        if (! $attachment) {
-            return $not_found;
-        }
-
-        $internal = false;
-        $ticket = null;
-        if ($attachment->attachable_type === 'ticket') {
-            $ticket = Ticket::find((int) $attachment->attachable_id);
-        } elseif ($attachment->attachable_type === 'reply') {
-            $reply = Reply::find((int) $attachment->attachable_id);
-            if ($reply) {
-                $internal = (bool) $reply->is_internal_note;
-                $ticket = Ticket::find((int) $reply->ticket_id);
+        // Ticket visibility applies to the attachment, reply and ticket
+        // lookups. A guest link is checked against the ticket's grant instead.
+        $find = static function () use ($request): array {
+            $attachment = Attachment::find((int) $request->get_param('id'));
+            $internal = false;
+            $ticket = null;
+            if ($attachment && $attachment->attachable_type === 'ticket') {
+                $ticket = Ticket::find((int) $attachment->attachable_id);
+            } elseif ($attachment && $attachment->attachable_type === 'reply') {
+                $reply = Reply::find((int) $attachment->attachable_id);
+                if ($reply) {
+                    $internal = (bool) $reply->is_internal_note;
+                    $ticket = Ticket::find((int) $reply->ticket_id);
+                }
             }
-        }
-        if (! $ticket) {
+
+            return [$attachment, $ticket, $internal];
+        };
+        [$attachment, $ticket, $internal] = $guest !== '' ? TicketAccess::without_restriction($find) : $find();
+        if (! $attachment || ! $ticket) {
             return $not_found;
         }
 
-        if (! self::may_download($ticket, $internal, $user)) {
+        $allowed = $guest !== ''
+            ? AttachmentService::guest_link_valid($attachment, $ticket, $internal, $guest, (int) $request->get_param('expires'))
+            : self::may_download($ticket, $internal, $user);
+        if (! $allowed) {
             return $this->error('escalated_forbidden', __('You cannot download this attachment.', 'escalated'), 403);
         }
 
@@ -125,6 +137,17 @@ class Attachment_Controller extends Base_Controller
         }
 
         return new WP_REST_Response($content, 200, self::headers($attachment, strlen($content)));
+    }
+
+    /**
+     * The guest link signature, when the request carries one and no API
+     * token (a token always takes the token path).
+     */
+    private static function guest_signature(WP_REST_Request $request): string
+    {
+        $guest = $request->get_param('guest');
+
+        return ! $request->get_header('Authorization') && is_string($guest) ? $guest : '';
     }
 
     /**
