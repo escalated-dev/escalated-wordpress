@@ -4,21 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-### Added
-- **Mobile guest API** under `/wp-json/escalated/v1/mobile/guest/`:
-  `POST verification`, `POST lookup`, `POST tickets`,
-  `GET tickets/{token}` and `POST tickets/{token}/replies`, following
-  escalated-developer-context `domain-model/mobile-guest-api.md`. The routes
-  use the existing email codes, guest access grants and per-IP guest budgets,
-  so grants work across the widget, the guest pages and the mobile routes.
-  Anything other than an active grant (including chat tokens and legacy
-  links) answers 404, and every answer is `Cache-Control: private, no-store`.
-  The routes are also limited per client IP by the `api_rate_limit` setting,
-  with `X-RateLimit-*` headers. See `docs/guest-access.md`.
-- Attachment downloads accept a signed guest link
-  (`AttachmentService::guest_download_url()`), which the mobile ticket
-  object uses for reply attachments. It works only while the ticket's grant
-  is active and never for internal-note files.
+## [1.6.6] - 2026-10-28
 
 ### Upgrading
 - `POST widget/chat/start` now answers exactly as escalated-laravel: `201
@@ -43,6 +29,22 @@ All notable changes to this project will be documented in this file.
 - `ChatSessionService::start()` returns the token once as
   `$session->visitor_token`; new chat tickets no longer carry it as their
   `guest_token`.
+
+### Added
+- **Mobile guest API** under `/wp-json/escalated/v1/mobile/guest/`:
+  `POST verification`, `POST lookup`, `POST tickets`,
+  `GET tickets/{token}` and `POST tickets/{token}/replies`, following
+  escalated-developer-context `domain-model/mobile-guest-api.md`. The routes
+  use the existing email codes, guest access grants and per-IP guest budgets,
+  so grants work across the widget, the guest pages and the mobile routes.
+  Anything other than an active grant (including chat tokens and legacy
+  links) answers 404, and every answer is `Cache-Control: private, no-store`.
+  The routes are also limited per client IP by the `api_rate_limit` setting,
+  with `X-RateLimit-*` headers. See `docs/guest-access.md`.
+- Attachment downloads accept a signed guest link
+  (`AttachmentService::guest_download_url()`), which the mobile ticket
+  object uses for reply attachments. It works only while the ticket's grant
+  is active and never for internal-note files.
 
 ### Security
 - **Widget chat tokens are stored hashed and expire.** The token returned by
