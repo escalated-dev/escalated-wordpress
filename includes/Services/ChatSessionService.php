@@ -61,9 +61,77 @@ class ChatSessionService
             throw new \RuntimeException('Failed to create chat session.');
         }
 
+        // The visitor's only key to this chat: random, expiring, stored hashed
+        // on the session. The chat's ticket keeps no guest token, so the chat
+        // token cannot open ticket routes (as in escalated-laravel).
+        $token = wp_generate_password(64, false);
+        ChatSession::update((int) $session_id, [
+            'visitor_token_hash' => self::hash_visitor_token($token),
+            'visitor_token_expires_at' => self::visitor_token_expiry(),
+        ]);
+        Ticket::update((int) $ticket->id, ['guest_token' => null]);
+
         $session = ChatSession::find($session_id);
+        $session->visitor_token = $token;
 
         do_action('escalated_chat_started', $session);
+
+        return $session;
+    }
+
+    /**
+     * The SHA-256 a chat token is stored as.
+     */
+    public static function hash_visitor_token(string $token): string
+    {
+        return hash('sha256', $token);
+    }
+
+    /**
+     * Chat tokens live as long as guest grants (GuestAccess::ttl_minutes()), in UTC.
+     */
+    private static function visitor_token_expiry(): string
+    {
+        return gmdate('Y-m-d H:i:s', time() + \Escalated\Services\GuestAccess::ttl_minutes() * 60);
+    }
+
+    /**
+     * The chat a visitor's unexpired token unlocks, or null (answered with 404).
+     *
+     * As in escalated-laravel, a chat token is an expiring grant: only its
+     * SHA-256 is kept and it stops working the guest access lifetime after the
+     * chat starts. A chat started before that holds its plain token as the
+     * ticket's guest_token: the first request with it moves the hash to the
+     * session with a full lifetime and clears the ticket's copy, so chats in
+     * progress during an upgrade keep working.
+     */
+    public function find_by_visitor_token(string $token): ?object
+    {
+        if ($token === '' || strlen($token) > 255) {
+            return null;
+        }
+        $session = ChatSession::find_by_visitor_token_hash(self::hash_visitor_token($token));
+        if (! $session) {
+            $ticket = Ticket::find_by_guest_token($token);
+            // The column's collation may compare case-insensitively.
+            if (! $ticket || ($ticket->channel ?? '') !== 'chat' || ! hash_equals((string) $ticket->guest_token, $token)) {
+                return null;
+            }
+            $session = ChatSession::find_by_ticket_id((int) $ticket->id);
+            if (! $session || ! empty($session->visitor_token_hash)) {
+                return null;
+            }
+            ChatSession::update((int) $session->id, [
+                'visitor_token_hash' => self::hash_visitor_token($token),
+                'visitor_token_expires_at' => self::visitor_token_expiry(),
+            ]);
+            Ticket::update((int) $ticket->id, ['guest_token' => null]);
+            $session = ChatSession::find((int) $session->id);
+        }
+        $expires = (string) ($session->visitor_token_expires_at ?? '');
+        if ($expires === '' || strtotime($expires.' UTC') <= time()) {
+            return null;
+        }
 
         return $session;
     }

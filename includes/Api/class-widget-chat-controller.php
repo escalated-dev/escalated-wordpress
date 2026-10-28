@@ -313,16 +313,19 @@ class Widget_Chat_Controller extends Base_Controller
                 WidgetMetadata::from_request($request)
             );
             $ticket = Ticket::find((int) $session->ticket_id);
+            $expires_at = gmdate('c', strtotime($session->visitor_token_expires_at.' UTC'));
 
             return $this->success([
-                // The chat id is the ticket's random guest token, never the
-                // sequential session id; the id-keyed routes resolve it.
-                'id' => $ticket->guest_token ?? null,
+                // The chat id is the visitor's random, expiring chat token,
+                // never the sequential session id; the id-keyed routes resolve it.
+                'id' => $session->visitor_token,
+                // The token stops working after this; the visitor starts a new chat.
+                'expires_at' => $expires_at,
                 'session_id' => (int) $session->id,
                 'ticket_id' => (int) $session->ticket_id,
                 'status' => $session->status,
                 'visitor_name' => $session->visitor_name,
-                'guest_token' => $ticket->guest_token ?? null,
+                'guest_token' => $session->visitor_token,
                 'messages' => $ticket ? $this->chat_messages($session, $ticket) : [],
                 'agent' => $this->agent_payload($session),
                 'created_at' => $session->created_at,
@@ -547,14 +550,10 @@ class Widget_Chat_Controller extends Base_Controller
      */
     private function session_for_id(string $id)
     {
-        $ticket = $id !== '' ? Ticket::find_by_guest_token($id) : null;
-        // The column's collation may compare case-insensitively.
-        if (! $ticket || ! hash_equals((string) $ticket->guest_token, $id)) {
-            return $this->error('escalated_not_found', __('Chat session not found.', 'escalated'), 404);
-        }
-
-        $session = ChatSession::find_by_ticket_id((int) $ticket->id);
-        if (! $session) {
+        // Unknown and expired tokens are both 404, as in escalated-laravel.
+        $session = (new ChatSessionService)->find_by_visitor_token($id);
+        $ticket = $session ? Ticket::find((int) $session->ticket_id) : null;
+        if (! $session || ! $ticket) {
             return $this->error('escalated_not_found', __('Chat session not found.', 'escalated'), 404);
         }
 
@@ -638,11 +637,12 @@ class Widget_Chat_Controller extends Base_Controller
             return $this->error('escalated_not_found', __('Chat session not found.', 'escalated'), 404);
         }
 
-        $ticket = Ticket::find((int) $session->ticket_id);
-        if (! $ticket || empty($ticket->guest_token) || ! hash_equals((string) $ticket->guest_token, $guest_token)) {
+        // The same expiring chat token the id-keyed routes take.
+        $unlocked = (new ChatSessionService)->find_by_visitor_token($guest_token);
+        if (! $unlocked || (int) $unlocked->id !== (int) $session->id) {
             return $this->error('escalated_forbidden', __('Chat session verification failed.', 'escalated'), 403);
         }
 
-        return $session;
+        return $unlocked;
     }
 }

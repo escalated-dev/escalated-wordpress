@@ -370,6 +370,70 @@ class Test_Widget_Contract extends WP_UnitTestCase
         $this->assertSame(404, $this->api('GET', '/chat/'.$ticket->guest_token.'/messages')['status']);
     }
 
+    public function test_chat_token_expires_with_the_guest_access_lifetime_and_only_its_hash_is_stored(): void
+    {
+        $before = time();
+        $chat = $this->start_chat();
+
+        $ttl = \Escalated\Services\GuestAccess::ttl_minutes() * 60;
+        $expires = strtotime($chat['expires_at']);
+        $this->assertGreaterThanOrEqual($before + $ttl, $expires);
+        $this->assertLessThanOrEqual(time() + $ttl, $expires);
+
+        $session = ChatSession::find($chat['session_id']);
+        $this->assertSame(hash('sha256', $chat['id']), $session->visitor_token_hash);
+        $this->assertSame($expires, strtotime($session->visitor_token_expires_at.' UTC'));
+        $this->assertEmpty(Ticket::find((int) $session->ticket_id)->guest_token);
+    }
+
+    public function test_chat_token_lifetime_follows_the_guest_access_ttl(): void
+    {
+        $filter = static fn () => 30;
+        add_filter('escalated_guest_access_ttl_minutes', $filter);
+        try {
+            $before = time();
+            $expires = strtotime($this->start_chat()['expires_at']);
+            $this->assertGreaterThanOrEqual($before + 1800, $expires);
+            $this->assertLessThanOrEqual(time() + 1800, $expires);
+        } finally {
+            remove_filter('escalated_guest_access_ttl_minutes', $filter);
+        }
+    }
+
+    public function test_every_chat_route_answers_404_once_the_token_has_expired(): void
+    {
+        $chat = $this->start_chat();
+        ChatSession::update($chat['session_id'], ['visitor_token_expires_at' => gmdate('Y-m-d H:i:s', time() - 60)]);
+
+        $this->assertSame(404, $this->api('GET', '/chat/'.$chat['id'].'/messages')['status']);
+        foreach (['messages', 'typing', 'end', 'rate'] as $action) {
+            $this->assertSame(404, $this->api('POST', '/chat/'.$chat['id'].'/'.$action, ['body' => 'x', 'rating' => 5])['status'], $action);
+        }
+        $_GET = [];
+        $legacy = $this->api('POST', '/chat/'.$chat['session_id'].'/messages', ['body' => 'Legacy', 'guest_token' => $chat['id']]);
+        $this->assertSame(403, $legacy['status']);
+    }
+
+    public function test_a_chat_started_before_tokens_expired_keeps_working_with_a_full_lifetime(): void
+    {
+        $chat = $this->start_chat();
+        // The shape such a chat has after the upgrade: the plain token on the
+        // ticket, nothing on the session.
+        $session = ChatSession::find($chat['session_id']);
+        Ticket::update((int) $session->ticket_id, ['guest_token' => $chat['id']]);
+        ChatSession::update($chat['session_id'], ['visitor_token_hash' => null, 'visitor_token_expires_at' => null]);
+        $before = time();
+
+        $this->assertSame(200, $this->api('GET', '/chat/'.$chat['id'].'/messages')['status']);
+        $sent = $this->api('POST', '/chat/'.$chat['id'].'/messages', ['body' => 'Still here']);
+        $this->assertSame(201, $sent['status'], (string) wp_json_encode($sent['json']));
+
+        $session = ChatSession::find($chat['session_id']);
+        $this->assertSame(hash('sha256', $chat['id']), $session->visitor_token_hash);
+        $this->assertGreaterThanOrEqual($before + \Escalated\Services\GuestAccess::ttl_minutes() * 60, strtotime($session->visitor_token_expires_at.' UTC'));
+        $this->assertEmpty(Ticket::find((int) $session->ticket_id)->guest_token);
+    }
+
     public function test_legacy_numeric_chat_routes_still_work(): void
     {
         $chat = $this->start_chat();

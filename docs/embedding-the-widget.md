@@ -145,20 +145,23 @@ working: existing routes, parameters and fields are unchanged.
 | `POST /tickets` `{ name, email, subject, description, department_id?, metadata?, verification_id, verification_code }` | 201 `{ message, reference, guest_access_token, expires_at }`, plus the legacy `guest_token` while legacy guest links are on. An unknown or inactive `department_id` is ignored. |
 | `POST /lookup` `{ email, reference, verification_id, verification_code }` | `{ data: [{ reference, subject, guest_access_token, expires_at }] }` |
 | `GET /tickets/{reference}` with `Authorization: Bearer <guest_access_token>` | `{ reference, subject, status, created_at, updated_at }` |
-| `POST /chat/start` `{ name, email, department_id?, message?, metadata?, verification_id, verification_code }` | 201 `{ id, session_id, status, messages, agent, guest_token, ... }` |
+| `POST /chat/start` `{ name, email, department_id?, message?, metadata?, verification_id, verification_code }` | 201 `{ id, expires_at, session_id, status, messages, agent, guest_token, ... }` |
 | `GET /chat/{id}/messages` | `{ messages: [{ id, body, is_agent, author: { name }, created_at }], agent, typing, ended, status }` |
 | `POST /chat/{id}/messages` `{ body }` | 201; 422 once the chat has ended |
 | `POST /chat/{id}/typing` | 200; fires the `escalated_chat_visitor_typing` action |
 | `POST /chat/{id}/end` | 200; 422 if it already ended |
 | `POST /chat/{id}/rate` `{ rating: 1-5, comment? }` | 200; 422 before the chat ends or once rated. Saved as the chat ticket's satisfaction rating. |
 
-The chat `id` is the chat ticket's random 64-character guest token, not the
-numeric session id (returned as `session_id`). The `/chat/{id}/...` routes
-resolve the chat from it and answer 404 for anything else. They allow 120
+The chat `id` is a random 64-character chat token (also returned as
+`guest_token`), not the numeric session id (returned as `session_id`). Only its
+SHA-256 is stored, on the chat session, and it expires the guest access
+lifetime after the chat starts (`expires_at`; setting
+`guest_access_ttl_minutes`, default 1440). The `/chat/{id}/...` routes resolve
+the chat from it and answer 404 for an unknown or expired token. They allow 120
 requests a minute per IP, so the widget's 3-second polling fits; the other
 widget routes keep the 30-a-minute limit. The older numeric routes
-(`/chat/{session_id}/messages`, `/end` and `/poll` with a `guest_token`
-parameter) still work. `typing` is always `null` for now: WordPress has no
+(`/chat/{session_id}/messages`, `/end` and `/poll` with the chat token as
+`guest_token`) still work, and answer 403 once it has expired. `typing` is always `null` for now: WordPress has no
 agent typing signal.
 
 `GET /tickets/{reference}` needs a grant for that ticket; an email address
