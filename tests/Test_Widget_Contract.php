@@ -269,8 +269,9 @@ class Test_Widget_Contract extends WP_UnitTestCase
         $this->assertMatchesRegularExpression('/^[A-Za-z0-9]{64}$/', $chat['id']);
         $this->assertDoesNotMatchRegularExpression('/^\d+$/', $chat['id']);
         $this->assertSame($chat['guest_token'], $chat['id']);
-        $this->assertIsInt($chat['session_id']);
-        $this->assertNotNull(ChatSession::find($chat['session_id']));
+        // As in escalated-laravel, `session_id` is the token too.
+        $this->assertSame($chat['id'], $chat['session_id']);
+        $this->assertNotNull(ChatSession::find(escalated_test_chat_id($chat)));
         $this->assertSame('waiting', $chat['status']);
         $this->assertSame('My order is late.', $chat['messages'][0]['body']);
         $this->assertFalse($chat['messages'][0]['is_agent']);
@@ -281,10 +282,10 @@ class Test_Widget_Contract extends WP_UnitTestCase
         $sales = $this->department('Sales');
 
         $chat = $this->start_chat(['department_id' => $sales]);
-        $this->assertSame($sales, (int) ChatSession::find($chat['session_id'])->department_id);
+        $this->assertSame($sales, (int) ChatSession::find(escalated_test_chat_id($chat))->department_id);
 
         $chat = $this->start_chat(['department_id' => 999999]);
-        $this->assertEmpty(ChatSession::find($chat['session_id'])->department_id);
+        $this->assertEmpty(ChatSession::find(escalated_test_chat_id($chat))->department_id);
     }
 
     public function test_chat_messages_round_trip_by_id(): void
@@ -296,8 +297,8 @@ class Test_Widget_Contract extends WP_UnitTestCase
         $this->assertLessThan(300, $sent['status']);
 
         $agent = self::factory()->user->create(['role' => 'administrator', 'display_name' => 'Alex Agent']);
-        ChatSession::update($chat['session_id'], ['agent_id' => $agent, 'status' => 'active']);
-        (new TicketService)->reply((int) ChatSession::find($chat['session_id'])->ticket_id, $agent, 'It ships today.');
+        ChatSession::update(escalated_test_chat_id($chat), ['agent_id' => $agent, 'status' => 'active']);
+        (new TicketService)->reply((int) ChatSession::find(escalated_test_chat_id($chat))->ticket_id, $agent, 'It ships today.');
 
         $response = $this->api('GET', '/chat/'.$chat['id'].'/messages');
         $data = $response['json'];
@@ -339,7 +340,7 @@ class Test_Widget_Contract extends WP_UnitTestCase
         $rated = $this->api('POST', '/chat/'.$chat['id'].'/rate', ['rating' => 4, 'comment' => 'Quick answer.']);
         $this->assertSame(200, $rated['status'], (string) wp_json_encode($rated['json']));
 
-        $rating = SatisfactionRating::for_ticket((int) ChatSession::find($chat['session_id'])->ticket_id);
+        $rating = SatisfactionRating::for_ticket((int) ChatSession::find(escalated_test_chat_id($chat))->ticket_id);
         $this->assertSame(4, (int) $rating->rating);
         $this->assertSame('Quick answer.', $rating->comment);
 
@@ -380,10 +381,25 @@ class Test_Widget_Contract extends WP_UnitTestCase
         $this->assertGreaterThanOrEqual($before + $ttl, $expires);
         $this->assertLessThanOrEqual(time() + $ttl, $expires);
 
-        $session = ChatSession::find($chat['session_id']);
+        $session = ChatSession::find(escalated_test_chat_id($chat));
         $this->assertSame(hash('sha256', $chat['id']), $session->visitor_token_hash);
         $this->assertSame($expires, strtotime($session->visitor_token_expires_at.' UTC'));
         $this->assertEmpty(Ticket::find((int) $session->ticket_id)->guest_token);
+    }
+
+    public function test_chat_start_answers_with_the_same_fields_as_laravel(): void
+    {
+        $chat = $this->start_chat();
+        $ticket = Ticket::find((int) ChatSession::find(escalated_test_chat_id($chat))->ticket_id);
+
+        $this->assertSame($chat['id'], $chat['session_id']);
+        $this->assertGreaterThan(time(), strtotime($chat['expires_at']));
+        $this->assertSame($ticket->reference, $chat['ticket_reference']);
+        $this->assertSame('waiting', $chat['status']);
+        $this->assertArrayHasKey('agent_name', $chat);
+        $this->assertNull($chat['agent_name']);
+        // The internal numeric ids the token replaced are not exposed.
+        $this->assertArrayNotHasKey('ticket_id', $chat);
     }
 
     public function test_chat_token_lifetime_follows_the_guest_access_ttl(): void
@@ -403,14 +419,14 @@ class Test_Widget_Contract extends WP_UnitTestCase
     public function test_every_chat_route_answers_404_once_the_token_has_expired(): void
     {
         $chat = $this->start_chat();
-        ChatSession::update($chat['session_id'], ['visitor_token_expires_at' => gmdate('Y-m-d H:i:s', time() - 60)]);
+        ChatSession::update(escalated_test_chat_id($chat), ['visitor_token_expires_at' => gmdate('Y-m-d H:i:s', time() - 60)]);
 
         $this->assertSame(404, $this->api('GET', '/chat/'.$chat['id'].'/messages')['status']);
         foreach (['messages', 'typing', 'end', 'rate'] as $action) {
             $this->assertSame(404, $this->api('POST', '/chat/'.$chat['id'].'/'.$action, ['body' => 'x', 'rating' => 5])['status'], $action);
         }
         $_GET = [];
-        $legacy = $this->api('POST', '/chat/'.$chat['session_id'].'/messages', ['body' => 'Legacy', 'guest_token' => $chat['id']]);
+        $legacy = $this->api('POST', '/chat/'.escalated_test_chat_id($chat).'/messages', ['body' => 'Legacy', 'guest_token' => $chat['id']]);
         $this->assertSame(403, $legacy['status']);
     }
 
@@ -419,16 +435,16 @@ class Test_Widget_Contract extends WP_UnitTestCase
         $chat = $this->start_chat();
         // The shape such a chat has after the upgrade: the plain token on the
         // ticket, nothing on the session.
-        $session = ChatSession::find($chat['session_id']);
+        $session = ChatSession::find(escalated_test_chat_id($chat));
         Ticket::update((int) $session->ticket_id, ['guest_token' => $chat['id']]);
-        ChatSession::update($chat['session_id'], ['visitor_token_hash' => null, 'visitor_token_expires_at' => null]);
+        ChatSession::update(escalated_test_chat_id($chat), ['visitor_token_hash' => null, 'visitor_token_expires_at' => null]);
         $before = time();
 
         $this->assertSame(200, $this->api('GET', '/chat/'.$chat['id'].'/messages')['status']);
         $sent = $this->api('POST', '/chat/'.$chat['id'].'/messages', ['body' => 'Still here']);
         $this->assertSame(201, $sent['status'], (string) wp_json_encode($sent['json']));
 
-        $session = ChatSession::find($chat['session_id']);
+        $session = ChatSession::find(escalated_test_chat_id($chat));
         $this->assertSame(hash('sha256', $chat['id']), $session->visitor_token_hash);
         $this->assertGreaterThanOrEqual($before + \Escalated\Services\GuestAccess::ttl_minutes() * 60, strtotime($session->visitor_token_expires_at.' UTC'));
         $this->assertEmpty(Ticket::find((int) $session->ticket_id)->guest_token);
@@ -439,14 +455,14 @@ class Test_Widget_Contract extends WP_UnitTestCase
         $chat = $this->start_chat();
 
         $_GET = [];
-        $sent = $this->api('POST', '/chat/'.$chat['session_id'].'/messages', ['body' => 'Legacy', 'guest_token' => $chat['guest_token']]);
+        $sent = $this->api('POST', '/chat/'.escalated_test_chat_id($chat).'/messages', ['body' => 'Legacy', 'guest_token' => $chat['guest_token']]);
         $this->assertSame(201, $sent['status']);
 
-        $poll = $this->api('GET', '/chat/'.$chat['session_id'].'/poll', null, ['guest_token' => $chat['guest_token'], 'since' => '2000-01-01 00:00:00']);
+        $poll = $this->api('GET', '/chat/'.escalated_test_chat_id($chat).'/poll', null, ['guest_token' => $chat['guest_token'], 'since' => '2000-01-01 00:00:00']);
         $this->assertSame(200, $poll['status']);
         $this->assertSame('waiting', $poll['json']['session_status']);
 
-        $denied = $this->api('POST', '/chat/'.$chat['session_id'].'/end', ['guest_token' => 'wrong']);
+        $denied = $this->api('POST', '/chat/'.escalated_test_chat_id($chat).'/end', ['guest_token' => 'wrong']);
         $this->assertSame(403, $denied['status']);
     }
 

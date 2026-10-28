@@ -145,7 +145,7 @@ working: existing routes, parameters and fields are unchanged.
 | `POST /tickets` `{ name, email, subject, description, department_id?, metadata?, verification_id, verification_code }` | 201 `{ message, reference, guest_access_token, expires_at }`, plus the legacy `guest_token` while legacy guest links are on. An unknown or inactive `department_id` is ignored. |
 | `POST /lookup` `{ email, reference, verification_id, verification_code }` | `{ data: [{ reference, subject, guest_access_token, expires_at }] }` |
 | `GET /tickets/{reference}` with `Authorization: Bearer <guest_access_token>` | `{ reference, subject, status, created_at, updated_at }` |
-| `POST /chat/start` `{ name, email, department_id?, message?, metadata?, verification_id, verification_code }` | 201 `{ id, expires_at, session_id, status, messages, agent, guest_token, ... }` |
+| `POST /chat/start` `{ name, email, department_id?, message?, metadata?, verification_id, verification_code }` | 201 `{ id, session_id, expires_at, ticket_reference, status, agent_name, messages, agent, guest_token, ... }`; `id`, `session_id` and `guest_token` are all the chat token, as in escalated-laravel |
 | `GET /chat/{id}/messages` | `{ messages: [{ id, body, is_agent, author: { name }, created_at }], agent, typing, ended, status }` |
 | `POST /chat/{id}/messages` `{ body }` | 201; 422 once the chat has ended |
 | `POST /chat/{id}/typing` | 200; fires the `escalated_chat_visitor_typing` action |
@@ -160,8 +160,9 @@ lifetime after the chat starts (`expires_at`; setting
 the chat from it and answer 404 for an unknown or expired token. They allow 120
 requests a minute per IP, so the widget's 3-second polling fits; the other
 widget routes keep the 30-a-minute limit. The older numeric routes
-(`/chat/{session_id}/messages`, `/end` and `/poll` with the chat token as
-`guest_token`) still work, and answer 403 once it has expired. `typing` is always `null` for now: WordPress has no
+(`/chat/{numeric id}/messages`, `/end` and `/poll` with the chat token as
+`guest_token`) still work for clients that already hold a numeric id, and
+answer 403 once it has expired; `/chat/start` no longer returns that id. `typing` is always `null` for now: WordPress has no
 agent typing signal.
 
 `GET /tickets/{reference}` needs a grant for that ticket; an email address

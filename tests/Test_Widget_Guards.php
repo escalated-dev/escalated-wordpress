@@ -147,7 +147,7 @@ class Test_Widget_Guards extends WP_UnitTestCase
         $chat = $this->start_chat()->get_data();
         Setting::set('widget_enabled', '0');
 
-        $response = $this->post('widget/chat/'.$chat['session_id'].'/messages', [
+        $response = $this->post('widget/chat/'.escalated_test_chat_id($chat).'/messages', [
             'body' => 'Still here?', 'guest_token' => $chat['guest_token'],
         ]);
 
@@ -173,7 +173,7 @@ class Test_Widget_Guards extends WP_UnitTestCase
 
         $this->assertSame(201, $this->post('widget/chat/'.$chat['id'].'/messages', ['body' => 'one'])->get_status());
 
-        $response = $this->post('widget/chat/'.$chat['session_id'].'/messages', [
+        $response = $this->post('widget/chat/'.escalated_test_chat_id($chat).'/messages', [
             'body' => 'two', 'guest_token' => $chat['guest_token'],
         ]);
         $this->assertSame(429, $response->get_status());

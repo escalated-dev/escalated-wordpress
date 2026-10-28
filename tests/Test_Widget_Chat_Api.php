@@ -56,7 +56,7 @@ class Test_Widget_Chat_Api extends WP_UnitTestCase
     {
         $chat = $this->start_chat()->get_data();
 
-        $request = new WP_REST_Request('POST', '/escalated/v1/widget/chat/'.$chat['session_id'].'/messages');
+        $request = new WP_REST_Request('POST', '/escalated/v1/widget/chat/'.escalated_test_chat_id($chat).'/messages');
         $request->set_param('body', 'I should not be accepted.');
         $request->set_param('guest_token', 'wrong-token');
 
@@ -69,7 +69,7 @@ class Test_Widget_Chat_Api extends WP_UnitTestCase
     {
         $chat = $this->start_chat()->get_data();
 
-        $request = new WP_REST_Request('POST', '/escalated/v1/widget/chat/'.$chat['session_id'].'/messages');
+        $request = new WP_REST_Request('POST', '/escalated/v1/widget/chat/'.escalated_test_chat_id($chat).'/messages');
         $request->set_param('body', 'Hello from the verified visitor.');
         $request->set_param('guest_token', $chat['guest_token']);
 
@@ -82,7 +82,7 @@ class Test_Widget_Chat_Api extends WP_UnitTestCase
     {
         $chat = $this->start_chat()->get_data();
 
-        $request = new WP_REST_Request('GET', '/escalated/v1/widget/chat/'.$chat['session_id'].'/poll');
+        $request = new WP_REST_Request('GET', '/escalated/v1/widget/chat/'.escalated_test_chat_id($chat).'/poll');
         $request->set_param('guest_token', 'wrong-token');
 
         $response = $this->server->dispatch($request);
@@ -94,7 +94,7 @@ class Test_Widget_Chat_Api extends WP_UnitTestCase
     {
         $chat = $this->start_chat()->get_data();
 
-        $request = new WP_REST_Request('POST', '/escalated/v1/widget/chat/'.$chat['session_id'].'/end');
+        $request = new WP_REST_Request('POST', '/escalated/v1/widget/chat/'.escalated_test_chat_id($chat).'/end');
         $request->set_param('guest_token', $chat['guest_token']);
 
         $response = $this->server->dispatch($request);
