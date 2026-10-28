@@ -413,7 +413,7 @@ class Test_Widget_Embedding extends WP_UnitTestCase
         $this->assertSame(201, $response['status']);
         $this->assertSame(self::SHOP, $response['headers']['Access-Control-Allow-Origin'] ?? null);
 
-        $session = ChatSession::find((int) $response['json']['session_id']);
+        $session = ChatSession::find(escalated_test_chat_id($response['json']));
         $this->assertSame([
             'page_url' => 'https://shop.example.com/cart',
             'cart_total' => 129.5,

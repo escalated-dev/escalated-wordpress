@@ -108,7 +108,7 @@ class Test_Chat_Webhooks extends WP_UnitTestCase
         $chat = $this->widget_start();
 
         $this->assertSame(['chat.started'], $this->delivered());
-        $session = ChatSession::find($chat['session_id']);
+        $session = ChatSession::find(escalated_test_chat_id($chat));
         $payload = $this->payload(0);
         $this->assertSame((int) $session->ticket_id, $payload['ticket']['id']);
         $this->assertSame([
@@ -129,12 +129,12 @@ class Test_Chat_Webhooks extends WP_UnitTestCase
         $chat = $this->widget_start();
         $this->settle();
 
-        $response = $this->agent_post('/chat/'.$chat['session_id'].'/accept', ['agent_id' => $this->agent]);
+        $response = $this->agent_post('/chat/'.escalated_test_chat_id($chat).'/accept', ['agent_id' => $this->agent]);
         $this->assertSame(200, $response->get_status());
 
         $this->assertSame(['chat.assigned'], $this->delivered());
         $payload = $this->payload(0)['chat'];
-        $this->assertSame($chat['session_id'], $payload['session_id']);
+        $this->assertSame(escalated_test_chat_id($chat), $payload['session_id']);
         $this->assertSame($this->agent, $payload['agent_id']);
         $this->assertSame('active', $payload['status']);
     }
@@ -142,10 +142,10 @@ class Test_Chat_Webhooks extends WP_UnitTestCase
     public function test_messages_send_chat_message_with_the_author_type(): void
     {
         $chat = $this->widget_start();
-        $this->agent_post('/chat/'.$chat['session_id'].'/accept', ['agent_id' => $this->agent]);
+        $this->agent_post('/chat/'.escalated_test_chat_id($chat).'/accept', ['agent_id' => $this->agent]);
         $this->settle();
 
-        $agent = $this->agent_post('/chat/'.$chat['session_id'].'/messages', ['agent_id' => $this->agent, 'body' => 'Agent says hi']);
+        $agent = $this->agent_post('/chat/'.escalated_test_chat_id($chat).'/messages', ['agent_id' => $this->agent, 'body' => 'Agent says hi']);
         $this->assertSame(201, $agent->get_status());
         $visitor = $this->widget_post('/chat/'.$chat['id'].'/messages', ['body' => 'Visitor says hi']);
         $this->assertSame(201, $visitor->get_status());
@@ -153,7 +153,7 @@ class Test_Chat_Webhooks extends WP_UnitTestCase
         $this->assertSame(['chat.message', 'chat.message'], $this->delivered());
 
         $first = $this->payload(0)['chat'];
-        $this->assertSame($chat['session_id'], $first['session_id']);
+        $this->assertSame(escalated_test_chat_id($chat), $first['session_id']);
         $this->assertSame('agent', $first['author_type']);
         $this->assertIsInt($first['reply_id']);
         $this->assertSame('Agent says hi', $this->reply_body($first['reply_id']));
@@ -172,10 +172,10 @@ class Test_Chat_Webhooks extends WP_UnitTestCase
         $idle = $this->widget_start();
         $this->settle();
 
-        $this->assertSame(200, $this->agent_post('/chat/'.$by_agent['session_id'].'/end', [])->get_status());
+        $this->assertSame(200, $this->agent_post('/chat/'.escalated_test_chat_id($by_agent).'/end', [])->get_status());
         $this->assertSame(200, $this->widget_post('/chat/'.$by_visitor['id'].'/end', [])->get_status());
-        ChatSession::update($idle['session_id'], ['last_activity_at' => gmdate('Y-m-d H:i:s', time() - DAY_IN_SECONDS)]);
-        ChatSession::update($by_agent['session_id'], ['last_activity_at' => current_time('mysql')]);
+        ChatSession::update(escalated_test_chat_id($idle), ['last_activity_at' => gmdate('Y-m-d H:i:s', time() - DAY_IN_SECONDS)]);
+        ChatSession::update(escalated_test_chat_id($by_agent), ['last_activity_at' => current_time('mysql')]);
         (new \Escalated\Cron\Chat_Cleanup)->run();
 
         $this->assertSame(['chat.ended', 'chat.ended', 'chat.ended'], $this->delivered());
@@ -186,9 +186,9 @@ class Test_Chat_Webhooks extends WP_UnitTestCase
             $ended[$chat['session_id']] = $chat['ended_by'];
         }
         $this->assertSame([
-            $by_agent['session_id'] => 'agent',
-            $by_visitor['session_id'] => 'customer',
-            $idle['session_id'] => 'system',
+            escalated_test_chat_id($by_agent) => 'agent',
+            escalated_test_chat_id($by_visitor) => 'customer',
+            escalated_test_chat_id($idle) => 'system',
         ], $ended);
     }
 

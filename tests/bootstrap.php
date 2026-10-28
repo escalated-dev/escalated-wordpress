@@ -31,6 +31,20 @@ require $_tests_dir.'/includes/bootstrap.php';
  *
  * @return array{verification_id: string, verification_code: string}
  */
+/**
+ * The numeric id of the chat a widget chat token opens. `POST chat/start`
+ * returns only the token (as `id` and `session_id`, like escalated-laravel).
+ */
+function escalated_test_chat_id(array $chat): int
+{
+    $session = \Escalated\Models\ChatSession::find_by_visitor_token_hash(hash('sha256', (string) $chat['id']));
+    if (! $session) {
+        throw new RuntimeException('No chat session for that token.');
+    }
+
+    return (int) $session->id;
+}
+
 function escalated_test_guest_proof(string $email, string $purpose = 'ticket'): array
 {
     $code = null;

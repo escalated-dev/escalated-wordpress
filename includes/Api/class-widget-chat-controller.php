@@ -315,19 +315,24 @@ class Widget_Chat_Controller extends Base_Controller
             $ticket = Ticket::find((int) $session->ticket_id);
             $expires_at = gmdate('c', strtotime($session->visitor_token_expires_at.' UTC'));
 
+            $agent = $this->agent_payload($session);
+
+            // As in escalated-laravel: `id` and `session_id` are both the chat
+            // token; the numeric session and ticket ids stay internal.
             return $this->success([
                 // The chat id is the visitor's random, expiring chat token,
                 // never the sequential session id; the id-keyed routes resolve it.
                 'id' => $session->visitor_token,
+                'session_id' => $session->visitor_token,
                 // The token stops working after this; the visitor starts a new chat.
                 'expires_at' => $expires_at,
-                'session_id' => (int) $session->id,
-                'ticket_id' => (int) $session->ticket_id,
+                'ticket_reference' => $ticket ? $ticket->reference : null,
                 'status' => $session->status,
+                'agent_name' => $agent['name'] ?? null,
                 'visitor_name' => $session->visitor_name,
                 'guest_token' => $session->visitor_token,
                 'messages' => $ticket ? $this->chat_messages($session, $ticket) : [],
-                'agent' => $this->agent_payload($session),
+                'agent' => $agent,
                 'created_at' => $session->created_at,
             ], 201);
         } catch (\Throwable $e) {

@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Upgrading
+- `POST widget/chat/start` now answers exactly as escalated-laravel: `201
+  { id, session_id, expires_at, ticket_reference, status, agent_name }`, where
+  `id` and `session_id` are both the chat token (plus `guest_token`,
+  `visitor_name`, `messages`, `agent` and `created_at`). The numeric
+  `session_id` and `ticket_id` are no longer returned: use `id` with the
+  `widget/chat/{id}/...` routes and `ticket_reference` to name the ticket. The
+  older numeric `widget/chat/{n}/messages|end|poll` routes still work for
+  clients that already hold a numeric id.
 - The plugin's schema upgrade (run automatically on load, as for every
   release) adds `visitor_token_hash` and `visitor_token_expires_at` to the
   chat sessions table. Chats already in progress keep working: the next
