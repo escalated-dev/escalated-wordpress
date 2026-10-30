@@ -89,6 +89,16 @@ class Admin_Users
 
         $users = $rows;
 
+        // Escalated roles, only while roles & permissions is enforced: each
+        // user's roles, and the roles an admin can give them.
+        $assignable_roles = [];
+        if (\Escalated\Support\AccessFeatures::roles_permissions()) {
+            $assignable_roles = \Escalated\Support\RoleCatalog::assignable();
+            foreach ($users as $i => $row) {
+                $users[$i]['roles'] = \Escalated\Support\RoleCatalog::user_roles((int) $row['id']);
+            }
+        }
+
         include ESCALATED_PLUGIN_DIR.'templates/admin/users.php';
     }
 
@@ -107,6 +117,23 @@ class Admin_Users
 
         $action = sanitize_text_field(wp_unslash($_POST['escalated_user_action']));
         $redirect = admin_url('admin.php?page=escalated-users');
+
+        if ($action === 'update_roles') {
+            \Escalated\Admin\Admin_Roles::require_enabled();
+            if (! current_user_can('escalated_role_manage')) {
+                wp_die(esc_html__('Permission denied.', 'escalated'), 403);
+            }
+            $user_id = absint($_POST['user_id'] ?? 0);
+            $nonce = sanitize_text_field(wp_unslash($_POST['_escalated_nonce'] ?? ''));
+            if (! wp_verify_nonce($nonce, 'escalated_user_roles_'.$user_id)) {
+                wp_die(esc_html__('Security check failed.', 'escalated'));
+            }
+            $roles = array_map('sanitize_key', (array) wp_unslash($_POST['roles'] ?? []));
+            $result = self::update_roles($user_id, $roles, get_current_user_id());
+            $redirect = add_query_arg(($result['ok'] ?? false) ? ['message' => 'updated'] : ['error' => $result['error'] ?? 'error'], $redirect);
+            wp_safe_redirect($redirect);
+            exit;
+        }
 
         if ($action === 'update_role') {
             $user_id = absint($_POST['user_id'] ?? 0);
@@ -201,6 +228,33 @@ class Admin_Users
             ['role' => $role, 'value' => $value],
             $current_user_id
         );
+
+        return ['ok' => true];
+    }
+
+    /**
+     * Replace a user's Escalated roles (escalated-laravel's
+     * UserController::updateRoles; roles & permissions on only). Taking away
+     * your own role management is refused, since nobody could undo it.
+     *
+     * @param  list<string>  $roles
+     * @return array{ok: bool, error?: string}
+     */
+    public static function update_roles(int $user_id, array $roles, ?int $current_user_id): array
+    {
+        if (! get_userdata($user_id)) {
+            return ['ok' => false, 'error' => 'not_found'];
+        }
+        $assignable = array_keys(\Escalated\Support\RoleCatalog::assignable());
+        if (array_diff($roles, $assignable) !== []) {
+            return ['ok' => false, 'error' => 'invalid_role'];
+        }
+        if ($current_user_id && (int) $current_user_id === $user_id
+            && ! \Escalated\Support\RoleCatalog::would_grant($user_id, $roles, 'role.manage')) {
+            return ['ok' => false, 'error' => 'self_role_manage'];
+        }
+        \Escalated\Support\RoleCatalog::replace_user_roles($user_id, $roles);
+        AuditLog::record('user.roles_updated', 'User', $user_id, null, ['roles' => $roles], $current_user_id);
 
         return ['ok' => true];
     }

@@ -842,6 +842,17 @@ class Activator
      *
      * @return array<array{slug: string, name: string, group: string, description: string}>
      */
+    /**
+     * The permission catalog (escalated-laravel's PermissionSeeder slugs plus
+     * this plugin's skill.*), for the access screens.
+     *
+     * @return list<array{slug: string, name: string, group: string, description: string}>
+     */
+    public static function permission_definitions(): array
+    {
+        return self::get_permission_definitions();
+    }
+
     private static function get_permission_definitions(): array
     {
         return [

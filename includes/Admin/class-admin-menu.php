@@ -47,6 +47,13 @@ class Admin_Menu
         add_submenu_page('escalated', __('Webhooks', 'escalated'), __('Webhooks', 'escalated'), 'escalated_webhook_manage', 'escalated-webhooks', [new Admin_Webhooks, 'render']);
         add_submenu_page('escalated', __('API Tokens', 'escalated'), __('API Tokens', 'escalated'), 'escalated_api_token_view', 'escalated-api-tokens', [new Admin_Api_Tokens, 'render']);
         add_submenu_page('escalated', __('Settings', 'escalated'), __('Settings', 'escalated'), 'escalated_settings_view', 'escalated-settings', [new Admin_Settings, 'render']);
+
+        // Roles: only while roles & permissions is switched on
+        // (docs/access-control.md). Its handlers answer 404 while it is off.
+        $roles = new Admin_Roles;
+        if (\Escalated\Support\AccessFeatures::roles_permissions()) {
+            add_submenu_page('escalated', __('Roles', 'escalated'), __('Roles', 'escalated'), 'escalated_role_view', 'escalated-roles', [$roles, 'render']);
+        }
     }
 
     /**
@@ -90,6 +97,10 @@ class Admin_Menu
             'nonce' => wp_create_nonce('escalated_admin'),
             'restUrl' => rest_url('escalated/v1/'),
             'themeClass' => $theme_class,
+            // The access switches, and the user's permissions: ['*'] for
+            // staff while roles & permissions is off (docs/access-control.md).
+            'features' => \Escalated\Support\AccessFeatures::shared(),
+            'permissions' => \Escalated\Support\AccessEnforcer::permissions(get_current_user_id()),
         ]);
 
         // Inject inline script to apply the theme class to the wrapper

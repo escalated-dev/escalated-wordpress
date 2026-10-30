@@ -193,6 +193,17 @@ class Admin_Tickets
         $causer_id = get_current_user_id();
         $redirect = admin_url('admin.php?page=escalated&action=view&ticket_id='.$ticket_id);
 
+        // With roles & permissions on, each action needs its permission
+        // (escalated-laravel's map): status, priority, department and tags
+        // need ticket.edit, and a change to resolved/closed/reopened also
+        // ticket.close. Off, the checks below stand as they always have.
+        $new_status_input = isset($_POST['new_status']) ? sanitize_text_field(wp_unslash($_POST['new_status'])) : '';
+        foreach (\Escalated\Support\AccessEnforcer::ticket_action_slugs($action, $new_status_input) ?? [] as $slug) {
+            if (! current_user_can(\Escalated\Support\RoutePermissions::cap($slug))) {
+                wp_die(esc_html__('Permission denied.', 'escalated'), 403);
+            }
+        }
+
         switch ($action) {
             case 'reply':
                 if (! current_user_can('escalated_reply_create')) {

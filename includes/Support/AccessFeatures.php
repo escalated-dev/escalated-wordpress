@@ -1,0 +1,76 @@
+<?php
+
+namespace Escalated\Support;
+
+/**
+ * The install-level access switches (escalated-developer-context ADR
+ * 2026-10-29-configurable-access-features; escalated-laravel's
+ * AccessFeatures).
+ *
+ * Each switch is read from configuration only: a constant in wp-config.php
+ * (`define('ESCALATED_ROLES_PERMISSIONS', true);`), else the environment
+ * variable of the same name, then the `escalated_access_{feature}` filter
+ * (code, for a host plugin or a test). Never from the settings table: each
+ * one changes who may do what, so no stored setting may flip it. All default
+ * off.
+ */
+final class AccessFeatures
+{
+    public const ROLES_PERMISSIONS = 'roles_permissions';
+
+    public const TWO_FACTOR = 'two_factor';
+
+    public const SSO = 'sso';
+
+    public static function roles_permissions(): bool
+    {
+        return self::read(self::ROLES_PERMISSIONS, 'ESCALATED_ROLES_PERMISSIONS');
+    }
+
+    /** Not enforced by this plugin yet, so always off (a screen must not claim it works). */
+    public static function two_factor(): bool
+    {
+        return false;
+    }
+
+    /** Not enforced by this plugin yet, so always off. */
+    public static function sso(): bool
+    {
+        return false;
+    }
+
+    /**
+     * The `features` the screens are told about.
+     *
+     * @return array{roles_permissions: bool, two_factor: bool, sso: bool}
+     */
+    public static function shared(): array
+    {
+        return [
+            'roles_permissions' => self::roles_permissions(),
+            'two_factor' => self::two_factor(),
+            'sso' => self::sso(),
+        ];
+    }
+
+    private static function read(string $feature, string $name): bool
+    {
+        if (defined($name)) {
+            $value = self::truthy(constant($name));
+        } else {
+            $env = getenv($name);
+            $value = $env !== false && self::truthy($env);
+        }
+
+        return (bool) apply_filters('escalated_access_'.$feature, $value);
+    }
+
+    private static function truthy(mixed $value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        return in_array(strtolower(trim((string) $value)), ['1', 'true', 'on', 'yes'], true);
+    }
+}
