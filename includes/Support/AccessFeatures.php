@@ -41,10 +41,9 @@ final class AccessFeatures
         return self::read('two_factor_required', 'ESCALATED_TWO_FACTOR_REQUIRED');
     }
 
-    /** Not enforced by this plugin yet, so always off. */
     public static function sso(): bool
     {
-        return false;
+        return self::read(self::SSO, 'ESCALATED_SSO');
     }
 
     /**
