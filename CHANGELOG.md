@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Upgrading
+- Two-factor authentication is a new install-level switch, off by default
+  (`ESCALATED_TWO_FACTOR` constant or environment variable, or the
+  `escalated_access_two_factor` filter). While it is off, the
+  token-authenticated `admin/two-factor` REST routes answer 404. TOTP secrets
+  generated from now on are 32 characters. The schema upgrade adds
+  `two_factors.last_used_step`. See docs/access-control.md.
 - Roles & permissions is a new install-level switch, off by default
   (`define('ESCALATED_ROLES_PERMISSIONS', true);` in wp-config.php, the
   environment variable of the same name, or the
@@ -16,6 +22,17 @@ All notable changes to this project will be documented in this file.
   docs/access-control.md.
 
 ### Added
+- Two-factor authentication, enforced behind its switch (ADR
+  2026-10-29-configurable-access-features, as escalated-laravel): TOTP
+  through pragmarx/google2fa with one step of drift and no code reuse,
+  Escalated > Two-Factor enrolment for every staff user, a challenge between
+  the WordPress login and the Escalated screens (5 attempts a minute, kept in
+  the WordPress login session, so every new login is challenged), single-use
+  recovery codes, "require two-factor" (`ESCALATED_TWO_FACTOR_REQUIRED` or
+  the `two_factor_required` setting) and `wp escalated two-factor-reset`.
+  Staff REST requests made with the login cookie get `403
+  two_factor_required` until the challenge is passed; API tokens are not
+  challenged.
 - Roles & permissions, enforced behind its switch (ADR
   2026-10-29-configurable-access-features, as escalated-laravel, with
   WordPress capabilities as the permissions and WordPress roles as the

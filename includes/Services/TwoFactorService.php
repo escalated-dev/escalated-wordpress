@@ -2,6 +2,8 @@
 
 namespace Escalated\Services;
 
+use PragmaRX\Google2FA\Google2FA;
+
 /**
  * TOTP (RFC 6238) two-factor authentication service.
  *
@@ -10,31 +12,28 @@ namespace Escalated\Services;
  * Storage/encryption concerns live in the {@see \Escalated\Models\TwoFactor}
  * model; this class holds no state.
  *
- * Ported from the Escalated Laravel reference implementation. Implemented
- * with the SPL/hash extension only — no external Composer dependency.
+ * Ported from the Escalated Laravel reference implementation, on the same
+ * maintained library (pragmarx/google2fa) rather than hand-rolled crypto.
  */
 class TwoFactorService
 {
-    /**
-     * Base32 alphabet (RFC 4648) used for secret encoding.
-     *
-     * @var string
-     */
-    protected $base32_chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    /** Steps of clock drift accepted either side of now. */
+    public const WINDOW = 1;
+
+    protected Google2FA $google2fa;
+
+    public function __construct()
+    {
+        $this->google2fa = new Google2FA;
+        $this->google2fa->setWindow(self::WINDOW);
+    }
 
     /**
-     * Generate a random 16-character base32 secret.
+     * A random 32-character base32 secret (160 bits).
      */
     public function generate_secret(): string
     {
-        $secret = '';
-        $bytes = random_bytes(16);
-
-        for ($i = 0; $i < 16; $i++) {
-            $secret .= $this->base32_chars[ord($bytes[$i]) % 32];
-        }
-
-        return $secret;
+        return $this->google2fa->generateSecretKey(32);
     }
 
     /**
@@ -45,103 +44,58 @@ class TwoFactorService
      */
     public function generate_qr_uri(string $secret, string $email): string
     {
-        $issuer = $this->issuer();
-        $label = rawurlencode($issuer.':'.$email);
-        $params = http_build_query([
-            'secret' => $secret,
-            'issuer' => $issuer,
-            'algorithm' => 'SHA1',
-            'digits' => 6,
-            'period' => 30,
-        ]);
-
-        return "otpauth://totp/{$label}?{$params}";
+        return $this->google2fa->getQRCodeUrl($this->issuer(), $email, $secret);
     }
 
     /**
-     * Verify a submitted TOTP code against a secret.
-     *
-     * Accepts the current 30-second window and +/- 1 period to tolerate
-     * clock drift, matching the Laravel reference. Uses a constant-time
-     * comparison to avoid timing oracles.
-     *
-     * @param  string  $secret  Base32 secret.
-     * @param  string  $code  User-supplied 6-digit code.
+     * Whether a submitted code is valid for the secret right now, with one
+     * step of drift either side (no replay check: see verify_and_consume).
      */
     public function verify(string $secret, string $code): bool
     {
-        $code = trim($code);
-
+        $code = preg_replace('/\s+/', '', $code) ?? '';
         if (! preg_match('/^\d{6}$/', $code)) {
             return false;
         }
 
-        $time_slice = (int) floor(time() / 30);
-
-        for ($i = -1; $i <= 1; $i++) {
-            $calculated = $this->generate_totp($secret, $time_slice + $i);
-
-            if (hash_equals($calculated, $code)) {
-                return true;
-            }
-        }
-
-        return false;
+        return (bool) $this->google2fa->verifyKey($secret, $code, self::WINDOW);
     }
 
     /**
-     * Generate the 6-digit TOTP code for a given 30-second time slice.
+     * Verify a code for an enrolment and record its time step, refusing that
+     * step or any earlier one afterwards, so a code works once. The step is
+     * claimed with a conditional update, so two requests racing with one
+     * code cannot both pass.
+     */
+    public function verify_and_consume(object $record, string $code): bool
+    {
+        $code = preg_replace('/\s+/', '', $code) ?? '';
+        if (! preg_match('/^\d{6}$/', $code)) {
+            return false;
+        }
+
+        $last = isset($record->last_used_step) && $record->last_used_step !== null ? (int) $record->last_used_step : 0;
+        $step = $this->google2fa->verifyKeyNewer(\Escalated\Models\TwoFactor::secret_of($record), $code, $last, self::WINDOW);
+        if (! is_int($step) || $step <= $last) {
+            return false;
+        }
+
+        if (! \Escalated\Models\TwoFactor::claim_step((int) $record->id, $step)) {
+            return false;
+        }
+        $record->last_used_step = $step;
+
+        return true;
+    }
+
+    /**
+     * The 6-digit TOTP code for a 30-second time slice (RFC 6238, SHA-1).
      *
      * Public so tests can assert against the RFC 6238 test vectors.
-     *
-     * @param  string  $secret  Base32 secret.
-     * @param  int  $time_slice  Unix time divided by the 30-second period.
-     * @return string Zero-padded 6-digit code.
      */
     public function generate_totp(string $secret, int $time_slice): string
     {
-        $secret_key = $this->base32_decode($secret);
-
-        // Pack the counter as a 64-bit big-endian integer.
-        $time = pack('N*', 0, $time_slice);
-
-        $hmac = hash_hmac('sha1', $time, $secret_key, true);
-
-        // RFC 4226 dynamic truncation.
-        $offset = ord($hmac[strlen($hmac) - 1]) & 0x0F;
-        $code = (
-            ((ord($hmac[$offset]) & 0x7F) << 24) |
-            ((ord($hmac[$offset + 1]) & 0xFF) << 16) |
-            ((ord($hmac[$offset + 2]) & 0xFF) << 8) |
-            (ord($hmac[$offset + 3]) & 0xFF)
-        ) % 1000000;
-
-        return str_pad((string) $code, 6, '0', STR_PAD_LEFT);
-    }
-
-    /**
-     * Decode a base32 (RFC 4648) string into raw bytes.
-     */
-    protected function base32_decode(string $input): string
-    {
-        $map = array_flip(str_split($this->base32_chars));
-        $input = strtoupper($input);
-        $input = rtrim($input, '=');
-
-        $binary = '';
-        foreach (str_split($input) as $char) {
-            if (! isset($map[$char])) {
-                continue;
-            }
-            $binary .= str_pad(decbin($map[$char]), 5, '0', STR_PAD_LEFT);
-        }
-
-        $output = '';
-        for ($i = 0; $i + 8 <= strlen($binary); $i += 8) {
-            $output .= chr(bindec(substr($binary, $i, 8)));
-        }
-
-        return $output;
+        return $this->google2fa->oathTotp($secret, $time_slice);
     }
 
     /**

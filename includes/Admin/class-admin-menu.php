@@ -54,6 +54,14 @@ class Admin_Menu
         if (\Escalated\Support\AccessFeatures::roles_permissions()) {
             add_submenu_page('escalated', __('Roles', 'escalated'), __('Roles', 'escalated'), 'escalated_role_view', 'escalated-roles', [$roles, 'render']);
         }
+
+        // Two-factor: enrolment for every staff user, and the challenge
+        // (outside the menu), only while two-factor is switched on.
+        $two_factor = new Admin_Two_Factor;
+        if (\Escalated\Support\AccessFeatures::two_factor()) {
+            add_submenu_page('escalated', __('Two-Factor', 'escalated'), __('Two-Factor', 'escalated'), 'read', \Escalated\Support\TwoFactorGate::ENROL_PAGE, [$two_factor, 'render']);
+            add_submenu_page('', __('Two-Factor Authentication', 'escalated'), '', 'read', \Escalated\Support\TwoFactorGate::CHALLENGE_PAGE, [$two_factor, 'render_challenge']);
+        }
     }
 
     /**

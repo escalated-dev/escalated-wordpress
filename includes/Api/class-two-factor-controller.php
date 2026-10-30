@@ -111,6 +111,11 @@ class Two_Factor_Controller extends Base_Controller
      */
     public function authenticated_check(WP_REST_Request $request)
     {
+        // 404 while two-factor is off (ADR 2026-10-29-configurable-access-features).
+        if (! \Escalated\Support\AccessFeatures::two_factor()) {
+            return $this->error('escalated_not_found', __('Not found.', 'escalated'), 404);
+        }
+
         $user_id = $this->check_token_permission($request);
 
         if ($user_id === null) {
@@ -212,7 +217,7 @@ class Two_Factor_Controller extends Base_Controller
 
         $service = new TwoFactorService;
 
-        if (! $service->verify(TwoFactor::secret_of($record), $code)) {
+        if (! $service->verify_and_consume($record, $code)) {
             return $this->error('escalated_invalid_code', __('Invalid verification code.', 'escalated'), 422);
         }
 
@@ -247,7 +252,7 @@ class Two_Factor_Controller extends Base_Controller
         $service = new TwoFactorService;
 
         // Try TOTP first.
-        if ($service->verify(TwoFactor::secret_of($record), $code)) {
+        if ($service->verify_and_consume($record, $code)) {
             return $this->success([
                 'verified' => true,
                 'method' => 'totp',
