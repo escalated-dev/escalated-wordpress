@@ -8,7 +8,7 @@ escalated-laravel is the reference). Each one is either enforced or hidden.
 |---|---|---|
 | Roles & permissions | `ESCALATED_ROLES_PERMISSIONS` | off |
 | Two-factor authentication | `ESCALATED_TWO_FACTOR` | off |
-| Single sign-on | not yet | off |
+| Single sign-on | `ESCALATED_SSO` | off |
 
 Set a switch in `wp-config.php`:
 
@@ -17,13 +17,11 @@ define('ESCALATED_ROLES_PERMISSIONS', true);
 ```
 
 or as an environment variable of the same name. A host plugin can also use the
-`escalated_access_roles_permissions` filter (`escalated_access_two_factor` for
-two-factor). The switches are never read from
+`escalated_access_roles_permissions` filter (`escalated_access_two_factor` and
+`escalated_access_sso` for the others). The switches are never read from
 the settings table or an option: each one changes who may do what, so no stored
 setting may flip it, and saving a setting with the same name changes nothing.
 
-SSO is not enforced by this plugin yet, so it reports off and its screens are
-not served.
 
 ## How this maps onto WordPress roles and capabilities
 
@@ -173,3 +171,86 @@ and the `admin/two-factor` REST routes answer 404, and enrolments are kept.
    challenged from their next visit.
 3. Require it only after telling staff: everyone without an enrolment is sent
    to enrol.
+
+## Single sign-on
+
+```php
+define('ESCALATED_SSO', true);
+// Optional, as escalated-laravel's escalated.sso.* (constant, environment
+// variable, or the escalated_sso_{name} filter):
+define('ESCALATED_SSO_CREATE_USERS', false);     // create users for unknown emails
+define('ESCALATED_SSO_SYNC_ROLES', false);       // map the IdP role onto Escalated roles
+define('ESCALATED_SSO_ALLOW_IDP_INITIATED', false);
+define('ESCALATED_SSO_CLOCK_SKEW', 120);         // JWT leeway, at most 300
+// ESCALATED_SSO_SP_ENTITY_ID (default: the metadata URL),
+// ESCALATED_SSO_JWT_AUDIENCE (default: home_url()),
+// ESCALATED_SSO_REDIRECT_TO (default: the ticket list for staff, else home).
+```
+
+This plugin signs people in itself, on the same maintained libraries as
+escalated-laravel: [`onelogin/php-saml`](https://github.com/SAML-Toolkits/php-saml)
+(strict), [`league/oauth2-client`](https://github.com/thephpleague/oauth2-client)
+and [`firebase/php-jwt`](https://github.com/firebase/php-jwt). A successful
+sign-in is a normal WordPress login (`wp_set_auth_cookie`, then the
+`wp_login` action), so two-factor still challenges it. The WordPress password
+login stays as it is.
+
+The provider is picked at runtime in **Escalated > Single Sign-On**
+(`escalated_settings_view` to see, `escalated_settings_manage` to save; the
+WordPress-native counterpart of `Admin/Settings/SsoSettings`): the `sso_*`
+settings, with `sso_jwt_secret` and `sso_oauth_client_secret` shown as
+`********` (posting the mask back keeps the stored secret), and the endpoints
+to give the IdP. With `sso_provider` `none`, `sso/login` answers 404.
+
+| Route (under `/wp-json/escalated/v1`) | Use |
+|---|---|
+| `GET sso/login` | Start sign-in with the chosen provider |
+| `GET sso/saml/metadata` | SP metadata XML; its URL is the default SP entity ID |
+| `POST sso/saml/acs` | SAML assertion consumer (HTTP-POST) |
+| `GET sso/oauth/callback` | OAuth 2 / OIDC redirect URI |
+| `GET\|POST sso/jwt/callback` | JWT hand-off (`jwt` parameter) |
+
+Each answers 404 unless its provider is the chosen one, and every refusal is
+the same `403 Single sign-on failed.` with the reason in the PHP error log.
+SAML compares the response's Destination with the ACS URL, so use pretty
+permalinks (the ACS URL must not carry a `?rest_route=` query).
+
+- **SAML**: the IdP certificate must be configured (without it every response
+  is refused); the assertion itself must be signed by it (a signed Response
+  alone is not enough, keys in `KeyInfo` are not trusted, encrypted
+  assertions are refused); Issuer, Audience, Destination, Recipient and the
+  validity windows (php-saml's fixed allowance) are checked; `InResponseTo`
+  must be an AuthnRequest this site issued in the last 10 minutes, consumed on
+  use and stored server-side in `escalated_sso_message_ids`; unsolicited
+  responses only with `ESCALATED_SSO_ALLOW_IDP_INITIATED`; an assertion ID is
+  accepted once.
+- **OAuth 2 / OIDC**: authorization code with PKCE (`S256`) and a single-use
+  `state`, kept server-side (a transient) under an HttpOnly, SameSite=Lax
+  cookie for 10 minutes; the code is exchanged server to server and the
+  profile read from the userinfo URL. A missing or mismatched state, an IdP
+  `error`, a failed exchange or `email_verified: false` is refused.
+- **JWT**: the algorithm is pinned to `sso_jwt_algorithm` (HS* secret or RS*
+  public key), so `alg: none` and algorithm switching are refused; `exp` is
+  required, `nbf`/`iat` honoured with the clock skew, `aud` must be
+  `ESCALATED_SSO_JWT_AUDIENCE` (default `home_url()`), and `jti` is required
+  and single-use.
+
+**Users**: the email comes from `sso_attr_email` (SAML falls back to the
+NameID), the name from `sso_attr_name`, the role from `sso_attr_role`. The
+user is matched by email, case-insensitively. No match is refused unless
+`ESCALATED_SSO_CREATE_USERS`, which creates a WordPress user with the
+default role and an unusable random password. With roles & permissions on
+and `ESCALATED_SSO_SYNC_ROLES`, a role naming an Escalated role
+(`light_agent` or `escalated_light_agent`, or one of yours) replaces the
+user's Escalated roles; an unknown value changes nothing.
+
+With the switch off, every `sso/*` route and the Single Sign-On screen
+answer 404.
+
+### Turning it on in an existing install
+
+1. Update the plugin (the schema upgrade adds `escalated_sso_message_ids`).
+2. Set `ESCALATED_SSO`, decide on `ESCALATED_SSO_CREATE_USERS` and
+   `ESCALATED_SSO_SYNC_ROLES`.
+3. Pick the provider in Escalated > Single Sign-On and give the IdP the
+   endpoints listed there; a SAML install needs the IdP certificate.

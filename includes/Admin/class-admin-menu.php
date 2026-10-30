@@ -55,6 +55,12 @@ class Admin_Menu
             add_submenu_page('escalated', __('Roles', 'escalated'), __('Roles', 'escalated'), 'escalated_role_view', 'escalated-roles', [$roles, 'render']);
         }
 
+        // Single sign-on settings, only while SSO is switched on.
+        $sso = new Admin_Sso;
+        if (\Escalated\Support\AccessFeatures::sso()) {
+            add_submenu_page('escalated', __('Single Sign-On', 'escalated'), __('Single Sign-On', 'escalated'), 'escalated_settings_view', 'escalated-sso', [$sso, 'render']);
+        }
+
         // Two-factor: enrolment for every staff user, and the challenge
         // (outside the menu), only while two-factor is switched on.
         $two_factor = new Admin_Two_Factor;

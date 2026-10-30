@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Upgrading
+- Single sign-on is a new install-level switch, off by default
+  (`ESCALATED_SSO` constant or environment variable, or the
+  `escalated_access_sso` filter). The schema upgrade adds
+  `escalated_sso_message_ids`. SAML needs pretty permalinks. See
+  docs/access-control.md.
 - Two-factor authentication is a new install-level switch, off by default
   (`ESCALATED_TWO_FACTOR` constant or environment variable, or the
   `escalated_access_two_factor` filter). While it is off, the
@@ -22,6 +27,17 @@ All notable changes to this project will be documented in this file.
   docs/access-control.md.
 
 ### Added
+- Single sign-on, enforced behind its switch (ADR
+  2026-10-29-configurable-access-features, as escalated-laravel, on the same
+  libraries): SAML through onelogin/php-saml in strict mode (signed assertion,
+  Issuer, Audience, Destination, Recipient, windows, InResponseTo of a request
+  issued here, no replay), OAuth 2 / OIDC through league/oauth2-client with a
+  single-use state and PKCE, and JWT through firebase/php-jwt (pinned
+  algorithm, required exp, aud and single-use jti), at `escalated/v1/sso/*`.
+  Escalated > Single Sign-On picks the provider, masks the secrets and lists
+  the endpoints. Unknown emails are refused unless
+  `ESCALATED_SSO_CREATE_USERS`; `ESCALATED_SSO_SYNC_ROLES` maps the IdP role
+  onto Escalated roles while roles & permissions is on.
 - Two-factor authentication, enforced behind its switch (ADR
   2026-10-29-configurable-access-features, as escalated-laravel): TOTP
   through pragmarx/google2fa with one step of drift and no code reuse,

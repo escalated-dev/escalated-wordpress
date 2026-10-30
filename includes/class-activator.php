@@ -4,7 +4,7 @@ namespace Escalated;
 
 class Activator
 {
-    public const SCHEMA_VERSION = 'two-factor-step-1';
+    public const SCHEMA_VERSION = 'sso-message-ids-1';
 
     /**
      * Run on plugin activation.
@@ -763,6 +763,21 @@ class Activator
             updated_at DATETIME,
             PRIMARY KEY  (id),
             UNIQUE KEY user_id (user_id)
+        ) $charset_collate;";
+        Escalated::schema_delta($sql);
+
+        // escalated_sso_message_ids — single-use SSO message IDs: AuthnRequest
+        // IDs this site issued, and SAML assertion IDs and JWT jtis it
+        // accepted (ADR 2026-10-29-configurable-access-features). expires_at
+        // is Unix seconds; expired rows are pruned on write.
+        $sql = "CREATE TABLE {$prefix}sso_message_ids (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            kind VARCHAR(32) NOT NULL,
+            message_id VARCHAR(191) NOT NULL,
+            expires_at BIGINT UNSIGNED NOT NULL,
+            PRIMARY KEY  (id),
+            UNIQUE KEY kind_message (kind,message_id),
+            KEY expires_at (expires_at)
         ) $charset_collate;";
         Escalated::schema_delta($sql);
 

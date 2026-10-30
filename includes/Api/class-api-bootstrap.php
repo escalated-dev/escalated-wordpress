@@ -35,6 +35,7 @@ class Api_Bootstrap
             new Dashboard_Controller,
             new Api_Token_Controller,
             new Two_Factor_Controller,
+            new Sso_Controller,
             new Audit_Log_Controller,
             new Events_Controller,
             new Widget_Controller,

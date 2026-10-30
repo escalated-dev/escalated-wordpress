@@ -24,8 +24,8 @@ final class RoutePermissions
     /**
      * Routes that are not staff routes: sign-in, guests, the widget, the
      * mobile guest API, inbound mail, and attachment downloads (authorized
-     * per ticket, for customers too), and the newsletter mail provider
-     * webhooks.
+     * per ticket, for customers too), the newsletter mail provider
+     * webhooks, and single sign-on.
      */
     public const PUBLIC_ROUTES = [
         '',
@@ -35,6 +35,7 @@ final class RoutePermissions
         '/guest/**',
         '/mobile/**',
         '/inbound/**',
+        '/sso/**',
         '/attachments/*/download',
         '/webhooks/**',
     ];
