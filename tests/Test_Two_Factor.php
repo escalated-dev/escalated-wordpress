@@ -19,6 +19,8 @@ class Test_Two_Factor extends WP_UnitTestCase
         parent::set_up();
 
         \Escalated\Activator::activate();
+        // The two-factor routes answer 404 while the switch is off.
+        add_filter('escalated_access_two_factor', '__return_true');
 
         global $wp_rest_server;
         $this->server = $wp_rest_server = new WP_REST_Server;
@@ -27,6 +29,7 @@ class Test_Two_Factor extends WP_UnitTestCase
 
     public function tear_down(): void
     {
+        remove_all_filters('escalated_access_two_factor');
         global $wp_rest_server;
         $wp_rest_server = null;
         parent::tear_down();
@@ -41,12 +44,12 @@ class Test_Two_Factor extends WP_UnitTestCase
         return new TwoFactorService;
     }
 
-    public function test_generate_secret_is_16_char_base32(): void
+    public function test_generate_secret_is_32_char_base32(): void
     {
         $secret = $this->service()->generate_secret();
 
-        $this->assertSame(16, strlen($secret));
-        $this->assertMatchesRegularExpression('/^[A-Z2-7]{16}$/', $secret);
+        $this->assertSame(32, strlen($secret));
+        $this->assertMatchesRegularExpression('/^[A-Z2-7]{32}$/', $secret);
     }
 
     /**
@@ -297,7 +300,7 @@ class Test_Two_Factor extends WP_UnitTestCase
 
         $this->assertSame(201, $response->get_status());
         $data = $response->get_data();
-        $this->assertMatchesRegularExpression('/^[A-Z2-7]{16}$/', $data['secret']);
+        $this->assertMatchesRegularExpression('/^[A-Z2-7]{32}$/', $data['secret']);
         $this->assertStringStartsWith('otpauth://totp/', $data['qr_uri']);
         $this->assertCount(8, $data['recovery_codes']);
     }
@@ -338,8 +341,10 @@ class Test_Two_Factor extends WP_UnitTestCase
         $this->assertFalse($status['pending']);
         $this->assertSame(8, $status['recovery_codes_remaining']);
 
-        // 3. Verify (challenge) with a TOTP code.
-        $code = $service->generate_totp($secret, (int) floor(time() / 30));
+        // 3. Verify (challenge) with a TOTP code. The confirm code's time step
+        // is spent (a code works once), so use the next step's, which the
+        // one-step drift window accepts.
+        $code = $service->generate_totp($secret, (int) floor(time() / 30) + 1);
         $verify = $this->server->dispatch(
             $this->request('POST', '/escalated/v1/admin/two-factor/verify', $token, ['code' => $code])
         );

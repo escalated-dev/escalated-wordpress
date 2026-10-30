@@ -7,7 +7,7 @@ escalated-laravel is the reference). Each one is either enforced or hidden.
 | Feature | Constant / environment variable | Default |
 |---|---|---|
 | Roles & permissions | `ESCALATED_ROLES_PERMISSIONS` | off |
-| Two-factor authentication | not yet | off |
+| Two-factor authentication | `ESCALATED_TWO_FACTOR` | off |
 | Single sign-on | not yet | off |
 
 Set a switch in `wp-config.php`:
@@ -17,12 +17,13 @@ define('ESCALATED_ROLES_PERMISSIONS', true);
 ```
 
 or as an environment variable of the same name. A host plugin can also use the
-`escalated_access_roles_permissions` filter. The switches are never read from
+`escalated_access_roles_permissions` filter (`escalated_access_two_factor` for
+two-factor). The switches are never read from
 the settings table or an option: each one changes who may do what, so no stored
 setting may flip it, and saving a setting with the same name changes nothing.
 
-Two-factor and SSO are not enforced by this plugin yet, so they report off and
-their screens are not served.
+SSO is not enforced by this plugin yet, so it reports off and its screens are
+not served.
 
 ## How this maps onto WordPress roles and capabilities
 
@@ -113,3 +114,62 @@ While the switch is on:
 2. Check that the roles hold the capabilities you expect (Users > Roles in a
    role editor, or Escalated > Roles once the switch is on).
 3. Set `ESCALATED_ROLES_PERMISSIONS`.
+
+## Two-factor authentication
+
+```php
+define('ESCALATED_TWO_FACTOR', true);
+// Optional: every staff user must enrol (the setting below wins once saved).
+define('ESCALATED_TWO_FACTOR_REQUIRED', true);
+```
+
+This plugin enforces two-factor itself, on the WordPress login it already
+uses; no other two-factor plugin is needed (one that challenges at
+`wp-login.php` can run alongside: the Escalated challenge only guards the
+Escalated screens).
+
+- **TOTP** is RFC 6238 (SHA-1, 6 digits, 30 s) through
+  [`pragmarx/google2fa`](https://github.com/antonioribeiro/google2fa), as
+  escalated-laravel, with one step of drift either side. The accepted time
+  step is recorded (a conditional update on `last_used_step`), so a code works
+  once. Secrets are stored encrypted and recovery codes as hashes.
+- **Enrolment** is Escalated > Two-Factor, open to every staff user (agents
+  and light agents too) and needing no permission. Setting up shows the
+  `otpauth://` URI and eight recovery codes once; confirming takes a 6-digit
+  code and counts as passing the challenge for this login; disabling removes
+  the enrolment. It is the WordPress-native counterpart of the shared
+  `Admin/Settings/TwoFactor` page.
+- **The challenge** sits between the WordPress login and the Escalated
+  screens: a staff user with a confirmed enrolment who has not passed it in
+  this login session is redirected from every Escalated wp-admin screen to it
+  (the WordPress-native counterpart of `Auth/TwoFactorChallenge`), and the
+  staff REST routes they call with their login cookie answer `403` with
+  `two_factor_required`. It takes a TOTP code or a recovery code, allows five
+  attempts a minute per user, and returns to the screen that was asked for.
+  The pass is kept in the WordPress login session (`WP_Session_Tokens`), so a
+  new login is challenged again and logging out ends it; when the response
+  can still set cookies, passing gives the login a new session token.
+- **Recovery codes**: eight, single use; a code that signs someone in is
+  removed.
+- **Requiring it**: `ESCALATED_TWO_FACTOR_REQUIRED` (or the
+  `escalated_access_two_factor_required` filter), or the "Require it" button
+  on the Two-Factor screen for users with `escalated_settings_manage`, which
+  saves the `two_factor_required` setting on its own (the setting wins once
+  saved). When required, staff without a confirmed enrolment are sent to the
+  Two-Factor screen and can use no other Escalated screen.
+- **Lost device**: `wp escalated two-factor-reset <user>` clears an
+  enrolment.
+- **API tokens** are not challenged: the token API is not session-based. The
+  token-authenticated `admin/two-factor` REST routes (self-service
+  enrolment for API clients) answer 404 while the switch is off.
+
+With the switch off nobody is challenged, the Two-Factor screen, the challenge
+and the `admin/two-factor` REST routes answer 404, and enrolments are kept.
+
+### Turning it on in an existing install
+
+1. Update the plugin (the schema upgrade adds `two_factors.last_used_step`).
+2. Set `ESCALATED_TWO_FACTOR`. Users who enrolled through the REST API are
+   challenged from their next visit.
+3. Require it only after telling staff: everyone without an enrolment is sent
+   to enrol.

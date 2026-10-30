@@ -250,6 +250,8 @@ class Test_Secrets_Never_Serialized extends WP_UnitTestCase
 
     public function test_the_two_factor_status_and_recovery_endpoints_never_return_the_stored_seed_or_hashes(): void
     {
+        // The two-factor routes answer 404 while the switch is off.
+        add_filter('escalated_access_two_factor', '__return_true');
         $user_id = $this->factory->user->create(['role' => 'escalated_agent']);
         $bearer = ApiToken::create_token($user_id, '2fa', ['*'])['token'];
 

@@ -26,6 +26,8 @@ class Escalated
         Services\TicketAccess::register();
         // Route permissions while roles & permissions is on.
         Support\AccessEnforcer::register();
+        // The two-factor challenge while two-factor is on.
+        Support\TwoFactorGate::register();
         $this->load_translations();
 
         // Register custom cron intervals.
@@ -57,6 +59,7 @@ class Escalated
         (new Frontend\Newsletter_Public_Routes)->register();
 
         Cli\AutomationCommand::register();
+        Cli\TwoFactorCommand::register();
     }
 
     /**

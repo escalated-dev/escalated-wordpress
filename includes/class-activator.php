@@ -4,7 +4,7 @@ namespace Escalated;
 
 class Activator
 {
-    public const SCHEMA_VERSION = 'chat-token-expiry-1';
+    public const SCHEMA_VERSION = 'two-factor-step-1';
 
     /**
      * Run on plugin activation.
@@ -758,6 +758,7 @@ class Activator
             secret TEXT NOT NULL,
             recovery_codes TEXT NULL,
             confirmed_at DATETIME NULL,
+            last_used_step BIGINT NULL,
             created_at DATETIME,
             updated_at DATETIME,
             PRIMARY KEY  (id),

@@ -27,10 +27,18 @@ final class AccessFeatures
         return self::read(self::ROLES_PERMISSIONS, 'ESCALATED_ROLES_PERMISSIONS');
     }
 
-    /** Not enforced by this plugin yet, so always off (a screen must not claim it works). */
     public static function two_factor(): bool
     {
-        return false;
+        return self::read(self::TWO_FACTOR, 'ESCALATED_TWO_FACTOR');
+    }
+
+    /**
+     * ESCALATED_TWO_FACTOR_REQUIRED: whether staff must enrol, until an
+     * admin saves the two_factor_required setting (which then wins).
+     */
+    public static function two_factor_required_default(): bool
+    {
+        return self::read('two_factor_required', 'ESCALATED_TWO_FACTOR_REQUIRED');
     }
 
     /** Not enforced by this plugin yet, so always off. */

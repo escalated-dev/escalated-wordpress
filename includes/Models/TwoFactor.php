@@ -288,6 +288,26 @@ class TwoFactor
     }
 
     /**
+     * Record a TOTP time step as used: true only when it is later than the
+     * last one accepted (a conditional update, so a race cannot reuse it).
+     */
+    public static function claim_step(int $id, int $step): bool
+    {
+        $wpdb = \Escalated\Escalated::db();
+        $table = static::table();
+
+        $updated = $wpdb->query($wpdb->prepare(
+            "UPDATE {$table} SET last_used_step = %d, updated_at = %s WHERE id = %d AND (last_used_step IS NULL OR last_used_step < %d)",
+            $step,
+            current_time('mysql'),
+            $id,
+            $step
+        ));
+
+        return $updated === 1;
+    }
+
+    /**
      * Number of unused recovery codes remaining on a record.
      *
      * @param  object  $record
