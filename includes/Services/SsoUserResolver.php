@@ -26,9 +26,14 @@ class SsoUserResolver
         $email = $identity['email'];
         $user = get_user_by('email', $email);
         if (! $user) {
-            $wpdb = \Escalated\Escalated::db();
-            $id = (int) $wpdb->get_var($wpdb->prepare("SELECT ID FROM {$wpdb->users} WHERE LOWER(user_email) = %s LIMIT 1", strtolower($email)));
-            $user = $id ? get_userdata($id) : false;
+            // Through the WordPress API, never the users table directly (the
+            // plugin may run on a separate database).
+            foreach (get_users(['search' => $email, 'search_columns' => ['user_email'], 'number' => 20]) as $candidate) {
+                if (strtolower($candidate->user_email) === strtolower($email)) {
+                    $user = $candidate;
+                    break;
+                }
+            }
         }
 
         if (! $user) {
