@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.6.7] - 2026-10-30
+
 ### Upgrading
 - Single sign-on is a new install-level switch, off by default
   (`ESCALATED_SSO` constant or environment variable, or the
