@@ -24,6 +24,8 @@ class Escalated
     public function boot(): void
     {
         Services\TicketAccess::register();
+        // Route permissions while roles & permissions is on.
+        Support\AccessEnforcer::register();
         $this->load_translations();
 
         // Register custom cron intervals.

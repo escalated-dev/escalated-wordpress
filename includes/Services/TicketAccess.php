@@ -40,6 +40,12 @@ final class TicketAccess
         self::$tokens[$request] = $user;
     }
 
+    /** The API token owner a REST request authenticated as, if any. */
+    public static function token_user(\WP_REST_Request $request): ?int
+    {
+        return self::$tokens !== null && isset(self::$tokens[$request]) ? self::$tokens[$request] : null;
+    }
+
     public static function enabled(): bool
     {
         return Setting::get('visibility', 'all') === 'department'

@@ -62,7 +62,8 @@ Configure opt-in department/account access and targeted SLAs using the
 [ticket access and routing guide](docs/ticket-access-and-routing.md).
 
 - Ticket management with threaded conversations, internal notes, and activity timeline.
-- Custom support roles: `escalated_admin` and `escalated_agent`.
+- Custom support roles: `escalated_admin`, `escalated_agent` and `escalated_light_agent`, with
+  optional per-route roles & permissions enforcement ([access control](docs/access-control.md)).
 - Department-based routing and assignment workflows.
 - SLA policies with first-response and resolution targets.
 - Automated escalation rules and scheduled SLA checks.

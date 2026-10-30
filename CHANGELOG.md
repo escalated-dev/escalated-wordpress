@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Upgrading
+- Roles & permissions is a new install-level switch, off by default
+  (`define('ESCALATED_ROLES_PERMISSIONS', true);` in wp-config.php, the
+  environment variable of the same name, or the
+  `escalated_access_roles_permissions` filter). Off, nothing changes. Before
+  turning it on, give every staff user an Escalated role (`escalated_admin`,
+  `escalated_agent`, `escalated_light_agent` or a role of yours holding
+  `escalated_*` capabilities): with it on, staff API tokens and the ticket
+  screen's actions need the owner's own capabilities. See
+  docs/access-control.md.
+
+### Added
+- Roles & permissions, enforced behind its switch (ADR
+  2026-10-29-configurable-access-features, as escalated-laravel, with
+  WordPress capabilities as the permissions and WordPress roles as the
+  roles): every staff REST route needs its capability
+  (`Escalated\Support\RoutePermissions`, fail closed), a status change to
+  resolved/closed/reopened needs `ticket.close`, API tokens are checked as
+  their owner, and the ticket screen's actions need their own capabilities.
+  Escalated > Roles edits the Escalated capabilities of WordPress roles, and
+  the Users screen assigns them, while the switch is on.
+
 ## [1.6.6] - 2026-10-28
 
 ### Upgrading

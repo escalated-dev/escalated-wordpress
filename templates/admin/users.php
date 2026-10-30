@@ -40,6 +40,7 @@ if (! defined('ABSPATH')) {
                     'self_demote' => __('You cannot remove your own admin role.', 'escalated'),
                     'not_found' => __('That user no longer exists.', 'escalated'),
                     'invalid_role' => __('Unknown role.', 'escalated'),
+                    'self_role_manage' => __('You cannot remove your own role management.', 'escalated'),
                     'error' => __('Could not update user.', 'escalated'),
                 ];
         echo esc_html($error_messages[$error] ?? $error_messages['error']);
@@ -64,12 +65,15 @@ if (! defined('ABSPATH')) {
                 <th scope="col"><?php esc_html_e('Email', 'escalated'); ?></th>
                 <th scope="col" style="width: 110px;"><?php esc_html_e('Admin', 'escalated'); ?></th>
                 <th scope="col" style="width: 110px;"><?php esc_html_e('Agent', 'escalated'); ?></th>
+                <?php if (! empty($assignable_roles)) { ?>
+                    <th scope="col"><?php esc_html_e('Roles', 'escalated'); ?></th>
+                <?php } ?>
             </tr>
         </thead>
         <tbody>
             <?php if (empty($users)) { ?>
                 <tr>
-                    <td colspan="4"><?php esc_html_e('No users found.', 'escalated'); ?></td>
+                    <td colspan="<?php echo empty($assignable_roles) ? 4 : 5; ?>"><?php esc_html_e('No users found.', 'escalated'); ?></td>
                 </tr>
             <?php } else { ?>
                 <?php foreach ($users as $user_row) { ?>
@@ -118,6 +122,22 @@ if (! defined('ABSPATH')) {
                                 <?php } ?>
                             </form>
                         </td>
+                        <?php if (! empty($assignable_roles)) { ?>
+                            <td>
+                                <form method="post" style="margin: 0;">
+                                    <input type="hidden" name="escalated_user_action" value="update_roles">
+                                    <input type="hidden" name="user_id" value="<?php echo esc_attr($user_row['id']); ?>">
+                                    <?php wp_nonce_field('escalated_user_roles_'.$user_row['id'], '_escalated_nonce'); ?>
+                                    <?php foreach ($assignable_roles as $role_row) { ?>
+                                        <label style="display: block;">
+                                            <input type="checkbox" name="roles[]" value="<?php echo esc_attr($role_row['slug']); ?>"<?php checked(in_array($role_row['slug'], $user_row['roles'] ?? [], true)); ?>>
+                                            <?php echo esc_html($role_row['name']); ?>
+                                        </label>
+                                    <?php } ?>
+                                    <button type="submit" class="button button-small"><?php esc_html_e('Save roles', 'escalated'); ?></button>
+                                </form>
+                            </td>
+                        <?php } ?>
                     </tr>
                 <?php } ?>
             <?php } ?>
