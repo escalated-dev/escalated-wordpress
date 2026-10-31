@@ -7,13 +7,18 @@
  * An internal note posted to /reply with is_internal_note stays internal: it
  * is stored as a note, fires note.created (never reply.created) and never
  * emails the customer. Status and priority take PATCH as well as POST, and
- * /tags takes Laravel's full tag_ids set. Everything goes through the REST
- * router and the hooks the plugin registers at boot.
+ * /tags takes Laravel's full tag_ids set. Status and priority changes go
+ * through TicketService, as the wp-admin ticket screen does, so they fire
+ * the same hooks (workflows, webhooks, activity log, notifications).
+ * Everything goes through the REST router and the hooks the plugin
+ * registers at boot.
  */
 
 use Escalated\Models\Reply;
 use Escalated\Models\Tag;
+use Escalated\Models\Webhook;
 use Escalated\Services\TicketService;
+use Escalated\Services\WebhookDispatcher;
 
 class Test_Staff_Api_Parity extends WP_UnitTestCase
 {
@@ -280,5 +285,156 @@ class Test_Staff_Api_Parity extends WP_UnitTestCase
         $refs = array_map(fn ($t) => $t->reference, $response->get_data()['items']);
         $this->assertSame([$followed->reference], $refs);
         $this->assertNotContains($other->reference, $refs);
+    }
+
+    // =========================================================================
+    // Status and priority changes fire the ticket screen's hooks
+    // =========================================================================
+
+    /**
+     * Run $act with an all-events webhook subscribed and HTTP answered, then
+     * send the queued deliveries and return the events that went out.
+     *
+     * @return array<int, string>
+     */
+    private function webhook_events(callable $act): array
+    {
+        Webhook::create([
+            'url' => 'https://hooks.example.com/all',
+            'events' => \Escalated\Services\EventVocabulary::WEBHOOK_EVENTS,
+            'secret' => 's',
+            'active' => 1,
+        ]);
+        $sent = [];
+        $http = function ($preempt, $args, $url) use (&$sent) {
+            $sent[] = json_decode($args['body'], true)['event'] ?? null;
+
+            return ['headers' => [], 'body' => 'ok', 'response' => ['code' => 200, 'message' => ''], 'cookies' => [], 'filename' => null];
+        };
+        $dns = fn ($addresses, $host) => ['93.184.216.34'];
+        add_filter('pre_http_request', $http, 10, 3);
+        add_filter('escalated_outbound_url_resolve', $dns, 10, 2);
+
+        $act();
+        (new WebhookDispatcher)->process_due();
+
+        remove_filter('pre_http_request', $http, 10);
+        remove_filter('escalated_outbound_url_resolve', $dns, 10);
+
+        return $sent;
+    }
+
+    /**
+     * The hooks among $hooks that fired while $act ran, in order.
+     *
+     * @return array<int, string>
+     */
+    private function fired(array $hooks, callable $act): array
+    {
+        $fired = [];
+        $listeners = [];
+        foreach ($hooks as $hook) {
+            $listeners[$hook] = function () use (&$fired, $hook) {
+                $fired[] = $hook;
+            };
+            add_action($hook, $listeners[$hook]);
+        }
+        $act();
+        foreach ($listeners as $hook => $listener) {
+            remove_action($hook, $listener);
+        }
+
+        return $fired;
+    }
+
+    private function activity(int $ticket_id, string $type): array
+    {
+        global $wpdb;
+        $table = \Escalated\Escalated::table('ticket_activities');
+
+        // Changes only, not the entry ticket creation logs.
+        return array_values(array_filter(
+            array_map(
+                fn ($row) => ['causer_id' => (int) $row->causer_id, 'properties' => json_decode((string) $row->properties, true)],
+                $wpdb->get_results($wpdb->prepare("SELECT * FROM {$table} WHERE ticket_id = %d AND type = %s ORDER BY id", $ticket_id, $type))
+            ),
+            fn ($entry) => isset($entry['properties']['old_status']) || isset($entry['properties']['old_priority'])
+        ));
+    }
+
+    public function test_status_change_fires_the_status_hooks_and_the_webhooks(): void
+    {
+        $ticket = $this->ticket();
+        $response = null;
+        $events = [];
+
+        $fired = $this->fired(['escalated_ticket_status_changed', 'escalated_ticket_resolved'], function () use (&$events, &$response, $ticket) {
+            $events = $this->webhook_events(function () use (&$response, $ticket) {
+                $response = $this->request('PATCH', 'tickets/'.$ticket->reference.'/status', ['status' => 'resolved']);
+            });
+        });
+
+        $this->assertSame(200, $response->get_status());
+        $this->assertSame(['escalated_ticket_status_changed', 'escalated_ticket_resolved'], $fired);
+        $this->assertContains('ticket.status_changed', $events);
+        $this->assertContains('ticket.resolved', $events);
+        $this->assertNotEmpty(\Escalated\Models\Ticket::find((int) $ticket->id)->resolved_at);
+    }
+
+    public function test_status_change_logs_activity_the_way_the_ticket_screen_does(): void
+    {
+        $ticket = $this->ticket();
+
+        $this->request('PATCH', 'tickets/'.$ticket->reference.'/status', ['status' => 'in_progress']);
+
+        $this->assertSame(
+            [['causer_id' => $this->agent_id, 'properties' => ['old_status' => 'open', 'new_status' => 'in_progress']]],
+            $this->activity((int) $ticket->id, 'status_changed')
+        );
+    }
+
+    public function test_closing_and_reopening_fire_their_hooks(): void
+    {
+        $ticket = $this->ticket();
+
+        $fired = $this->fired(['escalated_ticket_closed', 'escalated_ticket_reopened'], function () use ($ticket) {
+            $this->assertSame(200, $this->request('PATCH', 'tickets/'.$ticket->reference.'/status', ['status' => 'closed'])->get_status());
+            $this->assertSame(200, $this->request('PATCH', 'tickets/'.$ticket->reference.'/status', ['status' => 'reopened'])->get_status());
+        });
+
+        $this->assertSame(['escalated_ticket_closed', 'escalated_ticket_reopened'], $fired);
+    }
+
+    public function test_invalid_status_transition_is_still_rejected_and_fires_nothing(): void
+    {
+        $ticket = $this->ticket();
+        $this->request('PATCH', 'tickets/'.$ticket->reference.'/status', ['status' => 'closed']);
+
+        $fired = $this->fired(['escalated_ticket_status_changed'], function () use ($ticket) {
+            $this->assertSame(422, $this->request('PATCH', 'tickets/'.$ticket->reference.'/status', ['status' => 'in_progress'])->get_status());
+        });
+
+        $this->assertSame([], $fired);
+    }
+
+    public function test_priority_change_fires_the_priority_hook_and_the_webhook(): void
+    {
+        $ticket = $this->ticket();
+        $response = null;
+        $events = [];
+
+        $fired = $this->fired(['escalated_ticket_priority_changed'], function () use (&$events, &$response, $ticket) {
+            $events = $this->webhook_events(function () use (&$response, $ticket) {
+                $response = $this->request('PATCH', 'tickets/'.$ticket->reference.'/priority', ['priority' => 'urgent']);
+            });
+        });
+
+        $this->assertSame(200, $response->get_status());
+        $this->assertSame(['escalated_ticket_priority_changed'], $fired);
+        $this->assertContains('ticket.priority_changed', $events);
+        $this->assertSame(
+            [['causer_id' => $this->agent_id, 'properties' => ['old_priority' => 'medium', 'new_priority' => 'urgent']]],
+            $this->activity((int) $ticket->id, 'priority_changed')
+        );
     }
 }

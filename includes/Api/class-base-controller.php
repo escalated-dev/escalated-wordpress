@@ -23,17 +23,28 @@ abstract class Base_Controller extends WP_REST_Controller
     protected $namespace = 'escalated/v1';
 
     /**
+     * Why the last check_token_permission() call failed: 'ability' when the
+     * token is valid but may not call the route (answered 403), otherwise
+     * 'token' (answered 401).
+     *
+     * @var string|null
+     */
+    protected $token_failure = null;
+
+    /**
      * Validate a Bearer token and return the associated user ID.
      *
-     * Returns null if the token is missing, invalid, expired, or lacks
-     * the requested ability.
+     * Returns null if the token is missing, invalid, expired, or may not
+     * call a route of the given level.
      *
      * @param  WP_REST_Request  $request  The incoming request.
-     * @param  string  $ability  The ability to check. Default '*' (all).
+     * @param  string  $level  'agent' (default) or 'admin', as escalated-laravel's
+     *                         route groups; see ApiToken::allows().
      * @return int|null The authenticated user ID, or null on failure.
      */
-    protected function check_token_permission(WP_REST_Request $request, string $ability = '*'): ?int
+    protected function check_token_permission(WP_REST_Request $request, string $level = 'agent'): ?int
     {
+        $this->token_failure = 'token';
         $header = $request->get_header('Authorization');
 
         if (empty($header) || ! str_starts_with($header, 'Bearer ')) {
@@ -52,8 +63,10 @@ abstract class Base_Controller extends WP_REST_Controller
             return null;
         }
 
-        // Check ability.
-        if (! ApiToken::has_ability($token_record, $ability)) {
+        // Check the token may call a route of this level.
+        if (! ApiToken::allows($token_record, $level, $request->get_method(), (string) $request->get_route())) {
+            $this->token_failure = 'ability';
+
             return null;
         }
 
@@ -71,8 +84,22 @@ abstract class Base_Controller extends WP_REST_Controller
             return null;
         }
         \Escalated\Services\TicketAccess::token_actor($request, $user_id);
+        $this->token_failure = null;
 
         return $user_id;
+    }
+
+    /**
+     * The error for a failed check_token_permission(): 403 when the token is
+     * valid but lacks the ability, 401 otherwise.
+     */
+    protected function token_error(): WP_Error
+    {
+        if ($this->token_failure === 'ability') {
+            return $this->error('escalated_forbidden', __('Insufficient permissions.', 'escalated'), 403);
+        }
+
+        return $this->error('escalated_unauthorized', __('Invalid or expired API token.', 'escalated'), 401);
     }
 
     /**
@@ -100,24 +127,28 @@ abstract class Base_Controller extends WP_REST_Controller
     }
 
     /**
-     * Standard permission callback that validates Bearer token auth.
+     * Permission callback for agent routes: a valid Bearer token with the
+     * `agent` (or `*`) ability.
      *
      * @param  WP_REST_Request  $request  The incoming request.
      * @return bool|WP_Error True if authorized, WP_Error otherwise.
      */
     public function token_permissions_check(WP_REST_Request $request)
     {
-        $user_id = $this->check_token_permission($request);
+        return $this->check_token_permission($request) === null ? $this->token_error() : true;
+    }
 
-        if ($user_id === null) {
-            return new WP_Error(
-                'escalated_unauthorized',
-                __('Invalid or expired API token.', 'escalated'),
-                ['status' => 401]
-            );
-        }
-
-        return true;
+    /**
+     * Permission callback for admin routes: a valid Bearer token with the
+     * `admin` (or `*`) ability. An agent-only token is refused, as is an
+     * admin-only token on the agent routes.
+     *
+     * @param  WP_REST_Request  $request  The incoming request.
+     * @return bool|WP_Error True if authorized, WP_Error otherwise.
+     */
+    public function admin_token_permissions_check(WP_REST_Request $request)
+    {
+        return $this->check_token_permission($request, 'admin') === null ? $this->token_error() : true;
     }
 
     /**

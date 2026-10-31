@@ -52,7 +52,7 @@ class Agent_Controller extends Base_Controller
      */
     public function get_items($request)
     {
-        $user_id = $this->check_token_permission($request, 'agents:read');
+        $user_id = $this->check_token_permission($request);
 
         if ($user_id === null) {
             return $this->error('escalated_unauthorized', __('Unauthorized.', 'escalated'), 401);

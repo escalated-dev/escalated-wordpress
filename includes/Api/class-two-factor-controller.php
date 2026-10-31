@@ -119,7 +119,7 @@ class Two_Factor_Controller extends Base_Controller
         $user_id = $this->check_token_permission($request);
 
         if ($user_id === null) {
-            return $this->error('escalated_unauthorized', __('Invalid or expired API token.', 'escalated'), 401);
+            return $this->token_error();
         }
 
         $this->current_user_id = $user_id;

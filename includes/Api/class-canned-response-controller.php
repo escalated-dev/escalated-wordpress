@@ -59,7 +59,7 @@ class Canned_Response_Controller extends Base_Controller
     {
         $wpdb = \Escalated\Escalated::db();
 
-        $user_id = $this->check_token_permission($request, 'canned_responses:read');
+        $user_id = $this->check_token_permission($request);
 
         if ($user_id === null) {
             return $this->error('escalated_unauthorized', __('Unauthorized.', 'escalated'), 401);

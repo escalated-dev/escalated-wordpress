@@ -117,10 +117,10 @@ class Api_Token_Controller extends Base_Controller
      */
     public function admin_permissions_check(WP_REST_Request $request)
     {
-        $user_id = $this->check_token_permission($request);
+        $user_id = $this->check_token_permission($request, 'admin');
 
         if ($user_id === null) {
-            return $this->error('escalated_unauthorized', __('Invalid or expired API token.', 'escalated'), 401);
+            return $this->token_error();
         }
 
         $this->acting_user_id = $user_id;
@@ -220,7 +220,16 @@ class Api_Token_Controller extends Base_Controller
         if (! is_array($abilities)) {
             $abilities = ['*'];
         }
-        $abilities = array_map('sanitize_text_field', $abilities);
+        $abilities = array_values(array_unique(array_map('sanitize_text_field', $abilities)));
+
+        // Laravel's abilities only: agent, admin, *.
+        if ($abilities === [] || array_diff($abilities, ApiToken::ABILITIES) !== []) {
+            return $this->error(
+                'escalated_invalid_abilities',
+                __('Abilities must be agent, admin or *.', 'escalated'),
+                422
+            );
+        }
 
         // Parse optional expiry.
         $expires_at = null;

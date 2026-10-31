@@ -373,7 +373,7 @@ class Ticket_Controller extends Base_Controller
                 [
                     'methods' => WP_REST_Server::DELETABLE,
                     'callback' => [$this, 'delete_item'],
-                    'permission_callback' => [$this, 'token_permissions_check'],
+                    'permission_callback' => [$this, 'admin_token_permissions_check'],
                     'args' => [
                         'ref' => [
                             'required' => true,
@@ -394,7 +394,7 @@ class Ticket_Controller extends Base_Controller
      */
     public function get_items($request)
     {
-        $user_id = $this->check_token_permission($request, 'tickets:read');
+        $user_id = $this->check_token_permission($request);
 
         if ($user_id === null) {
             return $this->error('escalated_unauthorized', __('Unauthorized.', 'escalated'), 401);
@@ -499,7 +499,7 @@ class Ticket_Controller extends Base_Controller
      */
     public function create_item($request)
     {
-        $user_id = $this->check_token_permission($request, 'tickets:create');
+        $user_id = $this->check_token_permission($request);
 
         if ($user_id === null) {
             return $this->error('escalated_unauthorized', __('Unauthorized.', 'escalated'), 401);
@@ -581,7 +581,7 @@ class Ticket_Controller extends Base_Controller
      */
     public function get_item($request)
     {
-        $user_id = $this->check_token_permission($request, 'tickets:read');
+        $user_id = $this->check_token_permission($request);
 
         if ($user_id === null) {
             return $this->error('escalated_unauthorized', __('Unauthorized.', 'escalated'), 401);
@@ -686,7 +686,7 @@ class Ticket_Controller extends Base_Controller
             return $this->add_note($request);
         }
 
-        $user_id = $this->check_token_permission($request, 'tickets:reply');
+        $user_id = $this->check_token_permission($request);
 
         if ($user_id === null) {
             return $this->error('escalated_unauthorized', __('Unauthorized.', 'escalated'), 401);
@@ -722,7 +722,7 @@ class Ticket_Controller extends Base_Controller
      */
     public function add_note(WP_REST_Request $request)
     {
-        $user_id = $this->check_token_permission($request, 'tickets:note');
+        $user_id = $this->check_token_permission($request);
 
         if ($user_id === null) {
             return $this->error('escalated_unauthorized', __('Unauthorized.', 'escalated'), 401);
@@ -772,7 +772,7 @@ class Ticket_Controller extends Base_Controller
      */
     public function change_status(WP_REST_Request $request)
     {
-        $user_id = $this->check_token_permission($request, 'tickets:update');
+        $user_id = $this->check_token_permission($request);
 
         if ($user_id === null) {
             return $this->error('escalated_unauthorized', __('Unauthorized.', 'escalated'), 401);
@@ -802,31 +802,9 @@ class Ticket_Controller extends Base_Controller
             );
         }
 
-        $update_data = ['status' => $new_status];
-
-        // Track resolved/closed timestamps.
-        if ($new_status === 'resolved' && empty($ticket->resolved_at)) {
-            $update_data['resolved_at'] = current_time('mysql');
-        }
-
-        if ($new_status === 'closed' && empty($ticket->closed_at)) {
-            $update_data['closed_at'] = current_time('mysql');
-        }
-
-        Ticket::update($ticket->id, $update_data);
-
-        // Log activity.
-        TicketActivity::create([
-            'ticket_id' => $ticket->id,
-            'causer_id' => $user_id,
-            'type' => 'status_changed',
-            'properties' => [
-                'from' => $ticket->status,
-                'to' => $new_status,
-            ],
-        ]);
-
-        $updated_ticket = Ticket::find($ticket->id);
+        // The ticket screen's path: timestamps, activity log and the status
+        // hooks (workflows, webhooks, notifications).
+        $updated_ticket = (new TicketService)->change_status((int) $ticket->id, $new_status, $user_id);
 
         return $this->success([
             'message' => __('Status updated successfully.', 'escalated'),
@@ -843,7 +821,7 @@ class Ticket_Controller extends Base_Controller
      */
     public function change_priority(WP_REST_Request $request)
     {
-        $user_id = $this->check_token_permission($request, 'tickets:update');
+        $user_id = $this->check_token_permission($request);
 
         if ($user_id === null) {
             return $this->error('escalated_unauthorized', __('Unauthorized.', 'escalated'), 401);
@@ -860,21 +838,8 @@ class Ticket_Controller extends Base_Controller
             return $this->error('escalated_invalid_priority', __('Invalid priority value.', 'escalated'), 422);
         }
 
-        $old_priority = $ticket->priority;
-        Ticket::update($ticket->id, ['priority' => $new_priority]);
-
-        // Log activity.
-        TicketActivity::create([
-            'ticket_id' => $ticket->id,
-            'causer_id' => $user_id,
-            'type' => 'priority_changed',
-            'properties' => [
-                'from' => $old_priority,
-                'to' => $new_priority,
-            ],
-        ]);
-
-        $updated_ticket = Ticket::find($ticket->id);
+        // The ticket screen's path: activity log and the priority hooks.
+        $updated_ticket = (new TicketService)->change_priority((int) $ticket->id, $new_priority, $user_id);
 
         return $this->success([
             'message' => __('Priority updated successfully.', 'escalated'),
@@ -891,7 +856,7 @@ class Ticket_Controller extends Base_Controller
      */
     public function assign_agent(WP_REST_Request $request)
     {
-        $user_id = $this->check_token_permission($request, 'tickets:assign');
+        $user_id = $this->check_token_permission($request);
 
         if ($user_id === null) {
             return $this->error('escalated_unauthorized', __('Unauthorized.', 'escalated'), 401);
@@ -938,7 +903,7 @@ class Ticket_Controller extends Base_Controller
      */
     public function manage_tags(WP_REST_Request $request)
     {
-        $user_id = $this->check_token_permission($request, 'tickets:update');
+        $user_id = $this->check_token_permission($request);
 
         if ($user_id === null) {
             return $this->error('escalated_unauthorized', __('Unauthorized.', 'escalated'), 401);
@@ -1025,7 +990,7 @@ class Ticket_Controller extends Base_Controller
     {
         $wpdb = \Escalated\Escalated::db();
 
-        $user_id = $this->check_token_permission($request, 'tickets:read');
+        $user_id = $this->check_token_permission($request);
 
         if ($user_id === null) {
             return $this->error('escalated_unauthorized', __('Unauthorized.', 'escalated'), 401);
@@ -1081,7 +1046,7 @@ class Ticket_Controller extends Base_Controller
      */
     public function apply_macro(WP_REST_Request $request)
     {
-        $user_id = $this->check_token_permission($request, 'tickets:update');
+        $user_id = $this->check_token_permission($request);
 
         if ($user_id === null) {
             return $this->error('escalated_unauthorized', __('Unauthorized.', 'escalated'), 401);
@@ -1120,7 +1085,7 @@ class Ticket_Controller extends Base_Controller
      */
     public function trigger_custom_action(WP_REST_Request $request)
     {
-        $user_id = $this->check_token_permission($request, 'tickets:update');
+        $user_id = $this->check_token_permission($request);
 
         if ($user_id === null) {
             return $this->error('escalated_unauthorized', __('Unauthorized.', 'escalated'), 401);
@@ -1186,7 +1151,7 @@ class Ticket_Controller extends Base_Controller
      */
     public function delete_item($request)
     {
-        $user_id = $this->check_token_permission($request, 'tickets:delete');
+        $user_id = $this->check_token_permission($request, 'admin');
 
         if ($user_id === null) {
             return $this->error('escalated_unauthorized', __('Unauthorized.', 'escalated'), 401);
@@ -1227,7 +1192,7 @@ class Ticket_Controller extends Base_Controller
      */
     public function merge_search(WP_REST_Request $request)
     {
-        $user_id = $this->check_token_permission($request, 'tickets:read');
+        $user_id = $this->check_token_permission($request);
         if ($user_id === null) {
             return $this->error('escalated_unauthorized', __('Unauthorized.', 'escalated'), 401);
         }
@@ -1246,7 +1211,7 @@ class Ticket_Controller extends Base_Controller
      */
     public function merge(WP_REST_Request $request)
     {
-        $user_id = $this->check_token_permission($request, 'tickets:update');
+        $user_id = $this->check_token_permission($request);
         if ($user_id === null) {
             return $this->error('escalated_unauthorized', __('Unauthorized.', 'escalated'), 401);
         }

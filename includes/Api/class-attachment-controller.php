@@ -78,9 +78,7 @@ class Attachment_Controller extends Base_Controller
         }
 
         if ($request->get_header('Authorization')) {
-            return $this->check_token_permission($request, 'tickets:read') !== null
-                ? true
-                : $this->error('escalated_unauthorized', __('Invalid or expired API token.', 'escalated'), 401);
+            return $this->check_token_permission($request) !== null ? true : $this->token_error();
         }
 
         return is_user_logged_in()

@@ -88,7 +88,7 @@ class Ticket_Snooze_Controller extends Base_Controller
     {
         $ticket_id = (int) $request->get_param('id');
         $until = sanitize_text_field($request->get_param('until'));
-        $user_id = $this->check_token_permission($request, 'ticket.edit');
+        $user_id = $this->check_token_permission($request);
 
         if ($user_id === null) {
             return $this->error('escalated_unauthorized', __('Insufficient permissions.', 'escalated'), 403);
@@ -116,7 +116,7 @@ class Ticket_Snooze_Controller extends Base_Controller
     public function unsnooze(WP_REST_Request $request)
     {
         $ticket_id = (int) $request->get_param('id');
-        $user_id = $this->check_token_permission($request, 'ticket.edit');
+        $user_id = $this->check_token_permission($request);
 
         if ($user_id === null) {
             return $this->error('escalated_unauthorized', __('Insufficient permissions.', 'escalated'), 403);
