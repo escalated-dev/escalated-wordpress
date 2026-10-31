@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Upgrading
+- Replies posted through the staff REST API (`POST escalated/v1/tickets/{ref}/reply`)
+  now go through the same path as replies from the ticket screen: they fire
+  `escalated_reply_created`, so the customer gets the reply email, webhooks
+  receive `reply.created` and workflows run. Notes posted through the API
+  (`/note`, or `/reply` with `is_internal_note`) fire
+  `escalated_internal_note_added` (`note.created`). Before, API replies and
+  notes fired no hooks at all.
+
+### Security
+- An internal note posted to `POST escalated/v1/tickets/{ref}/reply` with
+  `is_internal_note` (the field escalated-laravel's agent API takes, and the
+  one the desktop app sends) was ignored and the note was saved as a public
+  reply the customer could read. The flag is now honoured: the note is stored
+  as an internal note, fires `note.created` (never `reply.created`) and is
+  never emailed to the customer. With roles & permissions on, such a request
+  needs `reply.create_internal`, not `reply.create`.
+
+### Fixed
+- The staff REST API now accepts what escalated-laravel's agent API accepts:
+  `PATCH` on `tickets/{ref}/status` and `tickets/{ref}/priority` (`POST` still
+  works), and their responses carry `status` / `priority`; `tickets/{ref}/tags`
+  takes Laravel's full `tag_ids` set (unknown ids answer 422) as well as
+  `add` / `remove`; `GET tickets?following=1` lists the tickets the caller
+  follows; reply and note responses also carry Laravel's `data` object.
+
 ## [1.6.7] - 2026-10-30
 
 ### Upgrading

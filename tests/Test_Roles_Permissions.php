@@ -339,6 +339,22 @@ class Test_Roles_Permissions extends WP_UnitTestCase
         $this->assertStringContainsString('note_added', $location);
     }
 
+    public function test_note_on_reply_needs_the_internal_note_permission_not_the_reply_one(): void
+    {
+        $this->switch_on();
+        $ticket = $this->ticket();
+        $token = $this->token_for($this->user_with(['ticket.view', 'reply.create_internal']));
+        $ref = $ticket->reference;
+
+        $note = $this->call($token, 'POST', 'tickets/'.$ref.'/reply', ['body' => 'Internal', 'is_internal_note' => true]);
+        $this->assertSame(201, $note->get_status());
+        $this->assertSame(1, (int) $note->get_data()['reply']->is_internal_note);
+        $this->assertSame(403, $this->call($token, 'POST', 'tickets/'.$ref.'/reply', ['body' => 'Public'])->get_status());
+
+        $replier = $this->token_for($this->user_with(['ticket.view', 'reply.create']));
+        $this->assertSame(403, $this->call($replier, 'POST', 'tickets/'.$ref.'/reply', ['body' => 'Internal', 'is_internal_note' => true])->get_status());
+    }
+
     public function test_light_agent_ticket_screen_with_the_switch_off_keeps_its_old_checks(): void
     {
         $ticket = $this->ticket();

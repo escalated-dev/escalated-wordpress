@@ -17,6 +17,7 @@ use Escalated\Services\AttachmentService;
 use Escalated\Services\MacroService;
 use Escalated\Services\TicketActionRegistry;
 use Escalated\Services\TicketMergeService;
+use Escalated\Services\TicketService;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_REST_Server;
@@ -143,6 +144,11 @@ class Ticket_Controller extends Base_Controller
                             'type' => 'string',
                             'sanitize_callback' => [Sanitizer::class, 'sanitize_html'],
                         ],
+                        // escalated-laravel's agent API: a note posted to /reply.
+                        'is_internal_note' => [
+                            'type' => 'boolean',
+                            'default' => false,
+                        ],
                     ],
                 ],
             ]
@@ -179,7 +185,8 @@ class Ticket_Controller extends Base_Controller
             '/'.$this->rest_base.'/'.self::REF_PATTERN.'/status',
             [
                 [
-                    'methods' => WP_REST_Server::CREATABLE,
+                    // PATCH as escalated-laravel's API; POST kept for existing clients.
+                    'methods' => 'POST, PATCH',
                     'callback' => [$this, 'change_status'],
                     'permission_callback' => [$this, 'token_permissions_check'],
                     'args' => [
@@ -204,7 +211,8 @@ class Ticket_Controller extends Base_Controller
             '/'.$this->rest_base.'/'.self::REF_PATTERN.'/priority',
             [
                 [
-                    'methods' => WP_REST_Server::CREATABLE,
+                    // PATCH as escalated-laravel's API; POST kept for existing clients.
+                    'methods' => 'POST, PATCH',
                     'callback' => [$this, 'change_priority'],
                     'permission_callback' => [$this, 'token_permissions_check'],
                     'args' => [
@@ -272,6 +280,11 @@ class Ticket_Controller extends Base_Controller
                             'type' => 'array',
                             'items' => ['type' => 'integer'],
                             'default' => [],
+                        ],
+                        // escalated-laravel's shape: the ticket's full tag set.
+                        'tag_ids' => [
+                            'type' => 'array',
+                            'items' => ['type' => 'integer'],
                         ],
                     ],
                 ],
@@ -439,6 +452,11 @@ class Ticket_Controller extends Base_Controller
             if (in_array($ticket_type, ['question', 'problem', 'incident', 'task'], true)) {
                 $filters['ticket_type'] = $ticket_type;
             }
+        }
+
+        // escalated-laravel's "following": only tickets the caller follows.
+        if ($request->has_param('following')) {
+            $filters['followed_by'] = $user_id;
         }
 
         if ($request->has_param('sort_by')) {
@@ -653,13 +671,21 @@ class Ticket_Controller extends Base_Controller
     }
 
     /**
-     * Add a public reply to a ticket.
+     * Add a reply to a ticket, or an internal note when is_internal_note is
+     * set (escalated-laravel's agent API takes notes on this endpoint).
+     *
+     * A note is stored as a note, fires note.created and is never sent to
+     * the customer; only a public reply fires reply.created.
      *
      * @param  WP_REST_Request  $request  The incoming request.
      * @return WP_REST_Response|\WP_Error
      */
     public function add_reply(WP_REST_Request $request)
     {
+        if (rest_sanitize_boolean($request->get_param('is_internal_note'))) {
+            return $this->add_note($request);
+        }
+
         $user_id = $this->check_token_permission($request, 'tickets:reply');
 
         if ($user_id === null) {
@@ -676,39 +702,15 @@ class Ticket_Controller extends Base_Controller
             return $this->error('escalated_missing_body', __('Reply body is required.', 'escalated'), 422);
         }
 
-        $reply_id = Reply::create([
-            'ticket_id' => $ticket->id,
-            'author_id' => $user_id,
-            'body' => $body,
-            'is_internal_note' => 0,
-            'type' => 'reply',
-        ]);
+        $reply = (new TicketService)->reply((int) $ticket->id, $user_id, $body);
 
-        if ($reply_id === false) {
-            return $this->error('escalated_reply_failed', __('Failed to create reply.', 'escalated'), 500);
-        }
-
-        // Log activity.
-        TicketActivity::create([
-            'ticket_id' => $ticket->id,
-            'causer_id' => $user_id,
-            'type' => 'replied',
-            'properties' => ['reply_id' => $reply_id],
-        ]);
-
-        // Update ticket timestamp.
+        // Bump the ticket's updated_at, as this endpoint always has.
         Ticket::update($ticket->id, []);
-
-        // Set first response if not already set.
-        if (empty($ticket->first_response_at)) {
-            Ticket::update($ticket->id, ['first_response_at' => current_time('mysql')]);
-        }
-
-        $reply = Reply::find($reply_id);
 
         return $this->success([
             'message' => __('Reply added successfully.', 'escalated'),
             'reply' => $reply,
+            'data' => $this->reply_data($reply, $user_id),
         ], 201);
     }
 
@@ -736,32 +738,30 @@ class Ticket_Controller extends Base_Controller
             return $this->error('escalated_missing_body', __('Note body is required.', 'escalated'), 422);
         }
 
-        $note_id = Reply::create([
-            'ticket_id' => $ticket->id,
-            'author_id' => $user_id,
-            'body' => $body,
-            'is_internal_note' => 1,
-            'type' => 'note',
-        ]);
-
-        if ($note_id === false) {
-            return $this->error('escalated_note_failed', __('Failed to create note.', 'escalated'), 500);
-        }
-
-        // Log activity.
-        TicketActivity::create([
-            'ticket_id' => $ticket->id,
-            'causer_id' => $user_id,
-            'type' => 'note_added',
-            'properties' => ['reply_id' => $note_id],
-        ]);
-
-        $note = Reply::find($note_id);
+        $note = (new TicketService)->add_note((int) $ticket->id, $user_id, $body);
 
         return $this->success([
             'message' => __('Internal note added successfully.', 'escalated'),
             'note' => $note,
+            'reply' => $note,
+            'data' => $this->reply_data($note, $user_id),
         ], 201);
+    }
+
+    /**
+     * The reply shape escalated-laravel's API returns under "data".
+     */
+    private function reply_data(object $reply, int $user_id): array
+    {
+        $author = get_userdata($user_id);
+
+        return [
+            'id' => (int) $reply->id,
+            'body' => $reply->body,
+            'is_internal_note' => (bool) $reply->is_internal_note,
+            'author' => ['id' => $user_id, 'name' => $author ? $author->display_name : ''],
+            'created_at' => $reply->created_at,
+        ];
     }
 
     /**
@@ -830,6 +830,7 @@ class Ticket_Controller extends Base_Controller
 
         return $this->success([
             'message' => __('Status updated successfully.', 'escalated'),
+            'status' => $new_status,
             'ticket' => Ticket::enrich($updated_ticket),
         ]);
     }
@@ -877,6 +878,7 @@ class Ticket_Controller extends Base_Controller
 
         return $this->success([
             'message' => __('Priority updated successfully.', 'escalated'),
+            'priority' => $new_priority,
             'ticket' => Ticket::enrich($updated_ticket),
         ]);
     }
@@ -949,6 +951,20 @@ class Ticket_Controller extends Base_Controller
 
         $add_ids = $request->get_param('add') ?: [];
         $remove_ids = $request->get_param('remove') ?: [];
+
+        // escalated-laravel's shape: tag_ids is the ticket's full tag set.
+        $tag_ids = $request->get_param('tag_ids');
+        if (is_array($tag_ids)) {
+            $wanted = array_values(array_unique(array_map('absint', $tag_ids)));
+            foreach ($wanted as $tag_id) {
+                if (! Tag::find($tag_id)) {
+                    return $this->error('escalated_invalid_tag', __('Tag not found.', 'escalated'), 422);
+                }
+            }
+            $current = array_map(static fn ($tag) => (int) $tag->id, Tag::for_ticket($ticket->id));
+            $add_ids = array_merge((array) $add_ids, array_diff($wanted, $current));
+            $remove_ids = array_merge((array) $remove_ids, array_diff($current, $wanted));
+        }
 
         if (! is_array($add_ids)) {
             $add_ids = [];
