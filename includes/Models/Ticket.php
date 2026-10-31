@@ -258,6 +258,13 @@ class Ticket
             $values[] = (int) $filters['requester_id'];
         }
 
+        // Followed-by filter (escalated-laravel's "following").
+        if (! empty($filters['followed_by'])) {
+            $followers_table = Escalated::table('ticket_followers');
+            $where[] = "t.id IN (SELECT ticket_id FROM {$followers_table} WHERE user_id = %d)";
+            $values[] = (int) $filters['followed_by'];
+        }
+
         // Tag filter (join with pivot table).
         if (! empty($filters['tag_ids']) && is_array($filters['tag_ids'])) {
             $tag_table = Escalated::table('ticket_tag');

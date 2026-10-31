@@ -64,8 +64,8 @@ final class RoutePermissions
             ['DELETE', '/tickets/*', ['ticket.delete']],
             ['POST', '/tickets/*/reply', ['reply.create']],
             ['POST', '/tickets/*/note', ['reply.create_internal']],
-            ['POST', '/tickets/*/status', $edit], // + ticket.close, see required()
-            ['POST', '/tickets/*/priority', $edit],
+            ['POST|PATCH', '/tickets/*/status', $edit], // + ticket.close, see required()
+            ['POST|PATCH', '/tickets/*/priority', $edit],
             ['POST', '/tickets/*/tags', $edit],
             ['POST', '/tickets/*/snooze', $edit],
             ['POST', '/tickets/*/unsnooze', $edit],
@@ -169,6 +169,8 @@ final class RoutePermissions
     /**
      * The slugs a request needs (null when unmapped): a status change to
      * resolved, closed or reopened also needs ticket.close.
+     * A note posted to /reply needs reply.create_internal instead of
+     * reply.create.
      *
      * @return list<string>|null
      */
@@ -177,6 +179,11 @@ final class RoutePermissions
         $required = self::mapped($method, $route);
         if ($required === null) {
             return null;
+        }
+        // An internal note posted to /reply (escalated-laravel's
+        // is_internal_note) needs the note permission, not the reply one.
+        if ($required === ['reply.create'] && rest_sanitize_boolean($request->get_param('is_internal_note'))) {
+            $required = ['reply.create_internal'];
         }
         if (in_array('ticket.edit', $required, true)) {
             $status = $request->get_param('status');
