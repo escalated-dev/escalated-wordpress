@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.6.9] - 2026-10-31
+
 ### Upgrading
 - API tokens now use escalated-laravel's abilities: `agent` for the agent
   routes, `admin` for the admin routes (`DELETE tickets/{ref}`, `automations`,
