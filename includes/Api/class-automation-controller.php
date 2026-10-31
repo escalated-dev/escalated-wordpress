@@ -33,7 +33,7 @@ class Automation_Controller extends Base_Controller
                 [
                     'methods' => WP_REST_Server::READABLE,
                     'callback' => [$this, 'get_items'],
-                    'permission_callback' => [$this, 'token_permissions_check'],
+                    'permission_callback' => [$this, 'admin_token_permissions_check'],
                     'args' => [
                         'active' => [
                             'type' => 'integer',
@@ -44,7 +44,7 @@ class Automation_Controller extends Base_Controller
                 [
                     'methods' => WP_REST_Server::CREATABLE,
                     'callback' => [$this, 'create_item'],
-                    'permission_callback' => [$this, 'token_permissions_check'],
+                    'permission_callback' => [$this, 'admin_token_permissions_check'],
                     'args' => [
                         'name' => [
                             'required' => true,
@@ -72,17 +72,17 @@ class Automation_Controller extends Base_Controller
                 [
                     'methods' => WP_REST_Server::READABLE,
                     'callback' => [$this, 'get_item'],
-                    'permission_callback' => [$this, 'token_permissions_check'],
+                    'permission_callback' => [$this, 'admin_token_permissions_check'],
                 ],
                 [
                     'methods' => WP_REST_Server::EDITABLE,
                     'callback' => [$this, 'update_item'],
-                    'permission_callback' => [$this, 'token_permissions_check'],
+                    'permission_callback' => [$this, 'admin_token_permissions_check'],
                 ],
                 [
                     'methods' => WP_REST_Server::DELETABLE,
                     'callback' => [$this, 'delete_item'],
-                    'permission_callback' => [$this, 'token_permissions_check'],
+                    'permission_callback' => [$this, 'admin_token_permissions_check'],
                 ],
             ]
         );
@@ -96,7 +96,7 @@ class Automation_Controller extends Base_Controller
      */
     public function get_items($request)
     {
-        $user_id = $this->check_token_permission($request, 'automations:read');
+        $user_id = $this->check_token_permission($request, 'admin');
 
         if ($user_id === null) {
             return $this->error('escalated_unauthorized', __('Unauthorized.', 'escalated'), 401);
@@ -122,7 +122,7 @@ class Automation_Controller extends Base_Controller
      */
     public function get_item($request)
     {
-        $user_id = $this->check_token_permission($request, 'automations:read');
+        $user_id = $this->check_token_permission($request, 'admin');
 
         if ($user_id === null) {
             return $this->error('escalated_unauthorized', __('Unauthorized.', 'escalated'), 401);
@@ -145,7 +145,7 @@ class Automation_Controller extends Base_Controller
      */
     public function create_item($request)
     {
-        $user_id = $this->check_token_permission($request, 'automations:write');
+        $user_id = $this->check_token_permission($request, 'admin');
 
         if ($user_id === null) {
             return $this->error('escalated_unauthorized', __('Unauthorized.', 'escalated'), 401);
@@ -178,7 +178,7 @@ class Automation_Controller extends Base_Controller
      */
     public function update_item($request)
     {
-        $user_id = $this->check_token_permission($request, 'automations:write');
+        $user_id = $this->check_token_permission($request, 'admin');
 
         if ($user_id === null) {
             return $this->error('escalated_unauthorized', __('Unauthorized.', 'escalated'), 401);
@@ -224,7 +224,7 @@ class Automation_Controller extends Base_Controller
      */
     public function delete_item($request)
     {
-        $user_id = $this->check_token_permission($request, 'automations:write');
+        $user_id = $this->check_token_permission($request, 'admin');
 
         if ($user_id === null) {
             return $this->error('escalated_unauthorized', __('Unauthorized.', 'escalated'), 401);

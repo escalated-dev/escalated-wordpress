@@ -217,6 +217,63 @@ class ApiToken
     }
 
     /**
+     * The abilities a token can be issued with, as in escalated-laravel:
+     * `agent` for the agent routes, `admin` for the admin routes and `*`
+     * for both.
+     */
+    public const ABILITIES = ['*', 'agent', 'admin'];
+
+    /**
+     * Scoped abilities the wp-admin token form issued before 1.6.9, and
+     * what each still grants on the agent routes: 'agent' grants them all,
+     * 'read' only GET/HEAD requests, 'reply' GET/HEAD plus replies and
+     * notes. None of them grants the admin routes.
+     */
+    public const LEGACY_ABILITIES = [
+        'tickets:write' => 'agent',
+        'tickets:read' => 'read',
+        'reports:read' => 'read',
+        'replies:write' => 'reply',
+    ];
+
+    /**
+     * Whether a token may call a route of the given level.
+     *
+     * @param  object  $record  The API token record.
+     * @param  string  $level  'agent' or 'admin'.
+     * @param  string  $method  The HTTP method of the request.
+     * @param  string  $route  The matched REST route (e.g. /escalated/v1/tickets/ABC/reply).
+     */
+    public static function allows($record, string $level, string $method = 'GET', string $route = ''): bool
+    {
+        $abilities = json_decode((string) $record->abilities, true);
+
+        if (! is_array($abilities)) {
+            return false;
+        }
+
+        if (in_array('*', $abilities, true) || in_array($level, $abilities, true)) {
+            return true;
+        }
+
+        if ($level !== 'agent') {
+            return false;
+        }
+
+        $reading = in_array(strtoupper($method), ['GET', 'HEAD'], true);
+        $replying = strtoupper($method) === 'POST' && preg_match('#/tickets/[^/]+/(reply|note)$#', $route) === 1;
+
+        foreach ($abilities as $ability) {
+            $grant = is_string($ability) ? (self::LEGACY_ABILITIES[$ability] ?? null) : null;
+            if ($grant === 'agent' || ($grant !== null && $reading) || ($grant === 'reply' && $replying)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Update the last used timestamp and IP for a token.
      *
      * @param  int  $id

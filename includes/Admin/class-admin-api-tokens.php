@@ -53,7 +53,12 @@ class Admin_Api_Tokens
                 }
 
                 $name = sanitize_text_field(wp_unslash($_POST['name'] ?? ''));
-                $abilities = isset($_POST['abilities']) ? array_map('sanitize_text_field', (array) $_POST['abilities']) : ['*'];
+                $abilities = isset($_POST['abilities']) ? array_map('sanitize_text_field', wp_unslash((array) $_POST['abilities'])) : ['*'];
+                $abilities = array_values(array_intersect(ApiToken::ABILITIES, $abilities));
+                if ($abilities === []) {
+                    $redirect = add_query_arg('message', 'error', $redirect);
+                    break;
+                }
 
                 $expires_at = null;
                 if (! empty($_POST['expires_at'])) {

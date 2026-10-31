@@ -164,20 +164,12 @@ if (! defined('ABSPATH')) {
                                 <?php esc_html_e('Full access (all abilities)', 'escalated'); ?>
                             </label>
                             <label style="display: block; margin-bottom: 6px;">
-                                <input type="checkbox" name="abilities[]" value="tickets:read">
-                                <?php esc_html_e('Read tickets', 'escalated'); ?>
-                            </label>
-                            <label style="display: block; margin-bottom: 6px;">
-                                <input type="checkbox" name="abilities[]" value="tickets:write">
-                                <?php esc_html_e('Create/update tickets', 'escalated'); ?>
-                            </label>
-                            <label style="display: block; margin-bottom: 6px;">
-                                <input type="checkbox" name="abilities[]" value="replies:write">
-                                <?php esc_html_e('Create replies', 'escalated'); ?>
+                                <input type="checkbox" name="abilities[]" value="agent">
+                                <?php esc_html_e('Agent (tickets, replies, notes, lookups)', 'escalated'); ?>
                             </label>
                             <label style="display: block;">
-                                <input type="checkbox" name="abilities[]" value="reports:read">
-                                <?php esc_html_e('Read reports', 'escalated'); ?>
+                                <input type="checkbox" name="abilities[]" value="admin">
+                                <?php esc_html_e('Admin (delete tickets, automations, API tokens)', 'escalated'); ?>
                             </label>
                         </fieldset>
                     </td>

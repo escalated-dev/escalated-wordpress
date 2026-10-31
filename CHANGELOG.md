@@ -4,6 +4,39 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Upgrading
+- API tokens now use escalated-laravel's abilities: `agent` for the agent
+  routes, `admin` for the admin routes (`DELETE tickets/{ref}`, `automations`,
+  `admin/api-tokens`) and `*` for both. `*` tokens, including the ones the
+  mobile login issues, work as before. Tokens issued with the old form's
+  scoped abilities keep working at the level they describe (`tickets:write`
+  acts as `agent`; `tickets:read` and `reports:read` as read-only `agent`;
+  `replies:write` as read-only `agent` that may also reply and add notes) and
+  never reach the admin routes. New tokens take only `agent`, `admin` and
+  `*`. A valid token without the ability now gets 403 instead of 401. See
+  docs/access-control.md.
+- Status and priority changes through the staff REST API now go through the
+  same path as the ticket screen, so they fire the status and priority hooks:
+  workflows run, webhooks receive `ticket.status_changed`,
+  `ticket.priority_changed`, `ticket.resolved`, `ticket.closed` and
+  `ticket.reopened`, and notifications go out. Their activity entries use
+  the ticket screen's `old_status` / `new_status` (`old_priority` /
+  `new_priority`) properties instead of `from` / `to`.
+
+### Security
+- Every token-authenticated staff route required the `*` ability, so a token
+  with Laravel's `agent` ability, or any scoped ability the wp-admin form
+  offered, was refused everywhere, and the only working tokens were full
+  access ones. Agent routes now need `agent` (or `*`) and admin routes need
+  `admin` (or `*`), as in escalated-laravel, so integrations can hold a token
+  that cannot delete tickets, edit automations or manage API tokens.
+
+### Fixed
+- `PATCH`/`POST tickets/{ref}/status` and `tickets/{ref}/priority` fired no
+  hooks, so workflows, webhooks, notifications and the `reopened` timestamp
+  reset skipped them. They now go through `TicketService`, as #121 did for
+  replies.
+
 ## [1.6.8] - 2026-10-31
 
 ### Upgrading

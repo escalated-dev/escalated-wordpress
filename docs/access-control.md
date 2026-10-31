@@ -254,3 +254,33 @@ answer 404.
    `ESCALATED_SSO_SYNC_ROLES`.
 3. Pick the provider in Escalated > Single Sign-On and give the IdP the
    endpoints listed there; a SAML install needs the IdP certificate.
+
+## API token abilities
+
+The token-authenticated REST API (`escalated/v1`) checks a token's abilities
+the way escalated-laravel's API does. A token is issued with one or more of:
+
+| Ability | Reaches |
+|---|---|
+| `agent` | the agent routes: tickets (list, show, create, reply, note, status, priority, assign, tags, follow, macros, actions, merge, split, snooze), agents, departments, tags, canned responses, macros, dashboard, saved views, chat, events, attachments, `auth/*`, `admin/two-factor` |
+| `admin` | the admin routes: `DELETE tickets/{ref}`, `automations`, `admin/api-tokens` |
+| `*` | both |
+
+An admin-only token cannot reach the agent routes; give a token both `agent`
+and `admin` (or `*`) for both. A valid token without the ability is answered
+403; a missing, unknown or expired token 401. Route permissions and
+capability checks (for example `escalated_api_token_manage` on
+`admin/api-tokens`) still apply on top.
+
+New tokens take only `agent`, `admin` and `*`: the wp-admin form offers those,
+and `POST admin/api-tokens` answers 422 for anything else. Tokens issued
+before 1.6.9 with the old form's scoped abilities keep working at the level
+they describe, and never reach the admin routes:
+
+| Old ability | Now grants |
+|---|---|
+| `tickets:write` | `agent` |
+| `tickets:read`, `reports:read` | `agent`, read-only (`GET` / `HEAD`) |
+| `replies:write` | `agent`, read-only, plus `POST tickets/{ref}/reply` and `/note` |
+
+Re-issue such a token with `agent` to give it the full agent API.

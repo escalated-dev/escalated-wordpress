@@ -55,7 +55,7 @@ class Ticket_Split_Controller extends Base_Controller
     public function split_ticket(WP_REST_Request $request)
     {
         $reply_id = (int) $request->get_param('reply_id');
-        $user_id = $this->check_token_permission($request, 'ticket.edit');
+        $user_id = $this->check_token_permission($request);
 
         if ($user_id === null) {
             return $this->error('escalated_unauthorized', __('Insufficient permissions.', 'escalated'), 403);
