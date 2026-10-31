@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.6.8] - 2026-10-31
+
 ### Upgrading
 - Replies posted through the staff REST API (`POST escalated/v1/tickets/{ref}/reply`)
   now go through the same path as replies from the ticket screen: they fire
