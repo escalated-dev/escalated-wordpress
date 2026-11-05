@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.6.10] - 2026-11-04
+
+### Changed
+- The bundled widget is now `@escalated-dev/escalated` 0.12.8. The widget's source did not change in 0.12.8; the bundle is rebuilt with Vue 3.5.44, so it behaves as before.
+
 ## [1.6.9] - 2026-10-31
 
 ### Upgrading
