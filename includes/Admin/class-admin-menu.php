@@ -12,6 +12,10 @@ class Admin_Menu
 
     public function add_menus(): void
     {
+        // Embedding the admin in the host's own admin (off by default; adds
+        // nothing then). See docs/embedding-admin.md.
+        \Escalated\Support\EmbedAdmin::boot();
+
         // Top-level menu. WordPress auto-creates a submenu entry with
         // the same slug pointing at the same callback. Adding an
         // explicit add_submenu_page with that same slug ('escalated')
@@ -115,7 +119,12 @@ class Admin_Menu
             // staff while roles & permissions is off (docs/access-control.md).
             'features' => \Escalated\Support\AccessFeatures::shared(),
             'permissions' => \Escalated\Support\AccessEnforcer::permissions(get_current_user_id()),
-        ]);
+        ] + \Escalated\Support\EmbedAdmin::script_data());
+
+        // iframe mode: the framed screen talks to an allowed parent window.
+        if (\Escalated\Support\EmbedAdmin::wants_bridge()) {
+            wp_enqueue_script('escalated-embed-bridge', ESCALATED_PLUGIN_URL.'assets/js/embed-bridge.js', ['escalated-admin'], ESCALATED_VERSION, true);
+        }
 
         // Inject inline script to apply the theme class to the wrapper
         if ($theme_class) {
