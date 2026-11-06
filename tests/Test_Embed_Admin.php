@@ -421,4 +421,26 @@ class Test_Embed_Admin extends WP_UnitTestCase
             ]],
         ], $items[$index]);
     }
+
+    public function test_the_documented_host_menu_template_renders_the_navigation(): void
+    {
+        $this->embed();
+        wp_set_current_user($this->admin);
+        $_GET = ['page' => 'escalated-tags'];
+
+        ob_start();
+        include __DIR__.'/Fixtures/embed/host-support-menu.php';
+        $html = (string) ob_get_clean();
+
+        $this->assertStringContainsString('<nav class="host-support-menu"', $html);
+        $this->assertStringContainsString('href="/wp-admin/admin.php?page=escalated-reports"', $html);
+        $this->assertSame(1, substr_count($html, 'aria-current="page"'));
+        $this->assertMatchesRegularExpression('#page=escalated-tags"\s+aria-current="page">\s*Tags#', $html);
+
+        // Nothing for someone who may not open the admin.
+        wp_set_current_user(self::factory()->user->create(['role' => 'subscriber']));
+        ob_start();
+        include __DIR__.'/Fixtures/embed/host-support-menu.php';
+        $this->assertSame('', trim((string) ob_get_clean()));
+    }
 }
