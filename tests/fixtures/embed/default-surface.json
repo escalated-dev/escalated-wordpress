@@ -1,0 +1,581 @@
+{
+    "menu": [
+        [
+            "top",
+            "Tickets",
+            "escalated_ticket_view",
+            "escalated"
+        ],
+        [
+            "sub",
+            "Tickets",
+            "escalated_ticket_view",
+            "escalated"
+        ],
+        [
+            "sub",
+            "Departments",
+            "escalated_department_view",
+            "escalated-departments"
+        ],
+        [
+            "sub",
+            "SLA Policies",
+            "escalated_sla_view",
+            "escalated-sla-policies"
+        ],
+        [
+            "sub",
+            "Business Hours",
+            "escalated_sla_view",
+            "escalated-business-hours"
+        ],
+        [
+            "sub",
+            "Automations",
+            "escalated_automation_view",
+            "escalated-automations"
+        ],
+        [
+            "sub",
+            "Workflows",
+            "escalated_automation_manage",
+            "escalated-workflows"
+        ],
+        [
+            "sub",
+            "Escalation Rules",
+            "escalated_escalation_view",
+            "escalated-escalation-rules"
+        ],
+        [
+            "sub",
+            "Tags",
+            "escalated_tag_view",
+            "escalated-tags"
+        ],
+        [
+            "sub",
+            "Skills",
+            "escalated_skill_manage",
+            "escalated-skills"
+        ],
+        [
+            "sub",
+            "Canned Responses",
+            "escalated_macro_manage",
+            "escalated-canned-responses"
+        ],
+        [
+            "sub",
+            "Macros",
+            "escalated_macro_view",
+            "escalated-macros"
+        ],
+        [
+            "sub",
+            "Reports",
+            "escalated_report_view",
+            "escalated-reports"
+        ],
+        [
+            "sub",
+            "Users",
+            "escalated_user_manage",
+            "escalated-users"
+        ],
+        [
+            "sub",
+            "Newsletters",
+            "escalated_newsletters_manage",
+            "escalated-newsletters"
+        ],
+        [
+            "sub",
+            "Webhooks",
+            "escalated_webhook_manage",
+            "escalated-webhooks"
+        ],
+        [
+            "sub",
+            "API Tokens",
+            "escalated_api_token_view",
+            "escalated-api-tokens"
+        ],
+        [
+            "sub",
+            "Settings",
+            "escalated_settings_view",
+            "escalated-settings"
+        ]
+    ],
+    "rest": {
+        "/escalated/v1": [
+            "GET"
+        ],
+        "/escalated/v1/admin/api-tokens": [
+            "GET",
+            "POST"
+        ],
+        "/escalated/v1/admin/api-tokens/(?P<id>\\d+)": [
+            "DELETE"
+        ],
+        "/escalated/v1/admin/audit-logs": [
+            "GET"
+        ],
+        "/escalated/v1/admin/kb/articles": [
+            "GET",
+            "POST"
+        ],
+        "/escalated/v1/admin/kb/articles/(?P<id>\\d+)": [
+            "DELETE",
+            "GET",
+            "PATCH",
+            "PUT"
+        ],
+        "/escalated/v1/admin/kb/categories": [
+            "GET",
+            "POST"
+        ],
+        "/escalated/v1/admin/kb/categories/(?P<id>\\d+)": [
+            "DELETE",
+            "PATCH",
+            "PUT"
+        ],
+        "/escalated/v1/admin/skills": [
+            "GET",
+            "POST"
+        ],
+        "/escalated/v1/admin/skills/(?P<id>\\d+)": [
+            "DELETE",
+            "PATCH",
+            "PUT"
+        ],
+        "/escalated/v1/admin/skills/(?P<id>\\d+)/edit": [
+            "GET"
+        ],
+        "/escalated/v1/admin/skills/new": [
+            "GET"
+        ],
+        "/escalated/v1/admin/tickets/(?P<ref>[A-Z]+-\\d+)/subjects": [
+            "POST"
+        ],
+        "/escalated/v1/admin/tickets/(?P<ref>[A-Z]+-\\d+)/subjects/(?P<link_id>\\d+)": [
+            "DELETE"
+        ],
+        "/escalated/v1/admin/two-factor": [
+            "DELETE",
+            "GET"
+        ],
+        "/escalated/v1/admin/two-factor/confirm": [
+            "POST"
+        ],
+        "/escalated/v1/admin/two-factor/recovery-codes": [
+            "POST"
+        ],
+        "/escalated/v1/admin/two-factor/setup": [
+            "POST"
+        ],
+        "/escalated/v1/admin/two-factor/verify": [
+            "POST"
+        ],
+        "/escalated/v1/admin/workflows": [
+            "GET",
+            "POST"
+        ],
+        "/escalated/v1/admin/workflows/(?P<id>\\d+)": [
+            "DELETE",
+            "GET",
+            "PATCH",
+            "PUT"
+        ],
+        "/escalated/v1/admin/workflows/(?P<id>\\d+)/edit": [
+            "GET"
+        ],
+        "/escalated/v1/admin/workflows/(?P<id>\\d+)/toggle": [
+            "POST"
+        ],
+        "/escalated/v1/admin/workflows/new": [
+            "GET"
+        ],
+        "/escalated/v1/admin/workflows/reorder": [
+            "POST"
+        ],
+        "/escalated/v1/agents": [
+            "GET"
+        ],
+        "/escalated/v1/attachments/(?P<id>\\d+)/download": [
+            "GET"
+        ],
+        "/escalated/v1/auth/login": [
+            "POST"
+        ],
+        "/escalated/v1/auth/logout": [
+            "POST"
+        ],
+        "/escalated/v1/auth/me": [
+            "GET"
+        ],
+        "/escalated/v1/auth/profile": [
+            "PATCH",
+            "POST",
+            "PUT"
+        ],
+        "/escalated/v1/auth/refresh": [
+            "POST"
+        ],
+        "/escalated/v1/auth/register": [
+            "POST"
+        ],
+        "/escalated/v1/auth/validate": [
+            "POST"
+        ],
+        "/escalated/v1/automations": [
+            "GET",
+            "POST"
+        ],
+        "/escalated/v1/automations/(?P<id>[\\d]+)": [
+            "DELETE",
+            "GET",
+            "PATCH",
+            "POST",
+            "PUT"
+        ],
+        "/escalated/v1/canned-responses": [
+            "GET"
+        ],
+        "/escalated/v1/chat/(?P<session_id>\\d+)": [
+            "GET"
+        ],
+        "/escalated/v1/chat/(?P<session_id>\\d+)/accept": [
+            "POST"
+        ],
+        "/escalated/v1/chat/(?P<session_id>\\d+)/end": [
+            "POST"
+        ],
+        "/escalated/v1/chat/(?P<session_id>\\d+)/messages": [
+            "POST"
+        ],
+        "/escalated/v1/chat/(?P<session_id>\\d+)/transfer": [
+            "POST"
+        ],
+        "/escalated/v1/chat/active": [
+            "GET"
+        ],
+        "/escalated/v1/chat/queue": [
+            "GET"
+        ],
+        "/escalated/v1/dashboard": [
+            "GET"
+        ],
+        "/escalated/v1/departments": [
+            "GET"
+        ],
+        "/escalated/v1/events": [
+            "GET"
+        ],
+        "/escalated/v1/events/types": [
+            "GET"
+        ],
+        "/escalated/v1/guest/lookup": [
+            "POST"
+        ],
+        "/escalated/v1/guest/verification": [
+            "POST"
+        ],
+        "/escalated/v1/inbound/(?P<adapter>[a-z]+)": [
+            "POST"
+        ],
+        "/escalated/v1/macros": [
+            "GET"
+        ],
+        "/escalated/v1/mobile/guest/lookup": [
+            "POST"
+        ],
+        "/escalated/v1/mobile/guest/tickets": [
+            "POST"
+        ],
+        "/escalated/v1/mobile/guest/tickets/(?P<token>[^/]+)": [
+            "GET"
+        ],
+        "/escalated/v1/mobile/guest/tickets/(?P<token>[^/]+)/replies": [
+            "POST"
+        ],
+        "/escalated/v1/mobile/guest/verification": [
+            "POST"
+        ],
+        "/escalated/v1/sso/jwt/callback": [
+            "GET",
+            "POST"
+        ],
+        "/escalated/v1/sso/login": [
+            "GET"
+        ],
+        "/escalated/v1/sso/oauth/callback": [
+            "GET"
+        ],
+        "/escalated/v1/sso/saml/acs": [
+            "POST"
+        ],
+        "/escalated/v1/sso/saml/metadata": [
+            "GET"
+        ],
+        "/escalated/v1/tags": [
+            "GET"
+        ],
+        "/escalated/v1/tickets": [
+            "GET",
+            "POST"
+        ],
+        "/escalated/v1/tickets/(?P<id>[\\d]+)/snooze": [
+            "POST"
+        ],
+        "/escalated/v1/tickets/(?P<id>[\\d]+)/unsnooze": [
+            "POST"
+        ],
+        "/escalated/v1/tickets/(?P<ref>[A-Z]+-\\d+)": [
+            "DELETE",
+            "GET"
+        ],
+        "/escalated/v1/tickets/(?P<ref>[A-Z]+-\\d+)/actions/(?P<action>[A-Za-z0-9_-]+)": [
+            "POST"
+        ],
+        "/escalated/v1/tickets/(?P<ref>[A-Z]+-\\d+)/assign": [
+            "POST"
+        ],
+        "/escalated/v1/tickets/(?P<ref>[A-Z]+-\\d+)/follow": [
+            "POST"
+        ],
+        "/escalated/v1/tickets/(?P<ref>[A-Z]+-\\d+)/macro": [
+            "POST"
+        ],
+        "/escalated/v1/tickets/(?P<ref>[A-Z]+-\\d+)/merge": [
+            "POST"
+        ],
+        "/escalated/v1/tickets/(?P<ref>[A-Z]+-\\d+)/note": [
+            "POST"
+        ],
+        "/escalated/v1/tickets/(?P<ref>[A-Z]+-\\d+)/priority": [
+            "PATCH",
+            "POST"
+        ],
+        "/escalated/v1/tickets/(?P<ref>[A-Z]+-\\d+)/reply": [
+            "POST"
+        ],
+        "/escalated/v1/tickets/(?P<ref>[A-Z]+-\\d+)/status": [
+            "PATCH",
+            "POST"
+        ],
+        "/escalated/v1/tickets/(?P<ref>[A-Z]+-\\d+)/tags": [
+            "POST"
+        ],
+        "/escalated/v1/tickets/merge-search": [
+            "GET"
+        ],
+        "/escalated/v1/tickets/split": [
+            "POST"
+        ],
+        "/escalated/v1/views": [
+            "GET",
+            "POST"
+        ],
+        "/escalated/v1/views/(?P<id>[\\d]+)": [
+            "DELETE",
+            "PATCH",
+            "POST",
+            "PUT"
+        ],
+        "/escalated/v1/widget/articles": [
+            "GET"
+        ],
+        "/escalated/v1/widget/articles/(?P<slug>[a-z0-9-]+)": [
+            "GET"
+        ],
+        "/escalated/v1/widget/articles/(?P<slug>[a-z0-9-]+)/feedback": [
+            "POST"
+        ],
+        "/escalated/v1/widget/chat/(?P<id>[A-Za-z0-9]{32,64})/end": [
+            "POST"
+        ],
+        "/escalated/v1/widget/chat/(?P<id>[A-Za-z0-9]{32,64})/messages": [
+            "GET",
+            "POST"
+        ],
+        "/escalated/v1/widget/chat/(?P<id>[A-Za-z0-9]{32,64})/rate": [
+            "POST"
+        ],
+        "/escalated/v1/widget/chat/(?P<id>[A-Za-z0-9]{32,64})/typing": [
+            "POST"
+        ],
+        "/escalated/v1/widget/chat/(?P<session_id>\\d+)/end": [
+            "POST"
+        ],
+        "/escalated/v1/widget/chat/(?P<session_id>\\d+)/messages": [
+            "POST"
+        ],
+        "/escalated/v1/widget/chat/(?P<session_id>\\d+)/poll": [
+            "GET"
+        ],
+        "/escalated/v1/widget/chat/availability": [
+            "GET"
+        ],
+        "/escalated/v1/widget/chat/start": [
+            "POST"
+        ],
+        "/escalated/v1/widget/config": [
+            "GET"
+        ],
+        "/escalated/v1/widget/embed\\.js": [
+            "GET"
+        ],
+        "/escalated/v1/widget/lookup": [
+            "POST"
+        ],
+        "/escalated/v1/widget/tickets": [
+            "POST"
+        ],
+        "/escalated/v1/widget/tickets/(?P<ref>[A-Z]+-\\d+)": [
+            "GET"
+        ],
+        "/escalated/v1/widget/verification": [
+            "POST"
+        ]
+    },
+    "hooks": [
+        "activate_app/escalated.php @10 Escalated\\Activator::activate (1)",
+        "admin_enqueue_scripts @10 Escalated\\Admin\\Admin_Menu::enqueue_assets (1)",
+        "admin_init @1 Escalated\\Support\\TwoFactorGate::guard_admin (1)",
+        "admin_init @10 Escalated\\Admin\\Admin_Api_Tokens::handle_actions (1)",
+        "admin_init @10 Escalated\\Admin\\Admin_Automations::handle_actions (1)",
+        "admin_init @10 Escalated\\Admin\\Admin_Business_Hours::handle_actions (1)",
+        "admin_init @10 Escalated\\Admin\\Admin_Canned_Responses::handle_actions (1)",
+        "admin_init @10 Escalated\\Admin\\Admin_Departments::handle_actions (1)",
+        "admin_init @10 Escalated\\Admin\\Admin_Escalation_Rules::handle_actions (1)",
+        "admin_init @10 Escalated\\Admin\\Admin_Macros::handle_actions (1)",
+        "admin_init @10 Escalated\\Admin\\Admin_Roles::handle_actions (1)",
+        "admin_init @10 Escalated\\Admin\\Admin_Settings::handle_save (1)",
+        "admin_init @10 Escalated\\Admin\\Admin_Skills::handle_actions (1)",
+        "admin_init @10 Escalated\\Admin\\Admin_Sla_Policies::handle_actions (1)",
+        "admin_init @10 Escalated\\Admin\\Admin_Sso::handle_actions (1)",
+        "admin_init @10 Escalated\\Admin\\Admin_Tags::handle_actions (1)",
+        "admin_init @10 Escalated\\Admin\\Admin_Tickets::handle_actions (1)",
+        "admin_init @10 Escalated\\Admin\\Admin_Users::handle_actions (1)",
+        "admin_init @10 Escalated\\Admin\\Admin_Webhooks::handle_actions (1)",
+        "admin_init @10 Escalated\\Admin\\Admin_Workflows::handle_actions (1)",
+        "admin_init @5 Escalated\\Admin\\Admin_Two_Factor::handle_actions (1)",
+        "admin_menu @10 Escalated\\Admin\\Admin_Menu::add_menus (1)",
+        "cron_schedules @10 Escalated\\Activator::add_cron_schedules (1)",
+        "deactivate_app/escalated.php @10 Escalated\\Deactivator::deactivate (1)",
+        "escalated_auto_close @10 Escalated\\Cron\\Auto_Close::run (1)",
+        "escalated_chat_accepted @100 Escalated\\Services\\NotificationService::on_chat_assigned (2)",
+        "escalated_chat_accepted @50 Escalated\\Services\\WorkflowListener::on_chat_assigned (2)",
+        "escalated_chat_cleanup @10 Escalated\\Cron\\Chat_Cleanup::run (1)",
+        "escalated_chat_ended @100 Escalated\\Services\\NotificationService::on_chat_ended (3)",
+        "escalated_chat_ended @50 Escalated\\Services\\WorkflowListener::on_chat_ended (3)",
+        "escalated_chat_message @100 Escalated\\Services\\NotificationService::on_chat_message (3)",
+        "escalated_chat_message @50 Escalated\\Services\\WorkflowListener::on_chat_message (3)",
+        "escalated_chat_started @100 Escalated\\Services\\NotificationService::on_chat_started (1)",
+        "escalated_chat_started @50 Escalated\\Services\\WorkflowListener::on_chat_started (1)",
+        "escalated_chat_transferred @100 Escalated\\Services\\NotificationService::on_chat_transferred (4)",
+        "escalated_chat_transferred @50 Escalated\\Services\\WorkflowListener::on_chat_transferred (4)",
+        "escalated_check_sla @10 Escalated\\Cron\\Sla_Check::run (1)",
+        "escalated_check_snoozed_tickets @10 Escalated\\Cron\\Snooze_Check::run (1)",
+        "escalated_department_changed @100 Escalated\\Services\\NotificationService::on_department_changed (4)",
+        "escalated_department_changed @50 Escalated\\Services\\WorkflowListener::on_department_changed (4)",
+        "escalated_dispatch_newsletters @10 Escalated\\Cron\\Newsletter_Dispatch::run (1)",
+        "escalated_evaluate_escalations @10 Escalated\\Cron\\Escalation_Check::run (1)",
+        "escalated_internal_note_added @100 Escalated\\Services\\NotificationService::on_note_created (2)",
+        "escalated_internal_note_added @50 Escalated\\Services\\WorkflowListener::on_note_created (2)",
+        "escalated_process_webhook_deliveries @10 Escalated\\Services\\WebhookDispatcher::run_cron (1)",
+        "escalated_purge_activities @10 Escalated\\Cron\\Activity_Purge::run (1)",
+        "escalated_reply_created @100 Escalated\\Services\\NotificationService::on_reply_created (2)",
+        "escalated_reply_created @5 Escalated\\Mail\\Email_Threading::set_reply_context (2)",
+        "escalated_reply_created @50 Escalated\\Services\\WorkflowListener::on_reply_created (2)",
+        "escalated_run_automations @10 Escalated\\Cron\\Automation_Check::run (1)",
+        "escalated_run_due_deferred_workflow_jobs @10 Escalated\\Cron\\Deferred_Workflow_Jobs_Check::run (1)",
+        "escalated_send_webhook_deliveries @10 Escalated\\Services\\WebhookDispatcher::run_cron (1)",
+        "escalated_sla_breached @100 Escalated\\Services\\NotificationService::on_sla_breached (2)",
+        "escalated_sla_breached @50 Escalated\\Services\\WorkflowListener::on_sla_breached (2)",
+        "escalated_sla_warning @100 Escalated\\Services\\NotificationService::on_sla_warning (3)",
+        "escalated_sla_warning @50 Escalated\\Services\\WorkflowListener::on_sla_warning (3)",
+        "escalated_tag_added @100 Escalated\\Services\\NotificationService::on_tag_added (2)",
+        "escalated_tag_added @50 Escalated\\Services\\WorkflowListener::on_tag_added (2)",
+        "escalated_tag_removed @100 Escalated\\Services\\NotificationService::on_tag_removed (2)",
+        "escalated_tag_removed @50 Escalated\\Services\\WorkflowListener::on_tag_removed (2)",
+        "escalated_ticket_action_triggered @10 Escalated\\Services\\Custom_Action_Listener::record_note (5)",
+        "escalated_ticket_assigned @100 Escalated\\Services\\NotificationService::on_ticket_assigned (4)",
+        "escalated_ticket_assigned @50 Escalated\\Services\\WorkflowListener::on_ticket_assigned (4)",
+        "escalated_ticket_closed @100 Escalated\\Services\\NotificationService::on_ticket_closed (2)",
+        "escalated_ticket_closed @50 Escalated\\Services\\WorkflowListener::on_ticket_closed (2)",
+        "escalated_ticket_created @100 Escalated\\Services\\NotificationService::on_ticket_created (1)",
+        "escalated_ticket_created @5 Escalated\\Mail\\Email_Threading::set_ticket_context (1)",
+        "escalated_ticket_created @50 Escalated\\Services\\WorkflowListener::on_ticket_created (1)",
+        "escalated_ticket_escalated @100 Escalated\\Services\\NotificationService::on_ticket_escalated (1)",
+        "escalated_ticket_escalated @50 Escalated\\Services\\WorkflowListener::on_ticket_escalated (1)",
+        "escalated_ticket_priority_changed @100 Escalated\\Services\\NotificationService::on_ticket_priority_changed (4)",
+        "escalated_ticket_priority_changed @50 Escalated\\Services\\WorkflowListener::on_ticket_priority_changed (4)",
+        "escalated_ticket_reopened @100 Escalated\\Services\\NotificationService::on_ticket_reopened (2)",
+        "escalated_ticket_reopened @50 Escalated\\Services\\WorkflowListener::on_ticket_reopened (2)",
+        "escalated_ticket_resolved @100 Escalated\\Services\\NotificationService::on_ticket_resolved (2)",
+        "escalated_ticket_resolved @50 Escalated\\Services\\WorkflowListener::on_ticket_resolved (2)",
+        "escalated_ticket_status_changed @100 Escalated\\Services\\NotificationService::on_ticket_status_changed (4)",
+        "escalated_ticket_status_changed @50 Escalated\\Services\\WorkflowListener::on_ticket_status_changed (4)",
+        "escalated_ticket_unassigned @100 Escalated\\Services\\NotificationService::on_ticket_unassigned (3)",
+        "escalated_ticket_unassigned @50 Escalated\\Services\\WorkflowListener::on_ticket_unassigned (3)",
+        "escalated_ticket_updated @100 Escalated\\Services\\NotificationService::on_ticket_updated (1)",
+        "escalated_ticket_updated @50 Escalated\\Services\\WorkflowListener::on_ticket_updated (1)",
+        "init @10 Escalated\\Frontend\\Newsletter_Public_Routes::add_rewrites (1)",
+        "plugins_loaded @10 Closure@escalated.php (1)",
+        "query @9223372036854775807 Escalated\\Services\\TicketVisibilitySql::filter (1)",
+        "query_vars @10 Escalated\\Frontend\\Newsletter_Public_Routes::query_vars (1)",
+        "rest_api_init @10 Escalated\\Api\\Api_Bootstrap::register_routes (1)",
+        "rest_api_init @10 Escalated\\Mail\\Inbound_Controller::register_routes (1)",
+        "rest_dispatch_request @4 Escalated\\Support\\TwoFactorGate::guard_rest (4)",
+        "rest_dispatch_request @5 Escalated\\Support\\AccessEnforcer::check (4)",
+        "rest_dispatch_request @9223372036854775807 Closure@includes/Services/TicketAccess.php (4)",
+        "rest_post_dispatch @10 Escalated\\Api\\Widget_Cors::post_dispatch (3)",
+        "rest_pre_dispatch @0 Escalated\\Api\\Widget_Cors::pre_dispatch (3)",
+        "rest_pre_serve_request @0 Escalated\\Api\\Widget_Cors::disable_core_cors (4)",
+        "rest_pre_serve_request @10 Escalated\\Api\\Attachment_Controller::serve_raw (4)",
+        "rest_pre_serve_request @10 Escalated\\Api\\Sso_Controller::serve_metadata (3)",
+        "rest_pre_serve_request @10 Escalated\\Api\\Widget_Script_Controller::serve_raw (4)",
+        "rest_request_before_callbacks @0 Closure@includes/Services/TicketAccess.php (3)",
+        "template_redirect @10 Escalated\\Frontend\\Newsletter_Public_Routes::handle (1)",
+        "tickets_page_escalated-api-tokens @10 Escalated\\Admin\\Admin_Api_Tokens::render (1)",
+        "tickets_page_escalated-automations @10 Escalated\\Admin\\Admin_Automations::render (1)",
+        "tickets_page_escalated-business-hours @10 Escalated\\Admin\\Admin_Business_Hours::render (1)",
+        "tickets_page_escalated-canned-responses @10 Escalated\\Admin\\Admin_Canned_Responses::render (1)",
+        "tickets_page_escalated-departments @10 Escalated\\Admin\\Admin_Departments::render (1)",
+        "tickets_page_escalated-escalation-rules @10 Escalated\\Admin\\Admin_Escalation_Rules::render (1)",
+        "tickets_page_escalated-macros @10 Escalated\\Admin\\Admin_Macros::render (1)",
+        "tickets_page_escalated-newsletters @10 Escalated\\Admin\\Admin_Newsletters::render (1)",
+        "tickets_page_escalated-reports @10 Escalated\\Admin\\Admin_Reports::render (1)",
+        "tickets_page_escalated-settings @10 Escalated\\Admin\\Admin_Settings::render (1)",
+        "tickets_page_escalated-skills @10 Escalated\\Admin\\Admin_Skills::render (1)",
+        "tickets_page_escalated-sla-policies @10 Escalated\\Admin\\Admin_Sla_Policies::render (1)",
+        "tickets_page_escalated-tags @10 Escalated\\Admin\\Admin_Tags::render (1)",
+        "tickets_page_escalated-users @10 Escalated\\Admin\\Admin_Users::render (1)",
+        "tickets_page_escalated-webhooks @10 Escalated\\Admin\\Admin_Webhooks::render (1)",
+        "tickets_page_escalated-workflows @10 Escalated\\Admin\\Admin_Workflows::render (1)",
+        "toplevel_page_escalated @10 Escalated\\Admin\\Admin_Tickets::render_list (1)",
+        "wp_ajax_escalated_close_ticket @10 Escalated\\Frontend\\Ajax_Handler::close_ticket (1)",
+        "wp_ajax_escalated_create_ticket @10 Escalated\\Frontend\\Ajax_Handler::create_ticket (1)",
+        "wp_ajax_escalated_guest_create @10 Escalated\\Frontend\\Ajax_Handler::guest_create (1)",
+        "wp_ajax_escalated_guest_reply @10 Escalated\\Frontend\\Ajax_Handler::guest_reply (1)",
+        "wp_ajax_escalated_rate_ticket @10 Escalated\\Frontend\\Ajax_Handler::rate_ticket (1)",
+        "wp_ajax_escalated_reply_ticket @10 Escalated\\Frontend\\Ajax_Handler::reply_ticket (1)",
+        "wp_ajax_nopriv_escalated_guest_create @10 Escalated\\Frontend\\Ajax_Handler::guest_create (1)",
+        "wp_ajax_nopriv_escalated_guest_reply @10 Escalated\\Frontend\\Ajax_Handler::guest_reply (1)",
+        "wp_enqueue_scripts @10 Escalated\\Frontend\\Shortcodes::enqueue_assets (1)",
+        "wp_mail @10 Escalated\\Mail\\Email_Threading::add_threading_headers (1)"
+    ],
+    "frame_options": 10,
+    "admin_script_keys": [
+        "ajaxUrl",
+        "nonce",
+        "restUrl",
+        "themeClass",
+        "features",
+        "permissions"
+    ]
+}
