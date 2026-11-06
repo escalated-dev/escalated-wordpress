@@ -25,6 +25,7 @@ define('ESCALATED_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('ESCALATED_PLUGIN_BASENAME', plugin_basename(__FILE__));
 
 require_once ESCALATED_PLUGIN_DIR.'vendor/autoload.php';
+require_once ESCALATED_PLUGIN_DIR.'includes/functions.php';
 
 spl_autoload_register(
     static function (string $class): void {

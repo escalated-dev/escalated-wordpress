@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- Optional: embed the admin in your own admin panel (off by default; no change unless configured). `escalated_admin_navigation()` returns Escalated's admin menu as NavigationItem data filtered by each screen's capability (add-on items through `escalated_admin_navigation_items`); iframe mode (`ESCALATED_EMBED_MODE=iframe`) lets the origins in `ESCALATED_EMBED_FRAME_ANCESTORS` frame Escalated screens requested with `escalated_embed=1`, without the wp-admin chrome, with `frame-ancestors` instead of `X-Frame-Options` on those responses only, and with the postMessage bridge `connectEscalatedFrame()` expects; a `guard` capability or callable can refuse embedded screens. Configure with the `ESCALATED_EMBED*` constants or environment variables, the `escalated_ui_embed` filter or `escalated_embed_admin()`. Remounting the screens under another path, replacing the admin gate and swapping the root view do not apply to wp-admin. See docs/embedding-admin.md.
+
 ## [1.6.10] - 2026-11-04
 
 ### Changed
