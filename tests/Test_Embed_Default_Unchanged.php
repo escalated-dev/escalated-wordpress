@@ -4,7 +4,7 @@
  * Embedding the admin is optional and off by default (ADR
  * 2026-11-05-embeddable-admin, port checklist "Default unchanged").
  *
- * tests/Fixtures/embed/default-surface.json is a snapshot of everything the
+ * tests/fixtures/embed/default-surface.json is a snapshot of everything the
  * plugin registers, taken from the default branch before embedding existed:
  * the wp-admin menu pages (title, capability, slug), every escalated/v1 REST
  * route with its methods, every hook callback the plugin adds (on boot, and
@@ -16,7 +16,7 @@
  */
 class Test_Embed_Default_Unchanged extends WP_UnitTestCase
 {
-    private const FIXTURE = __DIR__.'/Fixtures/embed/default-surface.json';
+    private const FIXTURE = __DIR__.'/fixtures/embed/default-surface.json';
 
     public function set_up(): void
     {

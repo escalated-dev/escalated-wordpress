@@ -145,7 +145,7 @@ class Test_Embed_Admin extends WP_UnitTestCase
     public function test_menu_pages_capabilities_and_rest_routes_do_not_move_while_embedding_is_on(): void
     {
         $this->embed(['mode' => 'iframe', 'frame_ancestors' => ['https://admin.example.com']]);
-        $expected = json_decode((string) file_get_contents(__DIR__.'/Fixtures/embed/default-surface.json'), true);
+        $expected = json_decode((string) file_get_contents(__DIR__.'/fixtures/embed/default-surface.json'), true);
 
         $live = Test_Embed_Default_Unchanged::surface();
 
@@ -429,7 +429,7 @@ class Test_Embed_Admin extends WP_UnitTestCase
         $_GET = ['page' => 'escalated-tags'];
 
         ob_start();
-        include __DIR__.'/Fixtures/embed/host-support-menu.php';
+        include __DIR__.'/fixtures/embed/host-support-menu.php';
         $html = (string) ob_get_clean();
 
         $this->assertStringContainsString('<nav class="host-support-menu"', $html);
@@ -440,7 +440,7 @@ class Test_Embed_Admin extends WP_UnitTestCase
         // Nothing for someone who may not open the admin.
         wp_set_current_user(self::factory()->user->create(['role' => 'subscriber']));
         ob_start();
-        include __DIR__.'/Fixtures/embed/host-support-menu.php';
+        include __DIR__.'/fixtures/embed/host-support-menu.php';
         $this->assertSame('', trim((string) ob_get_clean()));
     }
 }

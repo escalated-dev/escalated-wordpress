@@ -153,7 +153,7 @@ add_filter('escalated_admin_navigation_items', function (array $items, WP_User $
 ```
 
 A template that renders the menu in your own chrome (this exact file is
-`tests/Fixtures/embed/host-support-menu.php`, which the test suite renders):
+`tests/fixtures/embed/host-support-menu.php`, which the test suite renders):
 
 ```php
 <?php
