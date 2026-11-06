@@ -110,6 +110,8 @@ class Test_Embed_Default_Unchanged extends WP_UnitTestCase
                 foreach ($callbacks as $entry) {
                     $id = self::callback_id($entry['function']);
                     if ($id !== null) {
+                        // activate_/deactivate_ hooks carry the plugin's path, which depends on the checkout.
+                        $hook = str_replace(ESCALATED_PLUGIN_BASENAME, '{plugin}', (string) $hook);
                         $hooks[] = $hook.' @'.$priority.' '.$id.' ('.$entry['accepted_args'].')';
                     }
                 }

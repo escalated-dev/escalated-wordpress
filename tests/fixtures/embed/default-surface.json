@@ -442,7 +442,7 @@
         ]
     },
     "hooks": [
-        "activate_app/escalated.php @10 Escalated\\Activator::activate (1)",
+        "activate_{plugin} @10 Escalated\\Activator::activate (1)",
         "admin_enqueue_scripts @10 Escalated\\Admin\\Admin_Menu::enqueue_assets (1)",
         "admin_init @1 Escalated\\Support\\TwoFactorGate::guard_admin (1)",
         "admin_init @10 Escalated\\Admin\\Admin_Api_Tokens::handle_actions (1)",
@@ -465,7 +465,7 @@
         "admin_init @5 Escalated\\Admin\\Admin_Two_Factor::handle_actions (1)",
         "admin_menu @10 Escalated\\Admin\\Admin_Menu::add_menus (1)",
         "cron_schedules @10 Escalated\\Activator::add_cron_schedules (1)",
-        "deactivate_app/escalated.php @10 Escalated\\Deactivator::deactivate (1)",
+        "deactivate_{plugin} @10 Escalated\\Deactivator::deactivate (1)",
         "escalated_auto_close @10 Escalated\\Cron\\Auto_Close::run (1)",
         "escalated_chat_accepted @100 Escalated\\Services\\NotificationService::on_chat_assigned (2)",
         "escalated_chat_accepted @50 Escalated\\Services\\WorkflowListener::on_chat_assigned (2)",
