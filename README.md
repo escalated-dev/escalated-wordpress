@@ -95,6 +95,16 @@ Configure opt-in department/account access and targeted SLAs using the
    - Escalation Rules
    - Settings
 
+## Embedding the admin in your own admin panel (optional)
+
+Escalated's admin is a set of wp-admin screens and needs no setup. If you run
+your own admin on top of WordPress, you can list Escalated's menu there with
+`escalated_admin_navigation()` (capability-filtered NavigationItem data), or
+frame the screens chrome-free from another admin front end (iframe mode, only
+for the origins you list). Off by default; nothing changes unless you set
+`ESCALATED_EMBED` or call `escalated_embed_admin()`. See
+[embedding the admin](docs/embedding-admin.md).
+
 ## Frontend Shortcodes
 
 Use these shortcodes on WordPress pages:
