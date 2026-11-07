@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.6.12] - 2026-11-07
+
+### Upgrading
+- No migrations. **pragmarx/google2fa 9:** its default secret length moved from 16 to 32 characters; the plugin already generated 32-character secrets, and existing two-factor secrets keep working.
+
+### Changed
+- **Dependencies:** pragmarx/google2fa ^9.1 (was ^8.0), and a composer.lock refresh: onelogin/php-saml 4.4.1 (with robrichards/xmlseclibs 4.0.1 and phpseclib 3), paragonie/constant_time_encoding 3.1.4, phpunit 9.6.38 and nikic/php-parser 5.9. `composer audit` is clean (#128).
+
 ## [1.6.11] - 2026-11-05
 
 ### Upgrading
