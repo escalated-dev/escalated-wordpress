@@ -1,166 +1,154 @@
-<p align="center">
-  <a href="README.ar.md">العربية</a> •
-  <a href="README.de.md">Deutsch</a> •
-  <a href="../../README.md">English</a> •
-  <a href="README.es.md">Español</a> •
-  <a href="README.fr.md">Français</a> •
-  <a href="README.it.md">Italiano</a> •
-  <b>日本語</b> •
-  <a href="README.ko.md">한국어</a> •
-  <a href="README.nl.md">Nederlands</a> •
-  <a href="README.pl.md">Polski</a> •
-  <a href="README.pt-BR.md">Português (BR)</a> •
-  <a href="README.ru.md">Русский</a> •
-  <a href="README.tr.md">Türkçe</a> •
+<p align="center"><sub>
+  <a href="README.ar.md">العربية</a> ·
+  <a href="README.de.md">Deutsch</a> ·
+  <a href="../../README.md">English</a> ·
+  <a href="README.es.md">Español</a> ·
+  <a href="README.fr.md">Français</a> ·
+  <a href="README.it.md">Italiano</a> ·
+  <b>日本語</b> ·
+  <a href="README.ko.md">한국어</a> ·
+  <a href="README.nl.md">Nederlands</a> ·
+  <a href="README.pl.md">Polski</a> ·
+  <a href="README.pt-BR.md">Português (BR)</a> ·
+  <a href="README.ru.md">Русский</a> ·
+  <a href="README.tr.md">Türkçe</a> ·
   <a href="README.zh-CN.md">简体中文</a>
+</sub></p>
+
+<p align="center">
+  <a href="https://escalated.dev"><img src="https://raw.githubusercontent.com/escalated-dev/escalated/main/docs/assets/readme/logo.png" width="72" height="72" alt="Escalated"></a>
 </p>
 
-# Escalated for WordPress
+<h1 align="center">Escalated for WordPress</h1>
 
-[![Tests](https://github.com/escalated-dev/escalated-wordpress/actions/workflows/run-tests.yml/badge.svg)](https://github.com/escalated-dev/escalated-wordpress/actions/workflows/run-tests.yml)
-[![Latest Release](https://img.shields.io/github/v/release/escalated-dev/escalated-wordpress)](https://github.com/escalated-dev/escalated-wordpress/releases/latest)
-[![PHP Version](https://img.shields.io/badge/php-%3E%3D8.1-8892BF)](https://www.php.net/)
-[![WordPress](https://img.shields.io/badge/wordpress-%3E%3D6.0-21759B)](https://wordpress.org/)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+<p align="center">
+  WordPress の中で本格的なヘルプデスクを運用できます。<br>
+  チケット、SLA、エスカレーションルール、受信メール、カスタマーポータルを、外部サービスなしで wp-admin から管理できます。
+</p>
 
-WordPress向けのフル機能ヘルプデスク・チケットシステム。マルチロール対応、SLAトラッキング、エスカレーションルール、受信メール処理、マクロ、REST APIを備えています。外部サービス不要。
+<p align="center">
+  <a href="https://escalated.dev"><b>ウェブサイト</b></a> ·
+  <a href="https://escalated.dev/docs"><b>ドキュメント</b></a> ·
+  <a href="https://escalated.dev/cloud"><b>Cloud</b></a> ·
+  <a href="../../CHANGELOG.md"><b>変更履歴</b></a>
+</p>
 
-> **[escalated.dev](https://escalated.dev)** — 詳細、デモの閲覧、Cloud vs セルフホストオプションの比較はこちら。
+<br>
 
-## Screenshots
+<img src="../../screenshots/results/ticket-list.png" alt="wp-admin の Escalated チケット一覧。ステータス、優先度、部署、エージェントで絞り込めます" width="100%">
 
-| チケット一覧 | チケット詳細 |
-|:-----------:|:-------------:|
-| ![チケット一覧](screenshots/results/ticket-list.png) | ![チケット詳細](screenshots/results/ticket-detail.png) |
+## できること
 
-| 部門 | SLAポリシー |
-|:-----------:|:------------:|
-| ![部門](screenshots/results/departments.png) | ![SLAポリシー](screenshots/results/sla-policies.png) |
-
-| レポート | 設定 |
-|:-------:|:--------:|
-| ![レポート](screenshots/results/reports.png) | ![設定](screenshots/results/settings.png) |
-
-| 自動化 | マクロ |
-|:-----------:|:------:|
-| ![自動化](screenshots/results/automations.png) | ![マクロ](screenshots/results/macros.png) |
-
-> スクリーンショットはリリースごとにPlaywrightで自動生成されます。`.github/workflows/screenshots.yml` を参照してください。
-
-## Download
-
-[![Download Latest Release](https://img.shields.io/badge/Download-Latest%20Release-2ea44f?style=for-the-badge&logo=github)](https://github.com/escalated-dev/escalated-wordpress/releases/latest)
-
-- 最新プラグインパッケージ: [escalated.zip](https://github.com/escalated-dev/escalated-wordpress/releases/latest/download/escalated.zip)
-- 全リリース: [Releases](https://github.com/escalated-dev/escalated-wordpress/releases)
+<table>
+  <tr>
+    <td width="40%">
+      <h3>エージェントが wp-admin で対応するチケット</h3>
+      スレッド形式の会話、内部メモ、定型返信、マクロをチケット画面にまとめています。チケットは Mailgun、Postmark、Amazon SES 経由のメールでも届きます。
+    </td>
+    <td width="60%">
+      <img src="../../screenshots/results/ticket-detail.png" alt="wp-admin で開いたチケット。会話と返信フォームが表示されています">
+    </td>
+  </tr>
+  <tr>
+    <td width="60%">
+      <img src="../../screenshots/results/sla-policies.png" alt="初回応答と解決の目標を設定する SLA ポリシー画面">
+    </td>
+    <td width="40%">
+      <h3>自動で動く SLA とエスカレーションルール</h3>
+      初回応答と解決の目標、目標に遅れたチケットをエスカレーションするルール、WP-Cron で定期実行される SLA チェックを備えています。
+    </td>
+  </tr>
+</table>
 
 ## 機能
 
-- スレッド形式の会話、内部メモ、アクティビティタイムラインを備えたチケット管理。
-- カスタムサポートロール: `escalated_admin` と `escalated_agent`。
-- 部門ベースのルーティングと割り当てワークフロー。
-- 初回応答と解決目標を持つSLAポリシー。
-- 自動エスカレーションルールとスケジュールされたSLAチェック。
-- ショートコードによる顧客向けフロントエンドチケットページ。
-- ゲストチケット送信と安全なゲストチケットアクセス。
-- Mailgun、Postmark、Amazon SESのWebhookによる受信メール取り込み。
-- 定型応答、マクロ、タグ管理。
-- トークンごとの権限とレート制限を備えたBearerトークンREST API。
-- 設定可能なアップロード制限付きの添付ファイルサポート。
-- 満足度評価とレポートビュー。
+<table>
+<tr>
+<td width="33%" valign="top">
 
-## 要件
+**チケット**
+- スレッド形式の会話と内部メモ
+- すべてのチケットにアクティビティ履歴
+- 定型返信、マクロ、タグ
+- 重複チケットの統合
+- アップロード上限付きの添付ファイル
 
-- WordPress `6.0+`
-- PHP `8.1+`
+</td>
+<td width="33%" valign="top">
 
-## インストール
+**SLA とルーティング**
+- 部署ごとのルーティングと割り当て
+- 初回応答と解決の目標
+- エスカレーションルールと定期 SLA チェック
+- wp-admin または REST で設定するイベント駆動ワークフロー
 
-1. このプラグインをWordPressのプラグインディレクトリに配置します:
-   - `wp-content/plugins/escalated`
-2. WordPressのプラグイン画面から **Escalated** を有効化します。
-3. wp-adminで **Escalated** に移動し、以下を設定します:
-   - 部門
-   - SLAポリシー
-   - エスカレーションルール
-   - 設定
+</td>
+<td width="33%" valign="top">
 
-## フロントエンドショートコード
+**顧客**
+- ショートコードによるフロントエンドのチケットページ
+- ゲストによる送信と安全なゲストアクセス
+- 満足度評価
 
-WordPressページでこれらのショートコードを使用します:
+</td>
+</tr>
+<tr>
+<td width="33%" valign="top">
 
-- `[escalated_tickets]` - ログイン済みリクエスターのチケット一覧。
-- `[escalated_create_ticket]` - ログイン済みリクエスターの新規チケットフォーム。
-- `[escalated_view_ticket]` - チケット詳細ビュー:
-  - ログインユーザー: `?ticket=ESC-123` を期待
-  - ゲスト: `?guest_token=<token>` を期待
-- `[escalated_guest_create]` - ゲストチケット作成フォーム（設定で有効な場合）。
+**ロールとセキュリティ**
+- 管理者、エージェント、ライトエージェントのロール
+- ルートごとの権限 (任意)
+- スタッフ向け TOTP 二要素認証 (任意)
+- SAML 2.0、OAuth 2 / OIDC、JWT によるサインイン
 
-## REST API
+</td>
+<td width="33%" valign="top">
 
-- Namespace: `/wp-json/escalated/v1`
-- 認証: `Authorization: Bearer <api-token>`
-- デフォルトレート制限: トークンあたり `60` リクエスト/分（`api_rate_limit` 設定で変更可能）
+**メールと Webhook**
+- Mailgun、Postmark、Amazon SES からの受信
+- それぞれ独自のイベントを持つ複数の Webhook エンドポイント
+- 配信ログと再試行
 
-主要ルートグループ:
+</td>
+<td width="33%" valign="top">
 
-- `/auth/validate`
-- `/tickets`
-- `/departments`
-- `/tags`
-- `/canned-responses`
-- `/macros`
-- `/agents`
-- `/dashboard`
-- `/admin/api-tokens`
+**API とレポート**
+- 権限を設定できる Bearer トークン方式の REST API
+- トークンごとのレート制限
+- レポート画面
 
-## 受信メールWebhook
+</td>
+</tr>
+</table>
 
-受信ルートパターン:
+<p align="center"><sub><a href="../features.md">すべての機能の詳細</a></sub></p>
 
-- `POST /wp-json/escalated/v1/inbound/{adapter}`
+<p align="center">
+  <a href="https://wordpress.org"><img src="https://img.shields.io/badge/WordPress-21759B?style=for-the-badge&logo=wordpress&logoColor=white" alt="WordPress"></a>
+  <a href="https://www.php.net"><img src="https://img.shields.io/badge/PHP-777BB4?style=for-the-badge&logo=php&logoColor=white" alt="PHP"></a>
+  <a href="https://www.mysql.com"><img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL"></a>
+</p>
 
-対応アダプター:
+## クイックスタート
 
-- `mailgun`
-- `postmark`
-- `ses`
+1. 最新リリースから [escalated.zip](https://github.com/escalated-dev/escalated-wordpress/releases/latest/download/escalated.zip) をダウンロードします。
+2. プラグインディレクトリに展開し、プラグインが `wp-content/plugins/escalated` に置かれるようにします。
+3. WordPress のプラグイン画面で **Escalated** を有効化します。
+4. wp-admin の **Escalated** を開き、部署、SLA ポリシー、エスカレーションルール、設定を構成します。
 
-## スケジュールタスク (WP-Cron)
+WordPress 6.0+ と PHP 8.1+ が必要です。詳しくは[インストールガイド](../installation.md)を、顧客向けページのショートコードは[カスタマイズ](../customization.md)を参照してください。
 
-有効化時に、Escalatedは以下をスケジュールします:
+## 詳しく知る
 
-- `escalated_check_sla`（毎分）
-- `escalated_evaluate_escalations`（5分ごと）
-- `escalated_auto_close`（毎日）
-- `escalated_purge_activities`（毎週）
+- [すべての機能](../features.md) · [インストール](../installation.md) · [スクリーンショット](../screenshots.md)
+- [ショートコード、チケットの件名、翻訳](../customization.md) · [REST API とチケットの統合](../rest-api.md)
+- [アクセス制御](../access-control.md) · [チケットのアクセスとルーティング](../ticket-access-and-routing.md) · [ワークフロー](../workflows.md)
+- [受信メール](../inbound-email.md) · [Webhook](../webhooks.md) · [ゲストアクセス](../guest-access.md)
+- [ウィジェットの埋め込み](../embedding-the-widget.md) · [管理画面の埋め込み](../embedding-admin.md)
+- [スケジュールタスクとデータベース接続](../operations.md) · [ニュースレター](../newsletters.md) · [開発](../development.md)
 
-## 開発
-
-依存関係のインストール:
-
-```bash
-composer install
-```
-
-テストの実行（WordPressテストスイートが必要）:
-
-```bash
-vendor/bin/phpunit -c phpunit.xml.dist
-```
-
-必要に応じて、PHPUnitを実行する前に `WP_TESTS_DIR` をローカルのWordPressテストライブラリパスに設定してください。
-
-## 他のフレームワーク向け
-
-- **[Escalated for Laravel](https://github.com/escalated-dev/escalated-laravel)** — Laravel Composerパッケージ
-- **[Escalated for Rails](https://github.com/escalated-dev/escalated-rails)** — Ruby on Rails Engine
-- **[Escalated for Django](https://github.com/escalated-dev/escalated-django)** — Django再利用可能アプリ
-- **[Escalated for AdonisJS](https://github.com/escalated-dev/escalated-adonis)** — AdonisJS v6パッケージ
-- **[Escalated for Filament](https://github.com/escalated-dev/escalated-filament)** — Filament v3管理パネルプラグイン
-- **[Escalated for WordPress](https://github.com/escalated-dev/escalated-wordpress)** — WordPressプラグイン（現在のページ）
-- **[Shared Frontend](https://github.com/escalated-dev/escalated)** — Vue 3 + Inertia.js UIコンポーネント
+Escalated は [Laravel](https://github.com/escalated-dev/escalated-laravel)、[Rails](https://github.com/escalated-dev/escalated-rails)、[Django](https://github.com/escalated-dev/escalated-django)、[NestJS](https://github.com/escalated-dev/escalated-nestjs)、[AdonisJS](https://github.com/escalated-dev/escalated-adonis)、[Symfony](https://github.com/escalated-dev/escalated-symfony)、[Phoenix](https://github.com/escalated-dev/escalated-phoenix)、[Go](https://github.com/escalated-dev/escalated-go)、[.NET](https://github.com/escalated-dev/escalated-dotnet)、[Spring](https://github.com/escalated-dev/escalated-spring)、[Filament](https://github.com/escalated-dev/escalated-filament) 向けにも提供しています。ほかのバックエンド向けの UI は [escalated](https://github.com/escalated-dev/escalated) にあります。
 
 ## ライセンス
 
-MIT
+MIT。Copyright (c) 2026 Escalated.dev。詳細は [LICENSE](../../LICENSE) を参照してください。

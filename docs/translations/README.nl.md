@@ -1,166 +1,154 @@
-<p align="center">
-  <a href="README.ar.md">العربية</a> •
-  <a href="README.de.md">Deutsch</a> •
-  <a href="../../README.md">English</a> •
-  <a href="README.es.md">Español</a> •
-  <a href="README.fr.md">Français</a> •
-  <a href="README.it.md">Italiano</a> •
-  <a href="README.ja.md">日本語</a> •
-  <a href="README.ko.md">한국어</a> •
-  <b>Nederlands</b> •
-  <a href="README.pl.md">Polski</a> •
-  <a href="README.pt-BR.md">Português (BR)</a> •
-  <a href="README.ru.md">Русский</a> •
-  <a href="README.tr.md">Türkçe</a> •
+<p align="center"><sub>
+  <a href="README.ar.md">العربية</a> ·
+  <a href="README.de.md">Deutsch</a> ·
+  <a href="../../README.md">English</a> ·
+  <a href="README.es.md">Español</a> ·
+  <a href="README.fr.md">Français</a> ·
+  <a href="README.it.md">Italiano</a> ·
+  <a href="README.ja.md">日本語</a> ·
+  <a href="README.ko.md">한국어</a> ·
+  <b>Nederlands</b> ·
+  <a href="README.pl.md">Polski</a> ·
+  <a href="README.pt-BR.md">Português (BR)</a> ·
+  <a href="README.ru.md">Русский</a> ·
+  <a href="README.tr.md">Türkçe</a> ·
   <a href="README.zh-CN.md">简体中文</a>
+</sub></p>
+
+<p align="center">
+  <a href="https://escalated.dev"><img src="https://raw.githubusercontent.com/escalated-dev/escalated/main/docs/assets/readme/logo.png" width="72" height="72" alt="Escalated"></a>
 </p>
 
-# Escalated for WordPress
+<h1 align="center">Escalated for WordPress</h1>
 
-[![Tests](https://github.com/escalated-dev/escalated-wordpress/actions/workflows/run-tests.yml/badge.svg)](https://github.com/escalated-dev/escalated-wordpress/actions/workflows/run-tests.yml)
-[![Latest Release](https://img.shields.io/github/v/release/escalated-dev/escalated-wordpress)](https://github.com/escalated-dev/escalated-wordpress/releases/latest)
-[![PHP Version](https://img.shields.io/badge/php-%3E%3D8.1-8892BF)](https://www.php.net/)
-[![WordPress](https://img.shields.io/badge/wordpress-%3E%3D6.0-21759B)](https://wordpress.org/)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+<p align="center">
+  Draai een complete helpdesk binnen WordPress.<br>
+  Tickets, SLA's, escalatieregels, inkomende e-mail en een klantportaal, beheerd vanuit wp-admin zonder externe diensten.
+</p>
 
-Een volledig helpdesk- en ticketsysteem voor WordPress met multi-rol ondersteuning, SLA-tracking, escalatieregels, inkomende e-mailverwerking, macro's en een REST API. Geen externe diensten vereist.
+<p align="center">
+  <a href="https://escalated.dev"><b>Website</b></a> ·
+  <a href="https://escalated.dev/docs"><b>Documentatie</b></a> ·
+  <a href="https://escalated.dev/cloud"><b>Cloud</b></a> ·
+  <a href="../../CHANGELOG.md"><b>Wijzigingslog</b></a>
+</p>
 
-> **[escalated.dev](https://escalated.dev)** — Meer informatie, demo's bekijken en Cloud vs Zelf-gehost opties vergelijken.
+<br>
 
-## Screenshots
+<img src="../../screenshots/results/ticket-list.png" alt="De ticketlijst van Escalated in wp-admin met filters voor status, prioriteit, afdeling en agent" width="100%">
 
-| Ticketlijst | Ticketdetail |
-|:-----------:|:-------------:|
-| ![Ticketlijst](screenshots/results/ticket-list.png) | ![Ticketdetail](screenshots/results/ticket-detail.png) |
+## Wat het doet
 
-| Afdelingen | SLA-beleid |
-|:-----------:|:------------:|
-| ![Afdelingen](screenshots/results/departments.png) | ![SLA-beleid](screenshots/results/sla-policies.png) |
-
-| Rapporten | Instellingen |
-|:-------:|:--------:|
-| ![Rapporten](screenshots/results/reports.png) | ![Instellingen](screenshots/results/settings.png) |
-
-| Automatiseringen | Macro's |
-|:-----------:|:------:|
-| ![Automatiseringen](screenshots/results/automations.png) | ![Macro's](screenshots/results/macros.png) |
-
-> Screenshots worden bij elke release automatisch gegenereerd via Playwright. Zie `.github/workflows/screenshots.yml`.
-
-## Download
-
-[![Download Latest Release](https://img.shields.io/badge/Download-Latest%20Release-2ea44f?style=for-the-badge&logo=github)](https://github.com/escalated-dev/escalated-wordpress/releases/latest)
-
-- Laatste plugin-pakket: [escalated.zip](https://github.com/escalated-dev/escalated-wordpress/releases/latest/download/escalated.zip)
-- Alle releases: [Releases](https://github.com/escalated-dev/escalated-wordpress/releases)
+<table>
+  <tr>
+    <td width="40%">
+      <h3>Tickets die je agents in wp-admin afhandelen</h3>
+      Gesprekken in threads, interne notities, standaardantwoorden en macro's op het ticketscherm. Tickets komen ook binnen per e-mail via Mailgun, Postmark of Amazon SES.
+    </td>
+    <td width="60%">
+      <img src="../../screenshots/results/ticket-detail.png" alt="Een geopend ticket in wp-admin met het gesprek en het antwoordformulier">
+    </td>
+  </tr>
+  <tr>
+    <td width="60%">
+      <img src="../../screenshots/results/sla-policies.png" alt="Het scherm met SLA-beleid en doelen voor eerste reactie en oplossing">
+    </td>
+    <td width="40%">
+      <h3>SLA's en escalatieregels die vanzelf draaien</h3>
+      Doelen voor eerste reactie en oplossing, regels die tickets escaleren als een doel uitloopt, en SLA-controles die via WP-Cron worden ingepland.
+    </td>
+  </tr>
+</table>
 
 ## Functies
 
-- Ticketbeheer met threaded gesprekken, interne notities en activiteitstijdlijn.
-- Aangepaste ondersteuningsrollen: `escalated_admin` en `escalated_agent`.
-- Afdelingsgebaseerde routering en toewijzingsworkflows.
-- SLA-beleid met doelen voor eerste reactie en oplossing.
-- Geautomatiseerde escalatieregels en geplande SLA-controles.
-- Klantgerichte frontend-ticketpagina's via shortcodes.
-- Gastticket-indiening en veilige gasttickettoegang.
-- Inkomende e-mailverwerking via Mailgun-, Postmark- en Amazon SES-webhooks.
-- Standaardantwoorden, macro's en tagbeheer.
-- Bearer-token REST API met per-token machtigingen en snelheidsbeperking.
-- Bijlageondersteuning met configureerbare uploadlimieten.
-- Tevredenheidsbeoordelingen en rapportageweergaven.
+<table>
+<tr>
+<td width="33%" valign="top">
 
-## Vereisten
+**Tickets**
+- Gesprekken in threads en interne notities
+- Activiteitentijdlijn bij elk ticket
+- Standaardantwoorden, macro's en tags
+- Dubbele tickets samenvoegen
+- Bijlagen met uploadlimieten
 
-- WordPress `6.0+`
-- PHP `8.1+`
+</td>
+<td width="33%" valign="top">
 
-## Installatie
+**SLA's en routering**
+- Routering en toewijzing per afdeling
+- Doelen voor eerste reactie en oplossing
+- Escalatieregels en ingeplande SLA-controles
+- Event-gestuurde workflows in wp-admin of via REST
 
-1. Plaats deze plugin in uw WordPress-pluginmap:
-   - `wp-content/plugins/escalated`
-2. Activeer **Escalated** via het WordPress Plugins-scherm.
-3. Ga naar **Escalated** in wp-admin en configureer:
-   - Afdelingen
-   - SLA-beleid
-   - Escalatieregels
-   - Instellingen
+</td>
+<td width="33%" valign="top">
 
-## Frontend Shortcodes
+**Klanten**
+- Ticketpagina's op de frontend via shortcodes
+- Indienen als gast en veilige gasttoegang
+- Tevredenheidsbeoordelingen
 
-Gebruik deze shortcodes op WordPress-pagina's:
+</td>
+</tr>
+<tr>
+<td width="33%" valign="top">
 
-- `[escalated_tickets]` - Ticketlijst van de ingelogde aanvrager.
-- `[escalated_create_ticket]` - Nieuw ticketformulier voor ingelogde aanvragers.
-- `[escalated_view_ticket]` - Ticketdetailweergave:
-  - Ingelogde gebruikers: verwacht `?ticket=ESC-123`
-  - Gasten: verwacht `?guest_token=<token>`
-- `[escalated_guest_create]` - Gastticket-aanmaakformulier (indien ingeschakeld in instellingen).
+**Rollen en beveiliging**
+- Rollen voor beheerder, agent en light agent
+- Optionele rechten per route
+- Optionele TOTP-tweestapsverificatie voor medewerkers
+- Inloggen met SAML 2.0, OAuth 2 / OIDC of JWT
 
-## REST API
+</td>
+<td width="33%" valign="top">
 
-- Namespace: `/wp-json/escalated/v1`
-- Auth: `Authorization: Bearer <api-token>`
-- Standaard snelheidslimiet: `60` verzoeken/minuut per token (configureerbaar via de instelling `api_rate_limit`)
+**E-mail en webhooks**
+- Inkomend via Mailgun, Postmark en Amazon SES
+- Meerdere webhook-endpoints met eigen events
+- Afleverlog en nieuwe pogingen
 
-Belangrijkste routegroepen:
+</td>
+<td width="33%" valign="top">
 
-- `/auth/validate`
-- `/tickets`
-- `/departments`
-- `/tags`
-- `/canned-responses`
-- `/macros`
-- `/agents`
-- `/dashboard`
-- `/admin/api-tokens`
+**API en rapporten**
+- REST API met bearer-tokens en rechten per token
+- Rate limiting per token
+- Rapportageweergaven
 
-## Inkomende e-mail webhooks
+</td>
+</tr>
+</table>
 
-Inkomend routepatroon:
+<p align="center"><sub><a href="../features.md">Alle functies in detail</a></sub></p>
 
-- `POST /wp-json/escalated/v1/inbound/{adapter}`
+<p align="center">
+  <a href="https://wordpress.org"><img src="https://img.shields.io/badge/WordPress-21759B?style=for-the-badge&logo=wordpress&logoColor=white" alt="WordPress"></a>
+  <a href="https://www.php.net"><img src="https://img.shields.io/badge/PHP-777BB4?style=for-the-badge&logo=php&logoColor=white" alt="PHP"></a>
+  <a href="https://www.mysql.com"><img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL"></a>
+</p>
 
-Ondersteunde adapters:
+## Snel aan de slag
 
-- `mailgun`
-- `postmark`
-- `ses`
+1. Download [escalated.zip](https://github.com/escalated-dev/escalated-wordpress/releases/latest/download/escalated.zip) uit de nieuwste release.
+2. Pak het uit in je pluginmap, zodat de plugin in `wp-content/plugins/escalated` staat.
+3. Activeer **Escalated** via het scherm Plugins in WordPress.
+4. Ga in wp-admin naar **Escalated** en stel afdelingen, SLA-beleid, escalatieregels en instellingen in.
 
-## Geplande taken (WP-Cron)
+Vereist WordPress 6.0+ en PHP 8.1+. De [installatiehandleiding](../installation.md) bevat de details, en [aanpassen](../customization.md) noemt de shortcodes voor je klantgerichte pagina's.
 
-Bij activering plant Escalated:
+## Meer informatie
 
-- `escalated_check_sla` (elke minuut)
-- `escalated_evaluate_escalations` (elke 5 minuten)
-- `escalated_auto_close` (dagelijks)
-- `escalated_purge_activities` (wekelijks)
+- [Alle functies](../features.md) · [Installatie](../installation.md) · [Screenshots](../screenshots.md)
+- [Shortcodes, ticketonderwerpen en vertalingen](../customization.md) · [REST API en tickets samenvoegen](../rest-api.md)
+- [Toegangsbeheer](../access-control.md) · [Tickettoegang en routering](../ticket-access-and-routing.md) · [Workflows](../workflows.md)
+- [Inkomende e-mail](../inbound-email.md) · [Webhooks](../webhooks.md) · [Gasttoegang](../guest-access.md)
+- [De widget insluiten](../embedding-the-widget.md) · [De beheeromgeving insluiten](../embedding-admin.md)
+- [Geplande taken en databaseverbinding](../operations.md) · [Nieuwsbrieven](../newsletters.md) · [Ontwikkeling](../development.md)
 
-## Ontwikkeling
-
-Afhankelijkheden installeren:
-
-```bash
-composer install
-```
-
-Tests uitvoeren (WordPress-testsuite vereist):
-
-```bash
-vendor/bin/phpunit -c phpunit.xml.dist
-```
-
-Stel indien nodig `WP_TESTS_DIR` in op het pad van uw lokale WordPress-testbibliotheek voordat u PHPUnit uitvoert.
-
-## Ook Beschikbaar Voor
-
-- **[Escalated for Laravel](https://github.com/escalated-dev/escalated-laravel)** — Laravel Composer-pakket
-- **[Escalated for Rails](https://github.com/escalated-dev/escalated-rails)** — Ruby on Rails Engine
-- **[Escalated for Django](https://github.com/escalated-dev/escalated-django)** — Herbruikbare Django-app
-- **[Escalated for AdonisJS](https://github.com/escalated-dev/escalated-adonis)** — AdonisJS v6 pakket
-- **[Escalated for Filament](https://github.com/escalated-dev/escalated-filament)** — Filament v3 adminpaneel-plugin
-- **[Escalated for WordPress](https://github.com/escalated-dev/escalated-wordpress)** — WordPress-plugin (u bent hier)
-- **[Shared Frontend](https://github.com/escalated-dev/escalated)** — Vue 3 + Inertia.js UI-componenten
+Escalated is ook beschikbaar voor [Laravel](https://github.com/escalated-dev/escalated-laravel), [Rails](https://github.com/escalated-dev/escalated-rails), [Django](https://github.com/escalated-dev/escalated-django), [NestJS](https://github.com/escalated-dev/escalated-nestjs), [AdonisJS](https://github.com/escalated-dev/escalated-adonis), [Symfony](https://github.com/escalated-dev/escalated-symfony), [Phoenix](https://github.com/escalated-dev/escalated-phoenix), [Go](https://github.com/escalated-dev/escalated-go), [.NET](https://github.com/escalated-dev/escalated-dotnet), [Spring](https://github.com/escalated-dev/escalated-spring) en [Filament](https://github.com/escalated-dev/escalated-filament). De UI voor de andere backends staat in [escalated](https://github.com/escalated-dev/escalated).
 
 ## Licentie
 
-MIT
+MIT. Copyright (c) 2026 Escalated.dev. Zie [LICENSE](../../LICENSE).
