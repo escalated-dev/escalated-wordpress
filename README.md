@@ -1,423 +1,154 @@
-<p align="center">
-  <a href="docs/translations/README.ar.md">العربية</a> •
-  <a href="docs/translations/README.de.md">Deutsch</a> •
-  <b>English</b> •
-  <a href="docs/translations/README.es.md">Español</a> •
-  <a href="docs/translations/README.fr.md">Français</a> •
-  <a href="docs/translations/README.it.md">Italiano</a> •
-  <a href="docs/translations/README.ja.md">日本語</a> •
-  <a href="docs/translations/README.ko.md">한국어</a> •
-  <a href="docs/translations/README.nl.md">Nederlands</a> •
-  <a href="docs/translations/README.pl.md">Polski</a> •
-  <a href="docs/translations/README.pt-BR.md">Português (BR)</a> •
-  <a href="docs/translations/README.ru.md">Русский</a> •
-  <a href="docs/translations/README.tr.md">Türkçe</a> •
+<p align="center"><sub>
+  <a href="docs/translations/README.ar.md">العربية</a> ·
+  <a href="docs/translations/README.de.md">Deutsch</a> ·
+  <b>English</b> ·
+  <a href="docs/translations/README.es.md">Español</a> ·
+  <a href="docs/translations/README.fr.md">Français</a> ·
+  <a href="docs/translations/README.it.md">Italiano</a> ·
+  <a href="docs/translations/README.ja.md">日本語</a> ·
+  <a href="docs/translations/README.ko.md">한국어</a> ·
+  <a href="docs/translations/README.nl.md">Nederlands</a> ·
+  <a href="docs/translations/README.pl.md">Polski</a> ·
+  <a href="docs/translations/README.pt-BR.md">Português (BR)</a> ·
+  <a href="docs/translations/README.ru.md">Русский</a> ·
+  <a href="docs/translations/README.tr.md">Türkçe</a> ·
   <a href="docs/translations/README.zh-CN.md">简体中文</a>
+</sub></p>
+
+<p align="center">
+  <a href="https://escalated.dev"><img src="https://raw.githubusercontent.com/escalated-dev/escalated/main/docs/assets/readme/logo.png" width="72" height="72" alt="Escalated"></a>
 </p>
 
-# Escalated for WordPress
+<h1 align="center">Escalated for WordPress</h1>
 
-[![Tests](https://github.com/escalated-dev/escalated-wordpress/actions/workflows/run-tests.yml/badge.svg)](https://github.com/escalated-dev/escalated-wordpress/actions/workflows/run-tests.yml)
-[![Latest Release](https://img.shields.io/github/v/release/escalated-dev/escalated-wordpress)](https://github.com/escalated-dev/escalated-wordpress/releases/latest)
-[![Release Downloads](https://img.shields.io/github/downloads/escalated-dev/escalated-wordpress/total)](https://github.com/escalated-dev/escalated-wordpress/releases)
-[![PHP Version](https://img.shields.io/badge/php-%3E%3D8.1-8892BF)](https://www.php.net/)
-[![WordPress](https://img.shields.io/badge/wordpress-%3E%3D6.0-21759B)](https://wordpress.org/)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Views](https://hits.sh/github.com/escalated-dev/escalated-wordpress.svg?style=flat&label=views&color=007ec6)](https://hits.sh/github.com/escalated-dev/escalated-wordpress/)
+<p align="center">
+  Run a complete helpdesk inside WordPress.<br>
+  Tickets, SLAs, escalation rules, inbound email and a customer portal, managed from wp-admin with no external services.
+</p>
 
-A full-featured helpdesk and ticketing system for WordPress with multi-role support, SLA tracking, escalation rules, inbound email processing, macros, and a REST API. No external services required.
+<p align="center">
+  <a href="https://escalated.dev"><b>Website</b></a> ·
+  <a href="https://escalated.dev/docs"><b>Docs</b></a> ·
+  <a href="https://escalated.dev/cloud"><b>Cloud</b></a> ·
+  <a href="CHANGELOG.md"><b>Changelog</b></a>
+</p>
 
-> **[escalated.dev](https://escalated.dev)** — Learn more, view demos, and compare Cloud vs Self-Hosted options.
+<br>
 
-## Screenshots
+<img src="screenshots/results/ticket-list.png" alt="The Escalated ticket list in wp-admin with filters for status, priority, department and agent" width="100%">
 
-| Ticket List | Ticket Detail |
-|:-----------:|:-------------:|
-| ![Ticket List](screenshots/results/ticket-list.png) | ![Ticket Detail](screenshots/results/ticket-detail.png) |
+## What it does
 
-| Departments | SLA Policies |
-|:-----------:|:------------:|
-| ![Departments](screenshots/results/departments.png) | ![SLA Policies](screenshots/results/sla-policies.png) |
-
-| Reports | Settings |
-|:-------:|:--------:|
-| ![Reports](screenshots/results/reports.png) | ![Settings](screenshots/results/settings.png) |
-
-| Automations | Macros |
-|:-----------:|:------:|
-| ![Automations](screenshots/results/automations.png) | ![Macros](screenshots/results/macros.png) |
-
-> Screenshots are auto-generated via Playwright on every release. See `.github/workflows/screenshots.yml`.
-
-## Download
-
-[![Download Latest Release](https://img.shields.io/badge/Download-Latest%20Release-2ea44f?style=for-the-badge&logo=github)](https://github.com/escalated-dev/escalated-wordpress/releases/latest)
-
-- Latest plugin package: [escalated.zip](https://github.com/escalated-dev/escalated-wordpress/releases/latest/download/escalated.zip)
-- All releases: [Releases](https://github.com/escalated-dev/escalated-wordpress/releases)
+<table>
+  <tr>
+    <td width="40%">
+      <h3>Tickets your agents handle in wp-admin</h3>
+      Threaded conversations, internal notes, canned responses and macros on the ticket screen. Tickets also arrive by email through Mailgun, Postmark or Amazon SES.
+    </td>
+    <td width="60%">
+      <img src="screenshots/results/ticket-detail.png" alt="A ticket open in wp-admin with the conversation and reply form">
+    </td>
+  </tr>
+  <tr>
+    <td width="60%">
+      <img src="screenshots/results/sla-policies.png" alt="The SLA policies screen with first-response and resolution targets">
+    </td>
+    <td width="40%">
+      <h3>SLAs and escalation rules that run on their own</h3>
+      First-response and resolution targets, rules that escalate tickets when they slip, and SLA checks scheduled through WP-Cron.
+    </td>
+  </tr>
+</table>
 
 ## Features
 
-Configure opt-in department/account access and targeted SLAs using the
-[ticket access and routing guide](docs/ticket-access-and-routing.md).
-
-- Ticket management with threaded conversations, internal notes, and activity timeline.
-- Custom support roles: `escalated_admin`, `escalated_agent` and `escalated_light_agent`, with
-  optional per-route roles & permissions enforcement ([access control](docs/access-control.md)).
-- Optional two-factor authentication (TOTP) for staff, challenged after the WordPress login ([access control](docs/access-control.md)).
-- Optional single sign-on through SAML 2.0, OAuth 2 / OIDC or JWT ([access control](docs/access-control.md)).
-- Department-based routing and assignment workflows.
-- SLA policies with first-response and resolution targets.
-- Automated escalation rules and scheduled SLA checks.
-- Event-driven workflows, managed in wp-admin or over REST ([guide](docs/workflows.md)).
-- Customer-facing frontend ticket pages via shortcodes.
-- Guest ticket submission and secure guest ticket access.
-- Inbound email ingestion via Mailgun, Postmark, and Amazon SES webhooks.
-- Outbound webhooks: several endpoints with their own events and secrets, a delivery log and retries ([guide](docs/webhooks.md)).
-- Canned responses, macros, and tag management.
-- Bearer token REST API with per-token abilities and rate limiting.
-- Attachment support with configurable upload limits.
-- Satisfaction ratings and reporting views.
-
-## Requirements
-
-- WordPress `6.0+`
-- PHP `8.1+`
-
-## Installation
-
-1. Place this plugin in your WordPress plugins directory:
-   - `wp-content/plugins/escalated`
-2. Activate **Escalated** from the WordPress Plugins screen.
-3. Go to **Escalated** in wp-admin and configure:
-   - Departments
-   - SLA Policies
-   - Escalation Rules
-   - Settings
-
-## Embedding the admin in your own admin panel (optional)
-
-Escalated's admin is a set of wp-admin screens and needs no setup. If you run
-your own admin on top of WordPress, you can list Escalated's menu there with
-`escalated_admin_navigation()` (capability-filtered NavigationItem data), or
-frame the screens chrome-free from another admin front end (iframe mode, only
-for the origins you list). Off by default; nothing changes unless you set
-`ESCALATED_EMBED` or call `escalated_embed_admin()`. See
-[embedding the admin](docs/embedding-admin.md).
-
-## Frontend Shortcodes
-
-Use these shortcodes on WordPress pages:
-
-- `[escalated_tickets]` - Logged-in requester ticket list.
-- `[escalated_create_ticket]` - Logged-in requester new ticket form.
-- `[escalated_view_ticket]` - Ticket detail view:
-  - Logged-in users: expects `?ticket=ESC-123`
-  - Guests: expects `?guest_token=<link token>` (an expiring link from the guest form or a lookup; see [verified guest access](docs/guest-access.md))
-- `[escalated_guest_create]` - Guest ticket creation form (if enabled in settings).
-
-### Guest rate limits
-
-Guest ticket creation (widget `POST /widget/tickets` and the guest form) is limited to 5 per client IP per minute, and guest replies to 10. Over the limit the request gets `429` with `Retry-After`; a reply is counted before its guest token is checked.
-
-- Settings: `guest_rate_limit_enabled` (default `1`), `guest_rate_limit_tickets_per_minute` (`5`), `guest_rate_limit_replies_per_minute` (`10`), or the `escalated_guest_rate_limit` filter.
-- Counters are transients, so a persistent object cache (Redis, Memcached) shares them across servers.
-- The client IP is `REMOTE_ADDR`. Behind a proxy or CDN, rewrite it from the trusted proxy's forwarded header, or every guest shares one IP.
-
-### Embedding the widget on other sites
-
-List the sites under **Settings > Widget > Embedding Sites** (or the `ESCALATED_WIDGET_ALLOWED_ORIGINS` constant), then add `<script src="https://your-site/wp-json/escalated/v1/widget/embed.js" async></script>` to the other site. Only listed origins get CORS headers, and their requests always run as a guest. See [embedding the widget](docs/embedding-the-widget.md).
-
-## REST API
-
-- Namespace: `/wp-json/escalated/v1`
-- Auth: `Authorization: Bearer <api-token>`
-- Default rate limit: `60` requests/minute per token (configurable via `api_rate_limit` setting)
-
-Main route groups:
-
-- `/auth/validate`
-- `/tickets`
-- `/departments`
-- `/tags`
-- `/canned-responses`
-- `/macros`
-- `/agents`
-- `/dashboard`
-- `/admin/api-tokens`
-- `/admin/tickets/{ref}/subjects` (attach/detach ticket subjects)
-- `/tickets/{ref}/merge` and `/tickets/merge-search` (see [Ticket merge](#ticket-merge))
-
-## Ticket merge
-
-An agent with the `escalated_ticket_merge` capability can merge a duplicate into another ticket, from the **Merge** box on the ticket screen or over the API:
-
-- `GET /wp-json/escalated/v1/tickets/merge-search?q=&exclude=` (`tickets:read`) lists up to 10 unmerged tickets whose reference or subject matches: `{tickets: [{id, reference, subject, status, created_at}]}`.
-- `POST /wp-json/escalated/v1/tickets/{ref}/merge` with `{target_reference}` (`tickets:update`) merges `{ref}` into the target.
-
-A merge moves every reply (with its attachments) to the target, adds an internal system note to both tickets, and closes the source with `merged_into_id` set, all in one transaction. It then fires the usual close hooks for the source and `escalated_ticket_merged`. Merging a ticket into itself or merging an already-merged ticket is refused (422), and a merged ticket cannot be a target (404).
-
-## Ticket subjects
-
-A ticket has a **requester** (who raised it) and a **subject line** (free text).
-Tickets can also be *about* host-app entities — a project, customer, or asset —
-that are not people. Attach them as **subjects** so agents see context and can
-link into your app.
-
-WordPress does not own those models. Register allowed type strings and resolve
-each `(type, id)` via a filter:
-
-```php
-// Allow attaching via the agent REST API (empty list disables API attach).
-update_option('escalated_ticket_subject_types', ['project', 'customer']);
-
-add_filter('escalated_resolve_ticket_subject', function ($subject, $type, $id) {
-    if ($type === 'project') {
-        $post = get_post((int) $id);
-        if (! $post || $post->post_type !== 'project') {
-            return null;
-        }
-
-        return new class ($post) implements \Escalated\Contracts\TicketSubject {
-            public function __construct(private \WP_Post $post) {}
-
-            public function ticketSubjectTitle(): string
-            {
-                return $this->post->post_title;
-            }
-
-            public function ticketSubjectSubtitle(): ?string
-            {
-                return 'Project';
-            }
-
-            public function ticketSubjectUrl(): ?string
-            {
-                return get_permalink($this->post);
-            }
-
-            public function ticketSubjectColor(): ?string
-            {
-                return null;
-            }
-
-            public function ticketSubjectIcon(): ?string
-            {
-                return 'folder';
-            }
-        };
-    }
-
-    return $subject;
-}, 10, 3);
-```
-
-Programmatic attach/detach/sync (idempotent on `ticket_id` + `type` + `id`):
-
-```php
-use Escalated\Services\TicketSubjectService;
-
-TicketSubjectService::attach($ticket_id, 'project', '42', 'project');
-TicketSubjectService::detach($ticket_id, 'project', '42');
-TicketSubjectService::sync($ticket_id, [
-    ['type' => 'project', 'id' => '42', 'role' => 'primary'],
-    ['type' => 'customer', 'id' => '7'],
-]);
-```
-
-Serialized on each ticket as `subjects[]`:
-
-`{ type, id, role, title, subtitle, url, color, icon, missing }`
-
-(`title` falls back to `type#id` when the resolver returns null.)
-
-Admin REST (logged-in user with `escalated_ticket_edit`):
-
-- `POST /wp-json/escalated/v1/admin/tickets/{ref}/subjects` — body: `type`, `id`, optional `role`
-- `DELETE /wp-json/escalated/v1/admin/tickets/{ref}/subjects/{link_id}`
-
-## Custom Ticket Actions
-
-Host plugins can add custom buttons to the agent ticket screen and handle clicks
-with normal WordPress hooks. Register actions via the `escalated_ticket_actions`
-filter:
-
-```php
-add_filter('escalated_ticket_actions', function (array $actions): array {
-    $actions[] = [
-        'key' => 'sync-crm',
-        'label' => 'Sync CRM',
-        'variant' => 'primary',           // primary | secondary | danger
-        'confirmation' => 'Sync this ticket to the CRM?',
-        'metadata' => ['icon' => 'refresh-cw'],
-        // 'visible' / 'enabled' may be bool or callable($ticket, $user_id)
-        'enabled' => fn ($ticket, $user_id) => empty($ticket->metadata['crm_synced']),
-    ];
-
-    return $actions;
-});
-```
-
-Visible actions appear on the ticket detail response as `custom_actions` (each
-with a `url` and `method`). Triggering one
-(`POST /wp-json/escalated/v1/tickets/{ref}/actions/{key}`) validates the action
-is visible (404) and enabled (403), then fires the
-`escalated_ticket_action_triggered` hook:
-
-```php
-add_action('escalated_ticket_action_triggered', function ($ticket, $action_key, $user_id, $payload, $metadata) {
-    if ($action_key !== 'sync-crm') {
-        return;
-    }
-    // your handler
-}, 10, 5);
-```
-
-Escalated also records an internal note on the ticket whenever an action fires,
-for auditability.
-
-## Inbound Email Webhooks
-
-Inbound route pattern:
-
-- `POST /wp-json/escalated/v1/inbound/{adapter}`
-
-Supported adapters:
-
-- `mailgun`
-- `postmark`
-- `ses`
-
-How an inbound email is matched to a ticket:
-
-- **Thread matching**: when an inbound secret is set (the `escalated_email_inbound_secret` option or the `ESCALATED_EMAIL_INBOUND_SECRET` constant), outbound mail carries a signed Reply-To (`reply+{id}.{hmac8}@domain`) and only that address links an inbound email to a ticket. Without a secret, the `In-Reply-To` / `References` Message-IDs and the subject reference (e.g. `[ESC-00001]`) are used instead.
-- **Sender check**: a matched email becomes a reply only when the `From` address is the ticket's requester (the guest email, or the requester's WordPress email, case-insensitive). It is posted as that requester. Staff identity is never taken from the `From` header, so agents reply in the admin, not by email.
-- **Anything else** (no match, or a sender who is not the requester) creates a new ticket, so mail is never dropped.
-- **Reopen**: an accepted reply reopens a resolved or closed ticket.
-
-Set a secret in production; Message-IDs and ticket references can be guessed.
-
-## Scheduled Tasks (WP-Cron)
-
-On activation, Escalated schedules:
-
-- `escalated_check_sla` (every minute)
-- `escalated_evaluate_escalations` (every 5 minutes)
-- `escalated_auto_close` (daily)
-- `escalated_purge_activities` (weekly)
-
-## Translations
-
-Escalated for WordPress consumes translations from the central
-[`escalated-dev/locale`](https://github.com/escalated-dev/escalated-locale)
-Composer package, which is the single source of truth for translations
-across every Escalated host plugin.
-
-At runtime the plugin loads translations in two layers (later layer wins):
-
-1. **Central** — `vendor/escalated-dev/locale/languages/escalated-{locale}.mo`
-   (installed automatically via `composer install`).
-2. **Local overrides** — `languages/overrides/escalated-{locale}.mo`
-   (drop your own compiled `.mo` here to override individual entries
-   without forking the central package).
-
-If the central package is not yet installed, the plugin falls back to
-the legacy in-tree `languages/*.po`/`*.mo` files so existing sites keep
-working.
-
-To submit translation fixes, open a PR against
-[`escalated-dev/escalated-locale`](https://github.com/escalated-dev/escalated-locale).
-Do **not** edit the in-tree `.po` files — they exist only as a fallback
-and will be removed once the central package reaches a stable release.
-
-## Development
-
-Install dependencies:
-
-```bash
-composer install
-```
-
-Run tests (WordPress test suite required):
-
-```bash
-vendor/bin/phpunit -c phpunit.xml.dist
-```
-
-If needed, set `WP_TESTS_DIR` to your local WordPress tests library path before running PHPUnit.
-
-## Also Available For
-
-- **[Escalated for Laravel](https://github.com/escalated-dev/escalated-laravel)** — Laravel Composer package
-- **[Escalated for Rails](https://github.com/escalated-dev/escalated-rails)** — Ruby on Rails engine
-- **[Escalated for Django](https://github.com/escalated-dev/escalated-django)** — Django reusable app
-- **[Escalated for AdonisJS](https://github.com/escalated-dev/escalated-adonis)** — AdonisJS v6 package
-- **[Escalated for Filament](https://github.com/escalated-dev/escalated-filament)** — Filament v3 admin panel plugin
-- **[Escalated for WordPress](https://github.com/escalated-dev/escalated-wordpress)** — WordPress plugin (you are here)
-- **[Shared Frontend](https://github.com/escalated-dev/escalated)** — Vue 3 + Inertia.js UI components
-
-## Newsletters (optional, partial port)
-
-Schema, models, and renderer for the admin-only newsletter broadcast feature. Off by default — flip `escalated_newsletters_enabled` option (or pass `1` through the standard Escalated settings UI) to turn it on. WP-special: uses WP options, WP-Cron, and WP capabilities (see CLAUDE.md / spec).
-
-```php
-// Plug in a Markdown renderer (Parsedown, league/commonmark, etc.)
-add_filter('escalated_newsletter_markdown_renderer', function ($_, $md) {
-    return Parsedown::instance()->text($md);
-}, 10, 2);
-```
-
-Custom themes go in `templates/newsletter_themes/<slug>.php` and receive `$subject`, `$body` (pre-rendered safe HTML), `$unsubscribe_url`, `$view_in_browser_url`, `$brand` (associative array).
-
-Ships:
-- 5 new tables created by `Escalated\Activator::create_newsletter_tables()` (auto-called by the activator)
-- `marketing_opt_out_at` column added to `escalated_contacts`
-- 5 model wrappers under `includes/Models/Newsletter/`
-- `includes/Services/Newsletter/NewsletterRenderer.php` — full renderer
-- Two starter themes in `templates/newsletter_themes/{default,branded}.php`
-
-Follow-up PR: WP-Cron tick for dispatcher, planner/tracker services, admin pages (custom or via the Inertia frontend), REST API endpoints for tracking + unsubscribe + view-in-browser, ESP webhook endpoints.
-
-## Database connection
-
-By default Escalated's tables live in your WordPress database. Point them
-somewhere else — a schema shared with a legacy system, a separate reporting
-store, or simply out of the WordPress database — by defining the connection in
-`wp-config.php`:
-
-```php
-define('ESCALATED_DB_NAME', 'support');
-
-// Optional. Each falls back to the WordPress value when omitted.
-define('ESCALATED_DB_USER', 'support_user');
-define('ESCALATED_DB_PASSWORD', 'secret');
-define('ESCALATED_DB_HOST', 'db.internal');
-define('ESCALATED_DB_PREFIX', 'wp_');
-```
-
-Define nothing and Escalated uses the global `$wpdb` — the same instance, the
-same prefix, the same queries. An unconfigured site is unchanged.
-
-WordPress has no connection registry, so a second database means a second
-`wpdb`. Escalated builds one lazily and reuses it: `wpdb` connects in its
-constructor, so resolving per query would open a connection per query.
-
-### Your users stay in WordPress
-
-`ESCALATED_DB_NAME` moves Escalated's own tables and nothing else. The plugin
-never queries `wp_users`, `wp_posts` or `wp_options` directly — it reaches user
-data through `get_userdata()`, `get_user_by()` and `WP_User_Query`, which use
-the WordPress connection as they always have. Escalated stores user ids as plain
-unconstrained columns precisely so the two can live on different databases, and
-a test asserts no plugin code issues raw SQL against a core table.
-
-### Creating the tables
-
-Activation creates Escalated's tables on whichever connection is configured, so
-define the constants **before** activating the plugin. On an existing install,
-defining them afterwards does not move any data — create the tables on the new
-database and copy the rows across first.
+<table>
+<tr>
+<td width="33%" valign="top">
+
+**Tickets**
+- Threaded conversations and internal notes
+- Activity timeline on every ticket
+- Canned responses, macros and tags
+- Merge duplicate tickets
+- Attachments with upload limits
+
+</td>
+<td width="33%" valign="top">
+
+**SLAs and routing**
+- Department routing and assignment
+- First-response and resolution targets
+- Escalation rules and scheduled SLA checks
+- Event-driven workflows in wp-admin or REST
+
+</td>
+<td width="33%" valign="top">
+
+**Customers**
+- Frontend ticket pages via shortcodes
+- Guest submission and secure guest access
+- Satisfaction ratings
+
+</td>
+</tr>
+<tr>
+<td width="33%" valign="top">
+
+**Roles and security**
+- Admin, agent and light-agent roles
+- Optional per-route permissions
+- Optional TOTP two-factor for staff
+- SAML 2.0, OAuth 2 / OIDC or JWT sign-in
+
+</td>
+<td width="33%" valign="top">
+
+**Email and webhooks**
+- Inbound from Mailgun, Postmark and Amazon SES
+- Several webhook endpoints with own events
+- Delivery log and retries
+
+</td>
+<td width="33%" valign="top">
+
+**API and reports**
+- Bearer-token REST API with abilities
+- Per-token rate limiting
+- Reporting views
+
+</td>
+</tr>
+</table>
+
+<p align="center"><sub><a href="docs/features.md">Every feature in detail</a></sub></p>
+
+<p align="center">
+  <a href="https://wordpress.org"><img src="https://img.shields.io/badge/WordPress-21759B?style=for-the-badge&logo=wordpress&logoColor=white" alt="WordPress"></a>
+  <a href="https://www.php.net"><img src="https://img.shields.io/badge/PHP-777BB4?style=for-the-badge&logo=php&logoColor=white" alt="PHP"></a>
+  <a href="https://www.mysql.com"><img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL"></a>
+</p>
+
+## Quick start
+
+1. Download [escalated.zip](https://github.com/escalated-dev/escalated-wordpress/releases/latest/download/escalated.zip) from the latest release.
+2. Unzip it into your plugins directory, so the plugin sits in `wp-content/plugins/escalated`.
+3. Activate **Escalated** from the WordPress Plugins screen.
+4. Go to **Escalated** in wp-admin and set up departments, SLA policies, escalation rules and settings.
+
+Needs WordPress 6.0+ and PHP 8.1+. The [installation guide](docs/installation.md) has the details, and [customization](docs/customization.md) lists the shortcodes for your customer-facing pages.
+
+## Learn more
+
+- [All features](docs/features.md) · [Installation](docs/installation.md) · [Screenshots](docs/screenshots.md)
+- [Shortcodes, ticket subjects and translations](docs/customization.md) · [REST API and ticket merge](docs/rest-api.md)
+- [Access control](docs/access-control.md) · [Ticket access and routing](docs/ticket-access-and-routing.md) · [Workflows](docs/workflows.md)
+- [Inbound email](docs/inbound-email.md) · [Webhooks](docs/webhooks.md) · [Guest access](docs/guest-access.md)
+- [Embedding the widget](docs/embedding-the-widget.md) · [Embedding the admin](docs/embedding-admin.md)
+- [Scheduled tasks and database connection](docs/operations.md) · [Newsletters](docs/newsletters.md) · [Development](docs/development.md)
+
+Escalated is also available for [Laravel](https://github.com/escalated-dev/escalated-laravel), [Rails](https://github.com/escalated-dev/escalated-rails), [Django](https://github.com/escalated-dev/escalated-django), [NestJS](https://github.com/escalated-dev/escalated-nestjs), [AdonisJS](https://github.com/escalated-dev/escalated-adonis), [Symfony](https://github.com/escalated-dev/escalated-symfony), [Phoenix](https://github.com/escalated-dev/escalated-phoenix), [Go](https://github.com/escalated-dev/escalated-go), [.NET](https://github.com/escalated-dev/escalated-dotnet), [Spring](https://github.com/escalated-dev/escalated-spring) and [Filament](https://github.com/escalated-dev/escalated-filament). The UI for the other backends lives in [escalated](https://github.com/escalated-dev/escalated).
 
 ## License
 
-MIT - Copyright (c) Escalated.dev. See [LICENSE](LICENSE).
+MIT. Copyright (c) 2026 Escalated.dev. See [LICENSE](LICENSE).

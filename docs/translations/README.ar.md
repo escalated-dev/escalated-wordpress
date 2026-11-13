@@ -1,166 +1,154 @@
-<p align="center">
-  <b>العربية</b> •
-  <a href="README.de.md">Deutsch</a> •
-  <a href="../../README.md">English</a> •
-  <a href="README.es.md">Español</a> •
-  <a href="README.fr.md">Français</a> •
-  <a href="README.it.md">Italiano</a> •
-  <a href="README.ja.md">日本語</a> •
-  <a href="README.ko.md">한국어</a> •
-  <a href="README.nl.md">Nederlands</a> •
-  <a href="README.pl.md">Polski</a> •
-  <a href="README.pt-BR.md">Português (BR)</a> •
-  <a href="README.ru.md">Русский</a> •
-  <a href="README.tr.md">Türkçe</a> •
+<p align="center"><sub>
+  <b>العربية</b> ·
+  <a href="README.de.md">Deutsch</a> ·
+  <a href="../../README.md">English</a> ·
+  <a href="README.es.md">Español</a> ·
+  <a href="README.fr.md">Français</a> ·
+  <a href="README.it.md">Italiano</a> ·
+  <a href="README.ja.md">日本語</a> ·
+  <a href="README.ko.md">한국어</a> ·
+  <a href="README.nl.md">Nederlands</a> ·
+  <a href="README.pl.md">Polski</a> ·
+  <a href="README.pt-BR.md">Português (BR)</a> ·
+  <a href="README.ru.md">Русский</a> ·
+  <a href="README.tr.md">Türkçe</a> ·
   <a href="README.zh-CN.md">简体中文</a>
+</sub></p>
+
+<p align="center">
+  <a href="https://escalated.dev"><img src="https://raw.githubusercontent.com/escalated-dev/escalated/main/docs/assets/readme/logo.png" width="72" height="72" alt="Escalated"></a>
 </p>
 
-# Escalated for WordPress
+<h1 align="center">Escalated for WordPress</h1>
 
-[![Tests](https://github.com/escalated-dev/escalated-wordpress/actions/workflows/run-tests.yml/badge.svg)](https://github.com/escalated-dev/escalated-wordpress/actions/workflows/run-tests.yml)
-[![Latest Release](https://img.shields.io/github/v/release/escalated-dev/escalated-wordpress)](https://github.com/escalated-dev/escalated-wordpress/releases/latest)
-[![PHP Version](https://img.shields.io/badge/php-%3E%3D8.1-8892BF)](https://www.php.net/)
-[![WordPress](https://img.shields.io/badge/wordpress-%3E%3D6.0-21759B)](https://wordpress.org/)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+<p align="center">
+  شغّل مكتب دعم متكاملًا داخل WordPress.<br>
+  تذاكر، واتفاقيات مستوى الخدمة (SLA)، وقواعد تصعيد، وبريد وارد، وبوابة للعملاء، تُدار كلها من wp-admin دون أي خدمات خارجية.
+</p>
 
-نظام مكتب مساعدة وتذاكر متكامل لـ WordPress مع دعم أدوار متعددة، تتبع SLA، قواعد التصعيد، معالجة البريد الوارد، الماكرو، وREST API. لا يتطلب خدمات خارجية.
+<p align="center">
+  <a href="https://escalated.dev"><b>الموقع</b></a> ·
+  <a href="https://escalated.dev/docs"><b>التوثيق</b></a> ·
+  <a href="https://escalated.dev/cloud"><b>Cloud</b></a> ·
+  <a href="../../CHANGELOG.md"><b>سجل التغييرات</b></a>
+</p>
 
-> **[escalated.dev](https://escalated.dev)** — تعرف على المزيد، شاهد العروض التوضيحية، وقارن بين خيارات Cloud والاستضافة الذاتية.
+<br>
 
-## Screenshots
+<img src="../../screenshots/results/ticket-list.png" alt="قائمة التذاكر في Escalated داخل wp-admin مع عوامل تصفية حسب الحالة والأولوية والقسم والوكيل" width="100%">
 
-| قائمة التذاكر | تفاصيل التذكرة |
-|:-----------:|:-------------:|
-| ![قائمة التذاكر](screenshots/results/ticket-list.png) | ![تفاصيل التذكرة](screenshots/results/ticket-detail.png) |
+## ما الذي يقدمه
 
-| الأقسام | سياسات SLA |
-|:-----------:|:------------:|
-| ![الأقسام](screenshots/results/departments.png) | ![سياسات SLA](screenshots/results/sla-policies.png) |
-
-| التقارير | الإعدادات |
-|:-------:|:--------:|
-| ![التقارير](screenshots/results/reports.png) | ![الإعدادات](screenshots/results/settings.png) |
-
-| الأتمتة | الماكرو |
-|:-----------:|:------:|
-| ![الأتمتة](screenshots/results/automations.png) | ![الماكرو](screenshots/results/macros.png) |
-
-> يتم إنشاء لقطات الشاشة تلقائياً عبر Playwright مع كل إصدار. راجع `.github/workflows/screenshots.yml`.
-
-## Download
-
-[![Download Latest Release](https://img.shields.io/badge/Download-Latest%20Release-2ea44f?style=for-the-badge&logo=github)](https://github.com/escalated-dev/escalated-wordpress/releases/latest)
-
-- أحدث حزمة إضافة: [escalated.zip](https://github.com/escalated-dev/escalated-wordpress/releases/latest/download/escalated.zip)
-- جميع الإصدارات: [Releases](https://github.com/escalated-dev/escalated-wordpress/releases)
+<table>
+  <tr>
+    <td width="40%">
+      <h3>تذاكر يتولاها وكلاؤك داخل wp-admin</h3>
+      محادثات متسلسلة وملاحظات داخلية وردود جاهزة ووحدات ماكرو في شاشة التذكرة. تصل التذاكر أيضًا عبر البريد الإلكتروني من خلال Mailgun أو Postmark أو Amazon SES.
+    </td>
+    <td width="60%">
+      <img src="../../screenshots/results/ticket-detail.png" alt="تذكرة مفتوحة في wp-admin تعرض المحادثة ونموذج الرد">
+    </td>
+  </tr>
+  <tr>
+    <td width="60%">
+      <img src="../../screenshots/results/sla-policies.png" alt="شاشة سياسات SLA مع أهداف الاستجابة الأولى والحل">
+    </td>
+    <td width="40%">
+      <h3>اتفاقيات SLA وقواعد تصعيد تعمل من تلقاء نفسها</h3>
+      أهداف للاستجابة الأولى والحل، وقواعد تصعّد التذاكر عند التأخر، وفحوصات SLA مجدولة عبر WP-Cron.
+    </td>
+  </tr>
+</table>
 
 ## الميزات
 
-- إدارة التذاكر مع محادثات متسلسلة وملاحظات داخلية وجدول زمني للنشاط.
-- أدوار دعم مخصصة: `escalated_admin` و `escalated_agent`.
-- توجيه قائم على الأقسام وسير عمل التعيين.
-- سياسات SLA مع أهداف الاستجابة الأولى والحل.
-- قواعد تصعيد آلية وفحوصات SLA مجدولة.
-- صفحات تذاكر أمامية للعملاء عبر الأكواد المختصرة.
-- إرسال تذاكر الضيوف والوصول الآمن لتذاكر الضيوف.
-- استقبال البريد الوارد عبر webhooks من Mailgun وPostmark وAmazon SES.
-- ردود جاهزة وماكرو وإدارة الوسوم.
-- REST API مع رمز Bearer وصلاحيات لكل رمز وتحديد معدل الطلبات.
-- دعم المرفقات مع حدود رفع قابلة للتكوين.
-- تقييمات الرضا وعروض التقارير.
+<table>
+<tr>
+<td width="33%" valign="top">
 
-## المتطلبات
+**التذاكر**
+- محادثات متسلسلة وملاحظات داخلية
+- سجل زمني للنشاط في كل تذكرة
+- ردود جاهزة ووحدات ماكرو ووسوم
+- دمج التذاكر المكررة
+- مرفقات مع حدود للرفع
 
-- WordPress `6.0+`
-- PHP `8.1+`
+</td>
+<td width="33%" valign="top">
 
-## التثبيت
+**SLA والتوجيه**
+- التوجيه والإسناد حسب القسم
+- أهداف الاستجابة الأولى والحل
+- قواعد تصعيد وفحوصات SLA مجدولة
+- مسارات عمل قائمة على الأحداث في wp-admin أو عبر REST
 
-1. ضع هذه الإضافة في مجلد إضافات WordPress:
-   - `wp-content/plugins/escalated`
-2. قم بتفعيل **Escalated** من شاشة الإضافات في WordPress.
-3. انتقل إلى **Escalated** في wp-admin وقم بتكوين:
-   - الأقسام
-   - سياسات SLA
-   - قواعد التصعيد
-   - الإعدادات
+</td>
+<td width="33%" valign="top">
 
-## أكواد الواجهة المختصرة
+**العملاء**
+- صفحات تذاكر في واجهة الموقع عبر الرموز القصيرة (shortcodes)
+- إرسال التذاكر كضيف ووصول آمن للضيوف
+- تقييمات الرضا
 
-استخدم هذه الأكواد المختصرة في صفحات WordPress:
+</td>
+</tr>
+<tr>
+<td width="33%" valign="top">
 
-- `[escalated_tickets]` - قائمة تذاكر مقدم الطلب المسجل.
-- `[escalated_create_ticket]` - نموذج تذكرة جديدة لمقدمي الطلبات المسجلين.
-- `[escalated_view_ticket]` - عرض تفاصيل التذكرة:
-  - المستخدمون المسجلون: يتوقع `?ticket=ESC-123`
-  - الضيوف: يتوقع `?guest_token=<token>`
-- `[escalated_guest_create]` - نموذج إنشاء تذكرة ضيف (إذا كان مفعلاً في الإعدادات).
+**الأدوار والأمان**
+- أدوار المدير والوكيل والوكيل المحدود
+- صلاحيات اختيارية لكل مسار
+- مصادقة ثنائية اختيارية عبر TOTP للموظفين
+- تسجيل الدخول عبر SAML 2.0 أو OAuth 2 / OIDC أو JWT
 
-## REST API
+</td>
+<td width="33%" valign="top">
 
-- مساحة الأسماء: `/wp-json/escalated/v1`
-- المصادقة: `Authorization: Bearer <api-token>`
-- حد المعدل الافتراضي: `60` طلب/دقيقة لكل رمز (قابل للتكوين عبر إعداد `api_rate_limit`)
+**البريد وخطافات الويب**
+- بريد وارد من Mailgun وPostmark وAmazon SES
+- عدة نقاط نهاية لخطافات الويب لكل منها أحداثها الخاصة
+- سجل للتسليم وإعادة المحاولة
 
-مجموعات المسارات الرئيسية:
+</td>
+<td width="33%" valign="top">
 
-- `/auth/validate`
-- `/tickets`
-- `/departments`
-- `/tags`
-- `/canned-responses`
-- `/macros`
-- `/agents`
-- `/dashboard`
-- `/admin/api-tokens`
+**الواجهة البرمجية والتقارير**
+- واجهة REST API برموز Bearer مع صلاحيات لكل رمز
+- تحديد معدل الطلبات لكل رمز
+- شاشات التقارير
 
-## webhooks البريد الوارد
+</td>
+</tr>
+</table>
 
-نمط مسار البريد الوارد:
+<p align="center"><sub><a href="../features.md">كل الميزات بالتفصيل</a></sub></p>
 
-- `POST /wp-json/escalated/v1/inbound/{adapter}`
+<p align="center">
+  <a href="https://wordpress.org"><img src="https://img.shields.io/badge/WordPress-21759B?style=for-the-badge&logo=wordpress&logoColor=white" alt="WordPress"></a>
+  <a href="https://www.php.net"><img src="https://img.shields.io/badge/PHP-777BB4?style=for-the-badge&logo=php&logoColor=white" alt="PHP"></a>
+  <a href="https://www.mysql.com"><img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL"></a>
+</p>
 
-المحولات المدعومة:
+## البدء السريع
 
-- `mailgun`
-- `postmark`
-- `ses`
+1. نزّل [escalated.zip](https://github.com/escalated-dev/escalated-wordpress/releases/latest/download/escalated.zip) من أحدث إصدار.
+2. فك ضغطه في مجلد الإضافات بحيث تكون الإضافة في `wp-content/plugins/escalated`.
+3. فعّل **Escalated** من شاشة الإضافات في WordPress.
+4. انتقل إلى **Escalated** في wp-admin وأعدّ الأقسام وسياسات SLA وقواعد التصعيد والإعدادات.
 
-## المهام المجدولة (WP-Cron)
+يتطلب WordPress 6.0+ وPHP 8.1+. يحتوي [دليل التثبيت](../installation.md) على التفاصيل، وتسرد صفحة [التخصيص](../customization.md) الرموز القصيرة لصفحاتك الموجهة للعملاء.
 
-عند التفعيل، يقوم Escalated بجدولة:
+## اعرف المزيد
 
-- `escalated_check_sla` (كل دقيقة)
-- `escalated_evaluate_escalations` (كل 5 دقائق)
-- `escalated_auto_close` (يومياً)
-- `escalated_purge_activities` (أسبوعياً)
+- [كل الميزات](../features.md) · [التثبيت](../installation.md) · [لقطات الشاشة](../screenshots.md)
+- [الرموز القصيرة وعناوين التذاكر والترجمات](../customization.md) · [REST API ودمج التذاكر](../rest-api.md)
+- [التحكم في الوصول](../access-control.md) · [الوصول إلى التذاكر وتوجيهها](../ticket-access-and-routing.md) · [مسارات العمل](../workflows.md)
+- [البريد الوارد](../inbound-email.md) · [خطافات الويب](../webhooks.md) · [وصول الضيوف](../guest-access.md)
+- [تضمين الأداة](../embedding-the-widget.md) · [تضمين لوحة الإدارة](../embedding-admin.md)
+- [المهام المجدولة والاتصال بقاعدة البيانات](../operations.md) · [النشرات البريدية](../newsletters.md) · [التطوير](../development.md)
 
-## التطوير
+يتوفر Escalated أيضًا لـ [Laravel](https://github.com/escalated-dev/escalated-laravel)، [Rails](https://github.com/escalated-dev/escalated-rails)، [Django](https://github.com/escalated-dev/escalated-django)، [NestJS](https://github.com/escalated-dev/escalated-nestjs)، [AdonisJS](https://github.com/escalated-dev/escalated-adonis)، [Symfony](https://github.com/escalated-dev/escalated-symfony)، [Phoenix](https://github.com/escalated-dev/escalated-phoenix)، [Go](https://github.com/escalated-dev/escalated-go)، [.NET](https://github.com/escalated-dev/escalated-dotnet)، [Spring](https://github.com/escalated-dev/escalated-spring) و[Filament](https://github.com/escalated-dev/escalated-filament). توجد واجهة الخلفيات الأخرى في [escalated](https://github.com/escalated-dev/escalated).
 
-تثبيت التبعيات:
+## الترخيص
 
-```bash
-composer install
-```
-
-تشغيل الاختبارات (يتطلب مجموعة اختبارات WordPress):
-
-```bash
-vendor/bin/phpunit -c phpunit.xml.dist
-```
-
-إذا لزم الأمر، قم بتعيين `WP_TESTS_DIR` إلى مسار مكتبة اختبارات WordPress المحلية قبل تشغيل PHPUnit.
-
-## متوفر أيضاً لـ
-
-- **[Escalated for Laravel](https://github.com/escalated-dev/escalated-laravel)** — حزمة Composer لـ Laravel
-- **[Escalated for Rails](https://github.com/escalated-dev/escalated-rails)** — محرك Ruby on Rails
-- **[Escalated for Django](https://github.com/escalated-dev/escalated-django)** — تطبيق Django قابل لإعادة الاستخدام
-- **[Escalated for AdonisJS](https://github.com/escalated-dev/escalated-adonis)** — حزمة AdonisJS v6
-- **[Escalated for Filament](https://github.com/escalated-dev/escalated-filament)** — إضافة لوحة إدارة Filament v3
-- **[Escalated for WordPress](https://github.com/escalated-dev/escalated-wordpress)** — إضافة WordPress (أنت هنا)
-- **[Shared Frontend](https://github.com/escalated-dev/escalated)** — مكونات واجهة Vue 3 + Inertia.js
-
-## الرخصة
-
-MIT
+MIT. Copyright (c) 2026 Escalated.dev. راجع [LICENSE](../../LICENSE).

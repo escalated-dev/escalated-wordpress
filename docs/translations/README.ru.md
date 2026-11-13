@@ -1,166 +1,154 @@
-<p align="center">
-  <a href="README.ar.md">العربية</a> •
-  <a href="README.de.md">Deutsch</a> •
-  <a href="../../README.md">English</a> •
-  <a href="README.es.md">Español</a> •
-  <a href="README.fr.md">Français</a> •
-  <a href="README.it.md">Italiano</a> •
-  <a href="README.ja.md">日本語</a> •
-  <a href="README.ko.md">한국어</a> •
-  <a href="README.nl.md">Nederlands</a> •
-  <a href="README.pl.md">Polski</a> •
-  <a href="README.pt-BR.md">Português (BR)</a> •
-  <b>Русский</b> •
-  <a href="README.tr.md">Türkçe</a> •
+<p align="center"><sub>
+  <a href="README.ar.md">العربية</a> ·
+  <a href="README.de.md">Deutsch</a> ·
+  <a href="../../README.md">English</a> ·
+  <a href="README.es.md">Español</a> ·
+  <a href="README.fr.md">Français</a> ·
+  <a href="README.it.md">Italiano</a> ·
+  <a href="README.ja.md">日本語</a> ·
+  <a href="README.ko.md">한국어</a> ·
+  <a href="README.nl.md">Nederlands</a> ·
+  <a href="README.pl.md">Polski</a> ·
+  <a href="README.pt-BR.md">Português (BR)</a> ·
+  <b>Русский</b> ·
+  <a href="README.tr.md">Türkçe</a> ·
   <a href="README.zh-CN.md">简体中文</a>
+</sub></p>
+
+<p align="center">
+  <a href="https://escalated.dev"><img src="https://raw.githubusercontent.com/escalated-dev/escalated/main/docs/assets/readme/logo.png" width="72" height="72" alt="Escalated"></a>
 </p>
 
-# Escalated for WordPress
+<h1 align="center">Escalated for WordPress</h1>
 
-[![Tests](https://github.com/escalated-dev/escalated-wordpress/actions/workflows/run-tests.yml/badge.svg)](https://github.com/escalated-dev/escalated-wordpress/actions/workflows/run-tests.yml)
-[![Latest Release](https://img.shields.io/github/v/release/escalated-dev/escalated-wordpress)](https://github.com/escalated-dev/escalated-wordpress/releases/latest)
-[![PHP Version](https://img.shields.io/badge/php-%3E%3D8.1-8892BF)](https://www.php.net/)
-[![WordPress](https://img.shields.io/badge/wordpress-%3E%3D6.0-21759B)](https://wordpress.org/)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+<p align="center">
+  Полноценный хелпдеск прямо внутри WordPress.<br>
+  Тикеты, SLA, правила эскалации, входящая почта и клиентский портал, управляемые из wp-admin без внешних сервисов.
+</p>
 
-Полнофункциональная система helpdesk и тикетов для WordPress с поддержкой множества ролей, отслеживанием SLA, правилами эскалации, обработкой входящей почты, макросами и REST API. Внешние сервисы не требуются.
+<p align="center">
+  <a href="https://escalated.dev"><b>Сайт</b></a> ·
+  <a href="https://escalated.dev/docs"><b>Документация</b></a> ·
+  <a href="https://escalated.dev/cloud"><b>Cloud</b></a> ·
+  <a href="../../CHANGELOG.md"><b>Список изменений</b></a>
+</p>
 
-> **[escalated.dev](https://escalated.dev)** — Узнайте больше, посмотрите демо и сравните варианты Cloud и Self-Hosted.
+<br>
 
-## Screenshots
+<img src="../../screenshots/results/ticket-list.png" alt="Список тикетов Escalated в wp-admin с фильтрами по статусу, приоритету, отделу и агенту" width="100%">
 
-| Список тикетов | Детали тикета |
-|:-----------:|:-------------:|
-| ![Список тикетов](screenshots/results/ticket-list.png) | ![Детали тикета](screenshots/results/ticket-detail.png) |
+## Что он делает
 
-| Отделы | Политики SLA |
-|:-----------:|:------------:|
-| ![Отделы](screenshots/results/departments.png) | ![Политики SLA](screenshots/results/sla-policies.png) |
-
-| Отчёты | Настройки |
-|:-------:|:--------:|
-| ![Отчёты](screenshots/results/reports.png) | ![Настройки](screenshots/results/settings.png) |
-
-| Автоматизации | Макросы |
-|:-----------:|:------:|
-| ![Автоматизации](screenshots/results/automations.png) | ![Макросы](screenshots/results/macros.png) |
-
-> Скриншоты автоматически генерируются через Playwright при каждом релизе. См. `.github/workflows/screenshots.yml`.
-
-## Download
-
-[![Download Latest Release](https://img.shields.io/badge/Download-Latest%20Release-2ea44f?style=for-the-badge&logo=github)](https://github.com/escalated-dev/escalated-wordpress/releases/latest)
-
-- Последний пакет плагина: [escalated.zip](https://github.com/escalated-dev/escalated-wordpress/releases/latest/download/escalated.zip)
-- Все релизы: [Releases](https://github.com/escalated-dev/escalated-wordpress/releases)
+<table>
+  <tr>
+    <td width="40%">
+      <h3>Тикеты, которые агенты обрабатывают в wp-admin</h3>
+      Переписка в виде цепочек, внутренние заметки, шаблоны ответов и макросы на экране тикета. Тикеты также приходят по электронной почте через Mailgun, Postmark или Amazon SES.
+    </td>
+    <td width="60%">
+      <img src="../../screenshots/results/ticket-detail.png" alt="Тикет, открытый в wp-admin, с перепиской и формой ответа">
+    </td>
+  </tr>
+  <tr>
+    <td width="60%">
+      <img src="../../screenshots/results/sla-policies.png" alt="Экран политик SLA с целями по первому ответу и решению">
+    </td>
+    <td width="40%">
+      <h3>SLA и правила эскалации, которые работают сами</h3>
+      Цели по первому ответу и решению, правила, которые эскалируют тикеты при отставании, и проверки SLA по расписанию через WP-Cron.
+    </td>
+  </tr>
+</table>
 
 ## Возможности
 
-- Управление тикетами с цепочками разговоров, внутренними заметками и хронологией активности.
-- Пользовательские роли поддержки: `escalated_admin` и `escalated_agent`.
-- Маршрутизация по отделам и рабочие процессы назначения.
-- Политики SLA с целями первого ответа и решения.
-- Автоматизированные правила эскалации и запланированные проверки SLA.
-- Клиентские страницы тикетов на фронтенде через шорткоды.
-- Отправка гостевых тикетов и безопасный доступ к гостевым тикетам.
-- Приём входящей почты через вебхуки Mailgun, Postmark и Amazon SES.
-- Шаблонные ответы, макросы и управление тегами.
-- REST API с Bearer-токеном, правами доступа по токену и ограничением частоты запросов.
-- Поддержка вложений с настраиваемыми лимитами загрузки.
-- Оценки удовлетворённости и представления отчётов.
+<table>
+<tr>
+<td width="33%" valign="top">
 
-## Требования
+**Тикеты**
+- Переписка цепочками и внутренние заметки
+- Хронология действий в каждом тикете
+- Шаблоны ответов, макросы и теги
+- Объединение дублирующихся тикетов
+- Вложения с ограничениями на загрузку
 
-- WordPress `6.0+`
-- PHP `8.1+`
+</td>
+<td width="33%" valign="top">
 
-## Установка
+**SLA и маршрутизация**
+- Маршрутизация и назначение по отделам
+- Цели по первому ответу и решению
+- Правила эскалации и проверки SLA по расписанию
+- Рабочие процессы на событиях в wp-admin или через REST
 
-1. Поместите этот плагин в каталог плагинов WordPress:
-   - `wp-content/plugins/escalated`
-2. Активируйте **Escalated** на экране Плагинов WordPress.
-3. Перейдите в **Escalated** в wp-admin и настройте:
-   - Отделы
-   - Политики SLA
-   - Правила эскалации
-   - Настройки
+</td>
+<td width="33%" valign="top">
 
-## Фронтенд шорткоды
+**Клиенты**
+- Страницы тикетов на сайте через шорткоды
+- Отправка тикетов гостями и защищённый гостевой доступ
+- Оценки удовлетворённости
 
-Используйте эти шорткоды на страницах WordPress:
+</td>
+</tr>
+<tr>
+<td width="33%" valign="top">
 
-- `[escalated_tickets]` - Список тикетов авторизованного пользователя.
-- `[escalated_create_ticket]` - Форма нового тикета для авторизованных пользователей.
-- `[escalated_view_ticket]` - Детальный просмотр тикета:
-  - Авторизованные пользователи: ожидает `?ticket=ESC-123`
-  - Гости: ожидает `?guest_token=<token>`
-- `[escalated_guest_create]` - Форма создания гостевого тикета (если включено в настройках).
+**Роли и безопасность**
+- Роли администратора, агента и облегчённого агента
+- Необязательные права доступа для отдельных маршрутов
+- Необязательная двухфакторная аутентификация TOTP для сотрудников
+- Вход через SAML 2.0, OAuth 2 / OIDC или JWT
 
-## REST API
+</td>
+<td width="33%" valign="top">
 
-- Namespace: `/wp-json/escalated/v1`
-- Авторизация: `Authorization: Bearer <api-token>`
-- Ограничение частоты по умолчанию: `60` запросов/минуту на токен (настраивается через параметр `api_rate_limit`)
+**Почта и вебхуки**
+- Входящая почта из Mailgun, Postmark и Amazon SES
+- Несколько эндпоинтов вебхуков со своими событиями
+- Журнал доставки и повторные попытки
 
-Основные группы маршрутов:
+</td>
+<td width="33%" valign="top">
 
-- `/auth/validate`
-- `/tickets`
-- `/departments`
-- `/tags`
-- `/canned-responses`
-- `/macros`
-- `/agents`
-- `/dashboard`
-- `/admin/api-tokens`
+**API и отчёты**
+- REST API с Bearer-токенами и правами для токенов
+- Ограничение частоты запросов для каждого токена
+- Отчёты
 
-## Вебхуки входящей почты
+</td>
+</tr>
+</table>
 
-Шаблон входящего маршрута:
+<p align="center"><sub><a href="../features.md">Все возможности подробно</a></sub></p>
 
-- `POST /wp-json/escalated/v1/inbound/{adapter}`
+<p align="center">
+  <a href="https://wordpress.org"><img src="https://img.shields.io/badge/WordPress-21759B?style=for-the-badge&logo=wordpress&logoColor=white" alt="WordPress"></a>
+  <a href="https://www.php.net"><img src="https://img.shields.io/badge/PHP-777BB4?style=for-the-badge&logo=php&logoColor=white" alt="PHP"></a>
+  <a href="https://www.mysql.com"><img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL"></a>
+</p>
 
-Поддерживаемые адаптеры:
+## Быстрый старт
 
-- `mailgun`
-- `postmark`
-- `ses`
+1. Скачайте [escalated.zip](https://github.com/escalated-dev/escalated-wordpress/releases/latest/download/escalated.zip) из последнего релиза.
+2. Распакуйте его в каталог плагинов, чтобы плагин оказался в `wp-content/plugins/escalated`.
+3. Активируйте **Escalated** на экране «Плагины» в WordPress.
+4. Откройте **Escalated** в wp-admin и настройте отделы, политики SLA, правила эскалации и параметры.
 
-## Запланированные задачи (WP-Cron)
+Нужны WordPress 6.0+ и PHP 8.1+. Подробности в [руководстве по установке](../installation.md), а в разделе [кастомизация](../customization.md) перечислены шорткоды для страниц, которые видят клиенты.
 
-При активации Escalated планирует:
+## Подробнее
 
-- `escalated_check_sla` (каждую минуту)
-- `escalated_evaluate_escalations` (каждые 5 минут)
-- `escalated_auto_close` (ежедневно)
-- `escalated_purge_activities` (еженедельно)
+- [Все возможности](../features.md) · [Установка](../installation.md) · [Скриншоты](../screenshots.md)
+- [Шорткоды, темы тикетов и переводы](../customization.md) · [REST API и объединение тикетов](../rest-api.md)
+- [Управление доступом](../access-control.md) · [Доступ к тикетам и маршрутизация](../ticket-access-and-routing.md) · [Рабочие процессы](../workflows.md)
+- [Входящая почта](../inbound-email.md) · [Вебхуки](../webhooks.md) · [Гостевой доступ](../guest-access.md)
+- [Встраивание виджета](../embedding-the-widget.md) · [Встраивание админки](../embedding-admin.md)
+- [Задачи по расписанию и подключение к базе данных](../operations.md) · [Рассылки](../newsletters.md) · [Разработка](../development.md)
 
-## Разработка
-
-Установка зависимостей:
-
-```bash
-composer install
-```
-
-Запуск тестов (требуется тестовый набор WordPress):
-
-```bash
-vendor/bin/phpunit -c phpunit.xml.dist
-```
-
-При необходимости установите `WP_TESTS_DIR` в путь к вашей локальной тестовой библиотеке WordPress перед запуском PHPUnit.
-
-## Также доступно для
-
-- **[Escalated for Laravel](https://github.com/escalated-dev/escalated-laravel)** — Composer-пакет для Laravel
-- **[Escalated for Rails](https://github.com/escalated-dev/escalated-rails)** — Engine для Ruby on Rails
-- **[Escalated for Django](https://github.com/escalated-dev/escalated-django)** — Переиспользуемое приложение Django
-- **[Escalated for AdonisJS](https://github.com/escalated-dev/escalated-adonis)** — Пакет AdonisJS v6
-- **[Escalated for Filament](https://github.com/escalated-dev/escalated-filament)** — Плагин админ-панели Filament v3
-- **[Escalated for WordPress](https://github.com/escalated-dev/escalated-wordpress)** — Плагин WordPress (вы здесь)
-- **[Shared Frontend](https://github.com/escalated-dev/escalated)** — UI-компоненты Vue 3 + Inertia.js
+Escalated также доступен для [Laravel](https://github.com/escalated-dev/escalated-laravel), [Rails](https://github.com/escalated-dev/escalated-rails), [Django](https://github.com/escalated-dev/escalated-django), [NestJS](https://github.com/escalated-dev/escalated-nestjs), [AdonisJS](https://github.com/escalated-dev/escalated-adonis), [Symfony](https://github.com/escalated-dev/escalated-symfony), [Phoenix](https://github.com/escalated-dev/escalated-phoenix), [Go](https://github.com/escalated-dev/escalated-go), [.NET](https://github.com/escalated-dev/escalated-dotnet), [Spring](https://github.com/escalated-dev/escalated-spring) и [Filament](https://github.com/escalated-dev/escalated-filament). Интерфейс для остальных бэкендов находится в [escalated](https://github.com/escalated-dev/escalated).
 
 ## Лицензия
 
-MIT
+MIT. Copyright (c) 2026 Escalated.dev. См. [LICENSE](../../LICENSE).
