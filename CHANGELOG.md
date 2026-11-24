@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Upgrading
+- No migrations. **Required: schedule the recurring jobs.** Add a system cron job that runs WP-Cron every minute (`* * * * * wp cron event run --due-now --path=/path/to/wordpress`); a quiet site, or one with `DISABLE_WP_CRON` and no cron job, otherwise runs no SLA checks, escalation rules, automations or snooze wake-ups. Escalated now warns admins when they have not run for 15 minutes. See docs/operations.md.
+
+### Added
+- The admin ticket screen shows the ticket's subjects (the host records it is about) in a **Related** card, serialised as the ticket API does.
+- `ESCALATED_WIDGET_ENABLED` and `ESCALATED_GUEST_ROUTES` (default on; constant, environment variable or the `escalated_widget_enabled` / `escalated_guest_routes_enabled` filters): off, no widget route (and no widget CORS handling) or no guest route (`/guest/*`, `/mobile/guest/*`, the guest admin-ajax actions) is registered. The runtime **Guest tickets** and **Enable the support widget** settings work as before.
+- `ESCALATED_CUSTOMER_CAPABILITIES` (default none; or the `escalated_customer_capabilities` / `escalated_customer_can_access` filters): capabilities a signed-in user needs to use the customer portal shortcodes and their admin-ajax actions. With the two switches above this makes the portal staff-only. See docs/access-control.md.
+- A heartbeat each time the SLA check runs, and a warning on Escalated's screens for users who can view settings when it is missing or older than 15 minutes, naming the cron job to add.
+- `wp escalated doctor`: reports missing tables, roles and administrator capabilities, no user able to work tickets, unscheduled events and a stalled scheduler.
+
 ## [1.6.12] - 2026-11-07
 
 ### Upgrading
