@@ -211,4 +211,40 @@ class Test_Ticket_Subject_Service extends WP_UnitTestCase
         $this->expectException(\InvalidArgumentException::class);
         TicketSubjectService::attach_for_api((int) $ticket->id, 'project', '1');
     }
+
+    public function test_the_admin_ticket_screen_shows_the_related_subjects(): void
+    {
+        $ticket = $this->create_ticket();
+        TicketSubjectService::attach((int) $ticket->id, 'project', 'prj_9f1c', 'project');
+
+        $html = $this->render_admin_ticket((int) $ticket->id);
+
+        $this->assertStringContainsString('escalated-ticket-subjects', $html);
+        $this->assertStringContainsString('Related', $html);
+        $this->assertStringContainsString('Acme Redesign', $html);
+        $this->assertStringContainsString('Project · Acme', $html);
+        $this->assertStringContainsString('https://example.test/projects/prj_9f1c', $html);
+    }
+
+    public function test_the_admin_ticket_screen_has_no_related_card_without_subjects(): void
+    {
+        $ticket = $this->create_ticket();
+
+        $this->assertStringNotContainsString('escalated-ticket-subjects', $this->render_admin_ticket((int) $ticket->id));
+    }
+
+    private function render_admin_ticket(int $ticket_id): string
+    {
+        wp_set_current_user(self::factory()->user->create(['role' => 'administrator']));
+        $_GET = ['page' => 'escalated', 'action' => 'view', 'ticket_id' => (string) $ticket_id];
+        ob_start();
+        try {
+            (new \Escalated\Admin\Admin_Tickets)->render_list();
+        } finally {
+            $html = (string) ob_get_clean();
+            $_GET = [];
+        }
+
+        return $html;
+    }
 }

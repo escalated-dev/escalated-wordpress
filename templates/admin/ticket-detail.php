@@ -362,6 +362,30 @@ if ($requester_email) {
                 </form>
             </div>
 
+            <!-- Related (ticket subjects) -->
+            <?php if (! empty($subjects)) { ?>
+                <div class="escalated-card escalated-ticket-subjects" style="padding: 12px; margin-bottom: 12px;">
+                    <h4 class="escalated-text-primary" style="margin: 0 0 8px; font-size: 13px;"><?php esc_html_e('Related', 'escalated'); ?></h4>
+                    <ul style="margin: 0; padding: 0; list-style: none;">
+                        <?php foreach ($subjects as $subject) { ?>
+                            <li style="padding: 3px 0; font-size: 13px;">
+                                <?php if (! empty($subject['url'])) { ?>
+                                    <a href="<?php echo esc_url($subject['url']); ?>"><?php echo esc_html($subject['title']); ?></a>
+                                <?php } else { ?>
+                                    <?php echo esc_html($subject['title']); ?>
+                                <?php } ?>
+                                <?php if (! empty($subject['role'])) { ?>
+                                    <span class="escalated-text-muted">(<?php echo esc_html($subject['role']); ?>)</span>
+                                <?php } ?>
+                                <?php if (! empty($subject['subtitle'])) { ?>
+                                    <br><span class="escalated-text-secondary" style="font-size: 12px;"><?php echo esc_html($subject['subtitle']); ?></span>
+                                <?php } ?>
+                            </li>
+                        <?php } ?>
+                    </ul>
+                </div>
+            <?php } ?>
+
             <!-- Merge -->
             <?php if (current_user_can('escalated_ticket_merge')) { ?>
                 <div class="escalated-card" style="padding: 12px; margin-bottom: 12px;">

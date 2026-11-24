@@ -11,6 +11,7 @@ use Escalated\Models\Tag;
 use Escalated\Models\Ticket;
 use Escalated\Models\TicketActivity;
 use Escalated\Services\TicketService;
+use Escalated\Services\TicketSubjectService;
 
 class Admin_Tickets
 {
@@ -111,6 +112,8 @@ class Admin_Tickets
         $priorities = Enums::ticket_priorities();
         $departments = Department::all();
         $attachments = Attachment::for_attachable('ticket', $ticket_id);
+        // Host records the ticket is about, serialised as the ticket API does.
+        $subjects = TicketSubjectService::serialize_for_ticket($ticket_id);
 
         // Get agents for assignment.
         $agents = get_users([
