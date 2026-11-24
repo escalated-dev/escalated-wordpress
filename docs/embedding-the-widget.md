@@ -5,6 +5,8 @@ your WordPress site: a store, a marketing site or a customer portal loads one
 script from WordPress. Nothing changes until you list the sites that may do
 this.
 
+The widget routes are registered unless `wp-config.php` sets `define('ESCALATED_WIDGET_ENABLED', false);`, which removes them entirely. See [Staff-only installs](access-control.md#staff-only-installs-customer-portal-guest-and-widget-switches).
+
 ## 1. Turn the widget on and allow the embedding sites
 
 Under **Escalated > Settings > Widget**, check **Enable the support widget**

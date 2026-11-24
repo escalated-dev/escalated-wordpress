@@ -2,6 +2,8 @@
 
 Guests prove they own their mailbox before they can open a ticket, start a live chat, or look a ticket up. This follows escalated-laravel's `docs/guest-access.md` and what the shared widget (`@escalated-dev/escalated`) sends.
 
+To remove the guest routes altogether (a staff-only install), set `define('ESCALATED_GUEST_ROUTES', false);`. See [Staff-only installs](access-control.md#staff-only-installs-customer-portal-guest-and-widget-switches).
+
 ## Email codes
 
 `POST /wp-json/escalated/v1/widget/verification` (widget) or `POST /wp-json/escalated/v1/guest/verification` (guest pages):

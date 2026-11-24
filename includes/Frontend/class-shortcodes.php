@@ -2,6 +2,8 @@
 
 namespace Escalated\Frontend;
 
+use Escalated\Support\RouteSwitches;
+
 class Shortcodes
 {
     public function register(): void
@@ -45,6 +47,9 @@ class Shortcodes
         if (! is_user_logged_in()) {
             return '<p class="escalated-notice">'.esc_html__('Please log in to view your tickets.', 'escalated').'</p>';
         }
+        if (! RouteSwitches::customer_allowed()) {
+            return $this->not_allowed_notice();
+        }
         $user_id = get_current_user_id();
         $status = isset($_GET['status']) ? sanitize_text_field(wp_unslash($_GET['status'])) : '';
         $page = isset($_GET['tpage']) ? max(1, absint($_GET['tpage'])) : 1;
@@ -71,6 +76,9 @@ class Shortcodes
         if (! is_user_logged_in()) {
             return '<p class="escalated-notice">'.esc_html__('Please log in to create a ticket.', 'escalated').'</p>';
         }
+        if (! RouteSwitches::customer_allowed()) {
+            return $this->not_allowed_notice();
+        }
         $departments = \Escalated\Models\Department::active();
         ob_start();
         $template = apply_filters('escalated_template_path', ESCALATED_PLUGIN_DIR.'templates/frontend/ticket-create.php', 'ticket-create');
@@ -85,6 +93,9 @@ class Shortcodes
         // An access grant, or a legacy permanent token while those are accepted.
         $guest_token = isset($_GET['guest_token']) ? sanitize_text_field(wp_unslash($_GET['guest_token'])) : '';
         if ($guest_token) {
+            if (! RouteSwitches::guest_routes_enabled()) {
+                return '<p class="escalated-notice">'.esc_html__('Guest tickets are not available.', 'escalated').'</p>';
+            }
             $ticket = \Escalated\Services\GuestAccess::ticket_for_token($guest_token);
             if (! $ticket) {
                 return '<p class="escalated-notice">'.esc_html__('This link has expired. Verify your email to get a new one.', 'escalated').'</p>';
@@ -106,6 +117,9 @@ class Shortcodes
         // Logged-in user
         if (! is_user_logged_in()) {
             return '<p class="escalated-notice">'.esc_html__('Please log in to view tickets.', 'escalated').'</p>';
+        }
+        if (! RouteSwitches::customer_allowed()) {
+            return $this->not_allowed_notice();
         }
 
         $ref = isset($_GET['ticket']) ? sanitize_text_field(wp_unslash($_GET['ticket'])) : '';
@@ -132,7 +146,7 @@ class Shortcodes
 
     public function render_guest_create($atts): string
     {
-        if (! \Escalated\Models\Setting::get_bool('guest_tickets_enabled', true)) {
+        if (! RouteSwitches::guest_routes_enabled() || ! \Escalated\Models\Setting::get_bool('guest_tickets_enabled', true)) {
             return '<p class="escalated-notice">'.esc_html__('Guest tickets are not available.', 'escalated').'</p>';
         }
         $departments = \Escalated\Models\Department::active();
@@ -141,6 +155,14 @@ class Shortcodes
         include $template;
 
         return ob_get_clean().$this->powered_by_footer();
+    }
+
+    /**
+     * Shown to a signed-in user who lacks the configured customer capabilities.
+     */
+    protected function not_allowed_notice(): string
+    {
+        return '<p class="escalated-notice">'.esc_html__('You do not have access to the support portal.', 'escalated').'</p>';
     }
 
     /**

@@ -2,6 +2,8 @@
 
 namespace Escalated\Frontend;
 
+use Escalated\Support\RouteSwitches;
+
 class Ajax_Handler
 {
     public function register(): void
@@ -12,11 +14,13 @@ class Ajax_Handler
         add_action('wp_ajax_escalated_close_ticket', [$this, 'close_ticket']);
         add_action('wp_ajax_escalated_rate_ticket', [$this, 'rate_ticket']);
 
-        // Guest actions (nopriv)
-        add_action('wp_ajax_nopriv_escalated_guest_create', [$this, 'guest_create']);
-        add_action('wp_ajax_nopriv_escalated_guest_reply', [$this, 'guest_reply']);
-        add_action('wp_ajax_escalated_guest_create', [$this, 'guest_create']);
-        add_action('wp_ajax_escalated_guest_reply', [$this, 'guest_reply']);
+        // Guest actions (nopriv), only while the guest routes are switched on.
+        if (RouteSwitches::guest_routes_enabled()) {
+            add_action('wp_ajax_nopriv_escalated_guest_create', [$this, 'guest_create']);
+            add_action('wp_ajax_nopriv_escalated_guest_reply', [$this, 'guest_reply']);
+            add_action('wp_ajax_escalated_guest_create', [$this, 'guest_create']);
+            add_action('wp_ajax_escalated_guest_reply', [$this, 'guest_reply']);
+        }
     }
 
     public function create_ticket(): void
@@ -25,6 +29,9 @@ class Ajax_Handler
 
         if (! is_user_logged_in()) {
             wp_send_json_error(['message' => __('Authentication required.', 'escalated')], 401);
+        }
+        if (! RouteSwitches::customer_allowed()) {
+            wp_send_json_error(['message' => __('You do not have access to the support portal.', 'escalated')], 403);
         }
 
         $subject = sanitize_text_field(wp_unslash($_POST['subject'] ?? ''));
@@ -67,6 +74,9 @@ class Ajax_Handler
         if (! is_user_logged_in()) {
             wp_send_json_error(['message' => __('Authentication required.', 'escalated')], 401);
         }
+        if (! RouteSwitches::customer_allowed()) {
+            wp_send_json_error(['message' => __('You do not have access to the support portal.', 'escalated')], 403);
+        }
 
         $ticket_id = absint($_POST['ticket_id'] ?? 0);
         $body = wp_kses_post(wp_unslash($_POST['body'] ?? ''));
@@ -94,6 +104,9 @@ class Ajax_Handler
         if (! is_user_logged_in()) {
             wp_send_json_error(['message' => __('Authentication required.', 'escalated')], 401);
         }
+        if (! RouteSwitches::customer_allowed()) {
+            wp_send_json_error(['message' => __('You do not have access to the support portal.', 'escalated')], 403);
+        }
 
         $ticket_id = absint($_POST['ticket_id'] ?? 0);
         $ticket = \Escalated\Models\Ticket::find($ticket_id);
@@ -117,6 +130,9 @@ class Ajax_Handler
 
         if (! is_user_logged_in()) {
             wp_send_json_error(['message' => __('Authentication required.', 'escalated')], 401);
+        }
+        if (! RouteSwitches::customer_allowed()) {
+            wp_send_json_error(['message' => __('You do not have access to the support portal.', 'escalated')], 403);
         }
 
         $ticket_id = absint($_POST['ticket_id'] ?? 0);
