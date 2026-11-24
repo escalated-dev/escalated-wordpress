@@ -61,6 +61,7 @@ class Escalated
 
         Cli\AutomationCommand::register();
         Cli\TwoFactorCommand::register();
+        Cli\DoctorCommand::register();
     }
 
     /**
