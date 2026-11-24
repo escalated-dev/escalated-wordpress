@@ -22,3 +22,9 @@
    - SLA Policies
    - Escalation Rules
    - Settings
+4. **Required:** schedule the recurring jobs. Add a system cron job that runs
+   WP-Cron every minute (`* * * * * wp cron event run --due-now --path=/path/to/wordpress`).
+   Without it SLA checks, escalation rules, automations and snooze wake-ups
+   stop whenever the site is quiet. See
+   [Required: schedule the recurring jobs](operations.md#required-schedule-the-recurring-jobs).
+5. Run `wp escalated doctor` to check the setup.

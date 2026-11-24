@@ -135,6 +135,7 @@
 2. Unzip it into your plugins directory, so the plugin sits in `wp-content/plugins/escalated`.
 3. Activate **Escalated** from the WordPress Plugins screen.
 4. Go to **Escalated** in wp-admin and set up departments, SLA policies, escalation rules and settings.
+5. **Required:** add a system cron job that runs WP-Cron every minute (`* * * * * wp cron event run --due-now --path=/path/to/wordpress`), or SLA checks, escalation rules, automations and snooze wake-ups stop on a quiet site. See [Required: schedule the recurring jobs](docs/operations.md#required-schedule-the-recurring-jobs).
 
 Needs WordPress 6.0+ and PHP 8.1+. The [installation guide](docs/installation.md) has the details, and [customization](docs/customization.md) lists the shortcodes for your customer-facing pages.
 

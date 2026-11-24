@@ -1,13 +1,51 @@
 # Operations
 
-## Scheduled Tasks (WP-Cron)
+## Required: schedule the recurring jobs
 
-On activation, Escalated schedules:
+SLA checks, escalation rules, automations and snooze wake-ups only run when
+WP-Cron runs. Escalated schedules its events itself on activation (with
+`wp_schedule_event()`), but WP-Cron only fires when something triggers it: a
+page view while WP-Cron is on, or a real cron job. A quiet site, or one with
+`DISABLE_WP_CRON` set and no cron job, runs none of them.
 
-- `escalated_check_sla` (every minute)
-- `escalated_evaluate_escalations` (every 5 minutes)
-- `escalated_auto_close` (daily)
-- `escalated_purge_activities` (weekly)
+Add a system cron job that runs WP-Cron every minute:
+
+```cron
+* * * * * wp cron event run --due-now --path=/path/to/wordpress
+```
+
+(or `* * * * * curl -s https://example.com/wp-cron.php?doing_wp_cron >/dev/null`
+if WP-CLI is not available). With that in place you can set
+`define('DISABLE_WP_CRON', true);` so page views stop triggering it.
+
+That one job runs each of Escalated's events at its own interval:
+
+| Event | Interval | What it does |
+|---|---|---|
+| `escalated_check_sla` | every minute | SLA breaches and warnings |
+| `escalated_check_snoozed_tickets` | every minute | wakes snoozed tickets |
+| `escalated_run_due_deferred_workflow_jobs` | every minute | delayed workflow actions |
+| `escalated_process_webhook_deliveries` | every minute | webhook sends and retries |
+| `escalated_dispatch_newsletters` | every minute | newsletter sends |
+| `escalated_chat_cleanup` | every minute | idle live chats |
+| `escalated_evaluate_escalations` | every 5 minutes | escalation rules |
+| `escalated_run_automations` | every 5 minutes | time-based automations |
+| `escalated_auto_close` | daily | closes resolved tickets |
+| `escalated_purge_activities` | weekly | prunes old activity |
+
+**Checking it.** Each SLA check records a heartbeat (the
+`escalated_scheduler_heartbeat` option). When it is missing or older than 15
+minutes, users who can see Escalated's settings get a warning on every
+Escalated screen naming the cron job to add.
+`Escalated\Support\SchedulerHealth::status()` returns the same information
+as `{ healthy, last_run_at, message, commands }`.
+
+`wp escalated doctor` checks the whole setup: Escalated's tables, roles and
+the administrator role's capabilities, whether any user can work tickets,
+whether every event above is scheduled, and the heartbeat. It exits non-zero
+when anything is wrong. If events are missing (the plugin was loaded without
+its activation hook, e.g. as a must-use plugin), deactivate and reactivate it
+or call `\Escalated\Activator::activate()` from your installer.
 
 ## Database connection
 
