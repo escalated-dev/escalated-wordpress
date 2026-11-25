@@ -464,6 +464,7 @@
         "admin_init @10 Escalated\\Admin\\Admin_Workflows::handle_actions (1)",
         "admin_init @5 Escalated\\Admin\\Admin_Two_Factor::handle_actions (1)",
         "admin_menu @10 Escalated\\Admin\\Admin_Menu::add_menus (1)",
+        "admin_notices @10 Escalated\\Support\\SchedulerHealth::admin_notice (1)",
         "cron_schedules @10 Escalated\\Activator::add_cron_schedules (1)",
         "deactivate_{plugin} @10 Escalated\\Deactivator::deactivate (1)",
         "escalated_auto_close @10 Escalated\\Cron\\Auto_Close::run (1)",

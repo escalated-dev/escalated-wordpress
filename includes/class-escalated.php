@@ -43,6 +43,7 @@ class Escalated
         (new Mail\Inbound_Controller)->register();
         (new Mail\Email_Threading)->register();
         (new Cron\Sla_Check)->register();
+        Support\SchedulerHealth::register();
         (new Cron\Escalation_Check)->register();
         (new Cron\Automation_Check)->register();
         (new Cron\Auto_Close)->register();
@@ -60,6 +61,7 @@ class Escalated
 
         Cli\AutomationCommand::register();
         Cli\TwoFactorCommand::register();
+        Cli\DoctorCommand::register();
     }
 
     /**

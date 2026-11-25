@@ -6,6 +6,8 @@
 
 namespace Escalated\Api;
 
+use Escalated\Support\RouteSwitches;
+
 class Api_Bootstrap
 {
     /**
@@ -14,7 +16,9 @@ class Api_Bootstrap
     public function register(): void
     {
         add_action('rest_api_init', [$this, 'register_routes']);
-        (new Widget_Cors)->register();
+        if (RouteSwitches::widget_enabled()) {
+            (new Widget_Cors)->register();
+        }
     }
 
     /**
@@ -38,17 +42,12 @@ class Api_Bootstrap
             new Sso_Controller,
             new Audit_Log_Controller,
             new Events_Controller,
-            new Widget_Controller,
-            new Guest_Controller,
-            new Mobile_Guest_Controller,
-            new Widget_Script_Controller,
             new Article_Controller,
             new Article_Category_Controller,
             new Saved_View_Controller,
             new Ticket_Snooze_Controller,
             new Ticket_Split_Controller,
             new Chat_Controller,
-            new Widget_Chat_Controller,
             new Skill_Controller,
             new Workflow_Controller,
             new Ticket_Subject_Controller,
@@ -58,6 +57,17 @@ class Api_Bootstrap
             new Newsletter_Controller,
             new Newsletter_Esp_Webhook_Controller,
         ];
+
+        // Optional public surfaces: registered only while switched on.
+        if (RouteSwitches::widget_enabled()) {
+            $controllers[] = new Widget_Controller;
+            $controllers[] = new Widget_Script_Controller;
+            $controllers[] = new Widget_Chat_Controller;
+        }
+        if (RouteSwitches::guest_routes_enabled()) {
+            $controllers[] = new Guest_Controller;
+            $controllers[] = new Mobile_Guest_Controller;
+        }
 
         foreach ($controllers as $controller) {
             $controller->register_routes();

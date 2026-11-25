@@ -67,3 +67,5 @@ if ($admin_role) {
 }
 
 remove_role('escalated_light_agent');
+
+delete_option('escalated_scheduler_heartbeat');

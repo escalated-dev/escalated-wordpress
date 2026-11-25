@@ -284,3 +284,37 @@ they describe, and never reach the admin routes:
 | `replies:write` | `agent`, read-only, plus `POST tickets/{ref}/reply` and `/note` |
 
 Re-issue such a token with `agent` to give it the full agent API.
+
+## Staff-only installs: customer portal, guest and widget switches
+
+Out of the box any signed-in WordPress user can use the customer portal
+(`[escalated_tickets]`, `[escalated_create_ticket]`, `[escalated_view_ticket]`
+and their admin-ajax actions), and the guest pages and the widget register
+unauthenticated routes. On a site where only staff use Escalated, turn those
+surfaces off or close them to staff. Each setting is a constant in
+`wp-config.php`, else an environment variable of the same name, then a filter.
+Set them in `wp-config.php` or a (must-use) plugin, not a theme: the route
+switches are read when the routes are registered.
+
+| Setting | Default | Effect |
+|---|---|---|
+| `ESCALATED_CUSTOMER_CAPABILITIES` | none | Capabilities a signed-in user must hold to use the customer portal (an array, or a comma-separated string). Without them the shortcodes say "You do not have access to the support portal." and the admin-ajax actions answer 403. Filters: `escalated_customer_capabilities`, and `escalated_customer_can_access` (`$allowed, $user_id`) for any other guard. |
+| `ESCALATED_GUEST_ROUTES` | `true` | `false` registers no guest route: `/guest/*`, `/mobile/guest/*` and the guest admin-ajax actions. The guest shortcode and guest ticket links say guest tickets are not available. Filter: `escalated_guest_routes_enabled`. |
+| `ESCALATED_WIDGET_ENABLED` | `true` | `false` registers no widget route (`/widget/*`, `/widget/chat/*`, `/widget/embed.js`) and no widget CORS handling. Filter: `escalated_widget_enabled`. |
+
+A staff-only install:
+
+```php
+define('ESCALATED_CUSTOMER_CAPABILITIES', 'escalated_ticket_view');
+define('ESCALATED_GUEST_ROUTES', false);
+define('ESCALATED_WIDGET_ENABLED', false);
+```
+
+The **Guest tickets** and **Enable the support widget** settings still work as
+before while the routes are registered: switched off there, the routes answer
+with an error instead of not existing.
+
+The customer knowledge base needs no separate switch: the knowledge base REST
+routes already require the `escalated_kb_view` capability, which only the
+Escalated staff roles hold, and the public article routes are part of the
+widget.
