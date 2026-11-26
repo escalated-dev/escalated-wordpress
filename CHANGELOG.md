@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.6.14] - 2026-11-25
 ### Security
 - Signing in through `POST /wp-json/escalated/v1/auth/login` (or `auth/register`) no longer gives every user a full-access API token. Escalated admins get `*`, other staff `agent`, and everyone else a `customer` token that only works on the routes about their own account (`auth/me`, `auth/profile`, `auth/refresh`, `auth/logout`).
 - Every staff API route now checks that the token's owner is still Escalated staff, whatever the visibility setting. Before, the check ran only with department visibility or account scoping on.
