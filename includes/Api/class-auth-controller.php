@@ -7,11 +7,17 @@
  * credentials with wp_authenticate() and issues an Escalated API token; the
  * token-authenticated endpoints reuse the Bearer-token machinery in
  * Base_Controller. Mirrors the /auth contract of the other backends.
+ *
+ * The token a login or registration issues carries the user's Escalated
+ * role: `*` for Escalated admins, `agent` for other staff, and `customer`
+ * for everyone else. A customer token only reaches the routes about its own
+ * account (me, profile, refresh, logout); the staff routes refuse it.
  */
 
 namespace Escalated\Api;
 
 use Escalated\Models\ApiToken;
+use Escalated\Services\TicketAccess;
 use WP_REST_Request;
 use WP_REST_Server;
 
@@ -30,16 +36,17 @@ class Auth_Controller extends Base_Controller
     public function register_routes(): void
     {
         $public = '__return_true';
-        $authed = [$this, 'token_permissions_check'];
+        $staff = [$this, 'token_permissions_check'];
+        $own = [$this, 'self_token_permissions_check'];
 
         $routes = [
-            ['validate', WP_REST_Server::CREATABLE, 'validate_token', $authed],
+            ['validate', WP_REST_Server::CREATABLE, 'validate_token', $staff],
             ['login', WP_REST_Server::CREATABLE, 'login', $public],
             ['register', WP_REST_Server::CREATABLE, 'register', $public],
-            ['logout', WP_REST_Server::CREATABLE, 'logout', $authed],
-            ['refresh', WP_REST_Server::CREATABLE, 'refresh', $authed],
-            ['me', WP_REST_Server::READABLE, 'me', $authed],
-            ['profile', WP_REST_Server::EDITABLE, 'update_profile', $authed],
+            ['logout', WP_REST_Server::CREATABLE, 'logout', $own],
+            ['refresh', WP_REST_Server::CREATABLE, 'refresh', $own],
+            ['me', WP_REST_Server::READABLE, 'me', $own],
+            ['profile', WP_REST_Server::EDITABLE, 'update_profile', $own],
         ];
 
         foreach ($routes as [$path, $methods, $callback, $permission]) {
@@ -145,7 +152,7 @@ class Auth_Controller extends Base_Controller
      */
     public function me(WP_REST_Request $request)
     {
-        $user = get_userdata($this->check_token_permission($request));
+        $user = get_userdata($this->check_token_permission($request, 'self'));
 
         return $this->success(['user' => $this->user_payload($user)]);
     }
@@ -158,7 +165,7 @@ class Auth_Controller extends Base_Controller
      */
     public function update_profile(WP_REST_Request $request)
     {
-        $user_id = $this->check_token_permission($request);
+        $user_id = $this->check_token_permission($request, 'self');
         $args = ['ID' => $user_id];
 
         if ($request->get_param('display_name') !== null) {
@@ -195,17 +202,53 @@ class Auth_Controller extends Base_Controller
     }
 
     /**
-     * Issue a fresh token and revoke the current one.
+     * Issue a fresh token and revoke the current one. The new token keeps
+     * the current one's name, abilities and expiry.
      *
      * @param  WP_REST_Request  $request  The incoming request.
-     * @return \WP_REST_Response
+     * @return \WP_REST_Response|\WP_Error
      */
     public function refresh(WP_REST_Request $request)
     {
-        $user = get_userdata($this->check_token_permission($request));
-        $this->revoke_request_token($request);
+        $user = get_userdata($this->check_token_permission($request, 'self'));
+        $current = $this->request_token($request);
 
-        return $this->success($this->issue_token_response($user));
+        if (! $user || ! $current) {
+            return $this->token_error();
+        }
+
+        $abilities = json_decode((string) $current->abilities, true);
+        $created = ApiToken::create_token($user->ID, (string) $current->name, is_array($abilities) ? $abilities : []);
+
+        if ($created && ! empty($current->expires_at)) {
+            ApiToken::update($created['record']->id, ['expires_at' => $current->expires_at]);
+        }
+
+        ApiToken::delete($current->id);
+
+        return $this->success([
+            'token' => $created ? $created['token'] : null,
+            'user' => $this->user_payload($user),
+        ]);
+    }
+
+    /**
+     * The abilities a password login gives a user: `*` for Escalated
+     * admins, `agent` for other staff, `customer` for everyone else.
+     *
+     * @param  \WP_User  $user
+     */
+    private function login_abilities($user): array
+    {
+        if (TicketAccess::is_admin((int) $user->ID)) {
+            return ['*'];
+        }
+
+        if (TicketAccess::is_staff((int) $user->ID)) {
+            return ['agent'];
+        }
+
+        return ['customer'];
     }
 
     /**
@@ -215,7 +258,7 @@ class Auth_Controller extends Base_Controller
      */
     private function issue_token_response($user): array
     {
-        $created = ApiToken::create_token($user->ID, 'flutter-app');
+        $created = ApiToken::create_token($user->ID, 'flutter-app', $this->login_abilities($user));
 
         return [
             'token' => $created ? $created['token'] : null,
@@ -245,13 +288,27 @@ class Auth_Controller extends Base_Controller
      */
     private function revoke_request_token(WP_REST_Request $request): void
     {
+        $record = $this->request_token($request);
+
+        if ($record) {
+            ApiToken::delete($record->id);
+        }
+    }
+
+    /**
+     * The token record carried by the request's Authorization header.
+     *
+     * @param  WP_REST_Request  $request  The incoming request.
+     * @return object|null
+     */
+    private function request_token(WP_REST_Request $request)
+    {
         $header = (string) $request->get_header('Authorization');
 
-        if ($header !== '' && str_starts_with($header, 'Bearer ')) {
-            $record = ApiToken::find_by_token(substr($header, 7));
-            if ($record) {
-                ApiToken::delete($record->id);
-            }
+        if ($header === '' || ! str_starts_with($header, 'Bearer ')) {
+            return null;
         }
+
+        return ApiToken::find_by_token(substr($header, 7));
     }
 }
