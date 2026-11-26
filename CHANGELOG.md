@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.6.13] - 2026-11-25
 ### Upgrading
 - No migrations. **Required: schedule the recurring jobs.** Add a system cron job that runs WP-Cron every minute (`* * * * * wp cron event run --due-now --path=/path/to/wordpress`); a quiet site, or one with `DISABLE_WP_CRON` and no cron job, otherwise runs no SLA checks, escalation rules, automations or snooze wake-ups. Escalated now warns admins when they have not run for 15 minutes. See docs/operations.md.
 
