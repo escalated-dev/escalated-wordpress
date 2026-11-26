@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Security
+- Signing in through `POST /wp-json/escalated/v1/auth/login` (or `auth/register`) no longer gives every user a full-access API token. Escalated admins get `*`, other staff `agent`, and everyone else a `customer` token that only works on the routes about their own account (`auth/me`, `auth/profile`, `auth/refresh`, `auth/logout`).
+- Every staff API route now checks that the token's owner is still Escalated staff, whatever the visibility setting. Before, the check ran only with department visibility or account scoping on.
+- `auth/refresh` keeps the token's name, abilities and expiry instead of issuing a new full-access token without an expiry.
+
+### Upgrading
+- No migrations. Tokens issued by `auth/login` before this release to users who are not staff stop working on the staff routes; revoke them on the API tokens screen if you want them gone. A token whose owner is not staff is now refused with 403 `User no longer has agent access.` (was 401). Agents who sign in through `auth/login` get an `agent` token, so they no longer reach the admin routes that way; an admin can still issue a `*` or `admin` token to them on the API tokens screen.
+
+### Fixed
+- An API request counts once against the rate limit; requests were counted twice, halving the configured limit.
+
 ## [1.6.13] - 2026-11-25
 ### Upgrading
 - No migrations. **Required: schedule the recurring jobs.** Add a system cron job that runs WP-Cron every minute (`* * * * * wp cron event run --due-now --path=/path/to/wordpress`); a quiet site, or one with `DISABLE_WP_CRON` and no cron job, otherwise runs no SLA checks, escalation rules, automations or snooze wake-ups. Escalated now warns admins when they have not run for 15 minutes. See docs/operations.md.

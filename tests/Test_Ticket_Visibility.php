@@ -281,7 +281,7 @@ class Test_Ticket_Visibility extends WP_UnitTestCase
         $this->assertSame([$this->visible], array_map('intval', array_column($response->get_data()['items'], 'id')));
         $subscriber = self::factory()->user->create(['role' => 'subscriber']);
         Escalated::db()->update(Escalated::table('api_tokens'), ['user_id' => $subscriber], ['token' => hash('sha256', $this->token)]);
-        $this->assertSame(401, $this->server->dispatch($request)->get_status());
+        $this->assertSame(403, $this->server->dispatch($request)->get_status());
     }
 
     public function test_notifications_recheck_fresh_ticket_after_recipient_filter(): void

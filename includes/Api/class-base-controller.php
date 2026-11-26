@@ -8,6 +8,7 @@ namespace Escalated\Api;
 
 use Escalated\Models\ApiToken;
 use Escalated\Models\Setting;
+use Escalated\Services\TicketAccess;
 use WP_Error;
 use WP_REST_Controller;
 use WP_REST_Request;
@@ -24,8 +25,8 @@ abstract class Base_Controller extends WP_REST_Controller
 
     /**
      * Why the last check_token_permission() call failed: 'ability' when the
-     * token is valid but may not call the route (answered 403), otherwise
-     * 'token' (answered 401).
+     * token is valid but may not call the route, 'staff' when its owner is no
+     * longer an agent (both answered 403), otherwise 'token' (answered 401).
      *
      * @var string|null
      */
@@ -39,7 +40,9 @@ abstract class Base_Controller extends WP_REST_Controller
      *
      * @param  WP_REST_Request  $request  The incoming request.
      * @param  string  $level  'agent' (default) or 'admin', as escalated-laravel's
-     *                         route groups; see ApiToken::allows().
+     *                         route groups (see ApiToken::allows()), or 'self'
+     *                         for the routes about the token's own account,
+     *                         which any valid token may call.
      * @return int|null The authenticated user ID, or null on failure.
      */
     protected function check_token_permission(WP_REST_Request $request, string $level = 'agent'): ?int
@@ -64,14 +67,31 @@ abstract class Base_Controller extends WP_REST_Controller
         }
 
         // Check the token may call a route of this level.
-        if (! ApiToken::allows($token_record, $level, $request->get_method(), (string) $request->get_route())) {
+        if ($level !== 'self' && ! ApiToken::allows($token_record, $level, $request->get_method(), (string) $request->get_route())) {
             $this->token_failure = 'ability';
 
             return null;
         }
 
-        // Rate limiting.
-        if (! $this->check_rate_limit($token_record->token)) {
+        $user_id = (int) $token_record->user_id;
+
+        if (! get_userdata($user_id)) {
+            return null;
+        }
+
+        // Staff routes need an owner who is still staff, whatever the token's
+        // abilities and the visibility setting say. Admin routes are further
+        // gated by the token's `admin` ability and, with roles and
+        // permissions on, by the owner's permissions (AccessEnforcer).
+        if ($level !== 'self' && ! TicketAccess::is_staff($user_id)) {
+            $this->token_failure = 'staff';
+
+            return null;
+        }
+
+        // Rate limiting, once per request: handlers that re-check the token
+        // after the permission callback do not count again.
+        if (TicketAccess::token_user($request) === null && ! $this->check_rate_limit($token_record->token)) {
             return null;
         }
 
@@ -79,11 +99,7 @@ abstract class Base_Controller extends WP_REST_Controller
         $ip = $request->get_header('X-Forwarded-For') ?? ($_SERVER['REMOTE_ADDR'] ?? '');
         ApiToken::update_last_used($token_record->id, $ip);
 
-        $user_id = (int) $token_record->user_id;
-        if (\Escalated\Services\TicketAccess::enabled() && ! \Escalated\Services\TicketAccess::is_staff($user_id)) {
-            return null;
-        }
-        \Escalated\Services\TicketAccess::token_actor($request, $user_id);
+        TicketAccess::token_actor($request, $user_id);
         $this->token_failure = null;
 
         return $user_id;
@@ -97,6 +113,10 @@ abstract class Base_Controller extends WP_REST_Controller
     {
         if ($this->token_failure === 'ability') {
             return $this->error('escalated_forbidden', __('Insufficient permissions.', 'escalated'), 403);
+        }
+
+        if ($this->token_failure === 'staff') {
+            return $this->error('escalated_forbidden', __('User no longer has agent access.', 'escalated'), 403);
         }
 
         return $this->error('escalated_unauthorized', __('Invalid or expired API token.', 'escalated'), 401);
@@ -136,6 +156,19 @@ abstract class Base_Controller extends WP_REST_Controller
     public function token_permissions_check(WP_REST_Request $request)
     {
         return $this->check_token_permission($request) === null ? $this->token_error() : true;
+    }
+
+    /**
+     * Permission callback for the routes about the token's own account
+     * (auth/me, profile, refresh, logout): any valid token, including the
+     * customer tokens the password login gives non-staff users.
+     *
+     * @param  WP_REST_Request  $request  The incoming request.
+     * @return bool|WP_Error True if authorized, WP_Error otherwise.
+     */
+    public function self_token_permissions_check(WP_REST_Request $request)
+    {
+        return $this->check_token_permission($request, 'self') === null ? $this->token_error() : true;
     }
 
     /**

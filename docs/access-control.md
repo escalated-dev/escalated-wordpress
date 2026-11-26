@@ -262,9 +262,21 @@ the way escalated-laravel's API does. A token is issued with one or more of:
 
 | Ability | Reaches |
 |---|---|
-| `agent` | the agent routes: tickets (list, show, create, reply, note, status, priority, assign, tags, follow, macros, actions, merge, split, snooze), agents, departments, tags, canned responses, macros, dashboard, saved views, chat, events, attachments, `auth/*`, `admin/two-factor` |
+| `agent` | the agent routes: tickets (list, show, create, reply, note, status, priority, assign, tags, follow, macros, actions, merge, split, snooze), agents, departments, tags, canned responses, macros, dashboard, saved views, chat, events, attachments, `auth/validate`, `admin/two-factor` |
 | `admin` | the admin routes: `DELETE tickets/{ref}`, `automations`, `admin/api-tokens` |
 | `*` | both |
+| `customer` | only the routes about the token's own account: `auth/me`, `auth/profile`, `auth/refresh`, `auth/logout` (any valid token reaches these) |
+
+Every agent and admin route also checks that the token's owner is still
+Escalated staff (an admin, or a user with `escalated_ticket_view`), whatever
+the visibility setting; a token whose owner is not is answered 403
+`User no longer has agent access.`
+
+`POST auth/login` and `POST auth/register` (the mobile app's password sign-in)
+issue a token named `flutter-app` with the user's role: `*` for Escalated
+admins, `agent` for other staff and `customer` for everyone else.
+`auth/refresh` replaces the token with one of the same name, abilities and
+expiry.
 
 An admin-only token cannot reach the agent routes; give a token both `agent`
 and `admin` (or `*`) for both. A valid token without the ability is answered
