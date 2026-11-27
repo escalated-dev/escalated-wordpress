@@ -43,7 +43,14 @@ jobs:
             --exclude='phpunit.xml.dist' \
             --exclude='composer.json' \
             --exclude='composer.lock' \
-            --exclude='README.md'
+            --exclude='README.md' \
+            --exclude='.dockerignore' \
+            --exclude='.gitattributes' \
+            --exclude='docker' \
+            --exclude='docs' \
+            --exclude='scripts' \
+            --exclude='build' \
+            --exclude='release'
 
           cd build
           zip -r ../release/escalated.zip escalated
