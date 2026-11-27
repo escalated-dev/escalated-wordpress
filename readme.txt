@@ -2,7 +2,7 @@
 Contributors: escalated
 Tags: helpdesk, support, tickets, customer support, SLA, ticketing system
 Requires at least: 6.0
-Tested up to: 6.7
+Tested up to: 7.1
 Requires PHP: 8.1
 Stable tag: 1.6.14
 License: MIT
@@ -35,16 +35,18 @@ Escalated is a comprehensive helpdesk and support ticket system that runs entire
 
 **Shortcodes:**
 
-* `[escalated_portal]` - Renders the full customer portal (ticket list, creation form, ticket view).
-* `[escalated_guest_form]` - Renders the guest ticket creation form.
+* `[escalated_tickets]` - The signed-in customer's ticket list.
+* `[escalated_create_ticket]` - The new ticket form for signed-in customers.
+* `[escalated_view_ticket]` - One ticket and its conversation, chosen by the `?ticket=` reference in the URL (guests open it with their `?guest_token=` link).
+* `[escalated_guest_create]` - The ticket form for guests without an account.
 
 == Installation ==
 
 1. Upload the `escalated` folder to the `/wp-content/plugins/` directory.
 2. Activate the plugin through the 'Plugins' menu in WordPress.
 3. Navigate to **Escalated** in the admin sidebar to configure departments, SLA policies, and settings.
-4. Create a page and add the `[escalated_portal]` shortcode to provide a customer-facing support portal.
-5. Optionally create a page with `[escalated_guest_form]` for guest ticket submission.
+4. Create customer pages with the `[escalated_tickets]`, `[escalated_create_ticket]` and `[escalated_view_ticket]` shortcodes.
+5. Optionally create a page with `[escalated_guest_create]` for guest ticket submission.
 
 == Frequently Asked Questions ==
 
@@ -58,7 +60,7 @@ Escalated requires WordPress 6.0 or later.
 
 = Can guests submit tickets without an account? =
 
-Yes. Enable guest tickets in the Escalated settings and use the `[escalated_guest_form]` shortcode. Guests receive a unique link to track and reply to their tickets.
+Yes. Enable guest tickets in the Escalated settings and use the `[escalated_guest_create]` shortcode. Guests receive a unique link to track and reply to their tickets.
 
 = How does SLA tracking work? =
 
